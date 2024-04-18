@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "724437442567",
+    "project_id": "socialseed-609fa",
+    "storage_bucket": "socialseed-609fa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724437442567:android:46a23a638a7b27a7214aa2",
+        "android_client_info": {
+          "package_name": "com.example.socialseed"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUkRzNoDbEBUPSnVr7N4ZiacYDePA21rg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
