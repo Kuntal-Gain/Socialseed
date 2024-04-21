@@ -33,7 +33,7 @@
 
 ## Contributors
 
-<img src="https://contrib.rocks/image?repo=KuntalGain/Socialseed" />
+<img src="https://contrib.rocks/image?repo=Kuntal-Gain/Socialseed" />
 
 ## Branches
 
