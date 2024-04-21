@@ -249,6 +249,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       tags: post.tags,
       creationDate: post.creationDate,
       profileId: post.profileId,
+      isVerified: post.isVerified,
     ).toJson();
 
     try {
@@ -352,7 +353,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       username: comment.username,
       commentId: comment.commentId,
       postId: comment.postId,
-      likes: [],
+      likes: const [],
       content: comment.content,
       creatorUid: comment.creatorUid,
       createAt: comment.createAt,
@@ -451,7 +452,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         .doc(comment.postId)
         .collection(FirebaseConst.comments);
 
-    Map<String, dynamic> commentInfo = Map();
+    Map<String, dynamic> commentInfo = {};
 
     if (comment.content != "" && comment.content != null)
       commentInfo["content"] = comment.content;

@@ -1,9 +1,11 @@
+// ignore_for_file: overridden_fields, duplicate_ignore, annotate_overrides
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/comment_entity.dart';
 
 class CommentModel extends CommentEntity {
-  // ignore: overridden_fields
+  // ignore: overridden_fields, annotate_overrides
   final String? commentId;
   final String? postId;
   final String? creatorUid;
@@ -13,7 +15,7 @@ class CommentModel extends CommentEntity {
   final Timestamp? createAt;
   final List<String>? likes;
 
-  CommentModel({
+  const CommentModel({
     this.commentId,
     this.postId,
     this.creatorUid,

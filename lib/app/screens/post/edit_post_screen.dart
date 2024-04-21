@@ -1,20 +1,15 @@
 // Nececcessy Dependencies
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cool_dropdown/cool_dropdown.dart';
 import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:uuid/uuid.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 
 // Useful Imports
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
-import 'package:socialseed/app/screens/post/location_screen.dart';
 import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';

@@ -1,12 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/screens/post/edit_post_screen.dart';
+import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/widgets/comment_card_widget.dart';
 import 'package:socialseed/app/widgets/more_menu_items.dart';
 import 'package:socialseed/app/widgets/view_post_card.dart';
@@ -19,6 +18,7 @@ import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:uuid/uuid.dart';
+import 'package:socialseed/dependency_injection.dart' as di;
 
 class PostViewScreen extends StatefulWidget {
   final PostEntity post;
@@ -58,25 +58,25 @@ class _PostViewScreenState extends State<PostViewScreen> {
     super.initState();
 
     BlocProvider.of<CommentCubit>(context)
-      ..getComments(postId: widget.post.postid.toString());
+        .getComments(postId: widget.post.postid.toString());
   }
 
   List<PopupMenuEntry<MenuOptions>> getPopupMenuItems() {
     return [
       PopupMenuItem<MenuOptions>(
         value: MenuOptions.Edit,
-        child: GestureDetector(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (ctx) =>
-                  EditPostScreen(currentUser: widget.user, post: widget.post))),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const Icon(Icons.edit),
-              sizeHor(10),
-              const Text('Edit'),
-            ],
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.edit),
+            sizeHor(10),
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (ctx) => EditPostScreen(
+                      currentUser: widget.user, post: widget.post))),
+              child: const Text('Edit'),
+            ),
+          ],
         ),
       ),
       PopupMenuItem<MenuOptions>(
@@ -86,29 +86,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
           children: [
             const Icon(Icons.delete),
             sizeHor(10),
-            const Text('Delete'),
-          ],
-        ),
-      ),
-      PopupMenuItem<MenuOptions>(
-        value: MenuOptions.Copy,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Icon(Icons.copy_rounded),
-            sizeHor(10),
-            const Text('Copy Link'),
-          ],
-        ),
-      ),
-      PopupMenuItem<MenuOptions>(
-        value: MenuOptions.Report,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Icon(Icons.report),
-            sizeHor(10),
-            const Text('Report'),
+            GestureDetector(
+              onTap: () => di
+                  .sl<PostCubit>()
+                  .deletePost(post: widget.post)
+                  .then((value) => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (ctx) => FeedScreen(user: widget.user)))),
+              child: const Text('Delete'),
+            ),
           ],
         ),
       ),
@@ -301,19 +286,21 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 ),
               ),
             ),
-            Container(
+            SizedBox(
               height: 400,
               child: BlocBuilder<CommentCubit, CommentState>(
                 builder: (context, state) {
                   if (state is CommentLoading) {
-                    return const CircularProgressIndicator();
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
                   }
 
                   if (state is CommentLoaded) {
                     final comments = state.comments;
 
                     return ListView.builder(
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: (comments.length <= 3) ? comments.length : 3,
                         itemBuilder: (ctx, idx) {
                           final comment = comments[idx];
@@ -324,10 +311,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
 
                   if (state is CommentFailure) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error has occurred')));
+                        const SnackBar(content: Text('Error has occurred')));
                   }
 
-                  return SizedBox();
+                  return const SizedBox();
                 },
               ),
             ),
@@ -394,7 +381,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                       username: widget.post.username,
                       profileUrl: widget.user.imageUrl,
                       createAt: Timestamp.now(),
-                      likes: [],
+                      likes: const [],
                     ))
                         .then((value) {
                       setState(() {

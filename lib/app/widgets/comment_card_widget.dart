@@ -1,9 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:socialseed/app/widgets/view_post_widget.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
-import 'package:socialseed/utils/constants/color_const.dart';
 
 import '../../utils/constants/page_const.dart';
 
@@ -18,10 +15,10 @@ Widget commentCard(CommentEntity comment) {
   return Container(
     height: size,
     width: double.infinity,
-    margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-    padding: EdgeInsets.all(15),
+    margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+    padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      border: Border.all(color: Color(0xffc2c2c2)),
+      border: Border.all(color: const Color(0xffc2c2c2)),
       borderRadius: BorderRadius.circular(16),
     ),
     child: Row(

@@ -76,6 +76,7 @@ class _PostScreenState extends State<PostScreen> {
       location: location,
       tags: const [],
       creationDate: Timestamp.now(),
+      isVerified: widget.currentUser.isVerified,
     ))
         .then((value) {
       setState(() {

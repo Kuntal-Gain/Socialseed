@@ -20,6 +20,7 @@ class PostModel extends PostEntity {
   final List? tags;
   final Timestamp? creationDate;
   final String? profileId;
+  final bool? isVerified;
 
   const PostModel({
     this.postid,
@@ -37,6 +38,7 @@ class PostModel extends PostEntity {
     this.tags,
     this.creationDate,
     this.profileId,
+    this.isVerified,
   }) : super(
           postid: postid,
           uid: uid,
@@ -53,27 +55,30 @@ class PostModel extends PostEntity {
           tags: tags,
           creationDate: creationDate,
           profileId: profileId,
+          isVerified: isVerified,
         );
 
   factory PostModel.fromSnapShot(DocumentSnapshot snap) {
     var ss = snap.data() as Map<String, dynamic>;
 
     return PostModel(
-        postid: ss['postid'],
-        uid: ss['uid'],
-        username: ss['username'],
-        postType: ss['postType'],
-        content: ss['content'],
-        images: List.from(snap.get('images')),
-        likes: List.from(snap.get('likes')),
-        comments: List.from(snap.get('comments')),
-        totalLikes: ss['totalLikes'],
-        totalComments: ss['totalComments'],
-        shares: ss['shares'],
-        location: ss['location'],
-        tags: List.from(snap.get('tags')),
-        creationDate: ss['creationDate'],
-        profileId: ss['profileId']);
+      postid: ss['postid'],
+      uid: ss['uid'],
+      username: ss['username'],
+      postType: ss['postType'],
+      content: ss['content'],
+      images: List.from(snap.get('images')),
+      likes: List.from(snap.get('likes')),
+      comments: List.from(snap.get('comments')),
+      totalLikes: ss['totalLikes'],
+      totalComments: ss['totalComments'],
+      shares: ss['shares'],
+      location: ss['location'],
+      tags: List.from(snap.get('tags')),
+      creationDate: ss['creationDate'],
+      profileId: ss['profileId'],
+      isVerified: ss['isVerified'],
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -92,5 +97,6 @@ class PostModel extends PostEntity {
         "tags": tags,
         "creationDate": creationDate,
         "profileId": profileId,
+        'isVerified': isVerified,
       };
 }

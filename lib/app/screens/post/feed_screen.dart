@@ -80,9 +80,7 @@ class _FeedScreenState extends State<FeedScreen> {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
-                    context
-                        .read<PostCubit>()
-                        .getPosts(post: const PostEntity());
+                    di.sl<PostCubit>().getPosts(post: const PostEntity());
                   },
                   child: BlocBuilder<PostCubit, PostState>(
                     builder: (context, state) {
@@ -105,9 +103,9 @@ class _FeedScreenState extends State<FeedScreen> {
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.no_photography_sharp),
+                                  const Icon(Icons.no_photography_sharp),
                                   sizeVar(10),
-                                  Text('No Post Avaliable')
+                                  const Text('No Post Avaliable')
                                 ],
                               );
                       }

@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/widgets/image_tile_widget.dart';
@@ -17,6 +15,10 @@ import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
 import '../../utils/constants/text_const.dart';
 import '../cubits/post/post_cubit.dart';
+import '../screens/post/edit_post_screen.dart';
+import 'package:socialseed/dependency_injection.dart' as di;
+
+import '../screens/post/feed_screen.dart';
 
 Widget postCardWidget(BuildContext context, List<PostEntity> posts,
     UserEntity currentUser, bool isSinglePost) {
@@ -31,6 +33,43 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
 
       int totalLines = (caption.length / 25).ceil();
       size = size + totalLines * 25;
+
+      List<PopupMenuEntry<MenuOptions>> getPopupMenuItems() {
+        return [
+          PopupMenuItem<MenuOptions>(
+            value: MenuOptions.Edit,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.edit),
+                sizeHor(10),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (ctx) => EditPostScreen(
+                          currentUser: currentUser, post: post))),
+                  child: const Text('Edit'),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem<MenuOptions>(
+            value: MenuOptions.Delete,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.delete),
+                sizeHor(10),
+                GestureDetector(
+                  onTap: () => di.sl<PostCubit>().deletePost(post: post).then(
+                      (value) => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (ctx) => FeedScreen(user: currentUser)))),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          ),
+        ];
+      }
 
       return Container(
           height: size,
@@ -67,12 +106,17 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                                   style:
                                       TextConst.MediumStyle(14, Colors.black),
                                 ),
-                                sizeHor(5),
-                                Image.asset(
-                                  'assets/3963-verified-developer-badge-red 1.png',
-                                  height: 18,
-                                  width: 18,
-                                ),
+                                if (post.isVerified!)
+                                  Row(
+                                    children: [
+                                      sizeHor(5),
+                                      Image.asset(
+                                        'assets/3963-verified-developer-badge-red 1.png',
+                                        height: 18,
+                                        width: 18,
+                                      ),
+                                    ],
+                                  ),
                                 sizeHor(5),
                                 if (post.location!.isNotEmpty)
                                   getLocation(post.location!),
@@ -286,7 +330,12 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                         post.totalLikes),
                   ),
                   sizeHor(10),
-                  postItem(IconConst.commentIcon, post.totalComments),
+                  GestureDetector(
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (ctx) =>
+                              PostViewScreen(post: post, user: currentUser))),
+                      child:
+                          postItem(IconConst.commentIcon, post.totalComments)),
                   sizeHor(10),
                   postItem(IconConst.shareIcon, post.shares),
                 ],

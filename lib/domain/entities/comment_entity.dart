@@ -11,7 +11,7 @@ class CommentEntity extends Equatable {
   final Timestamp? createAt;
   final List<String>? likes;
 
-  CommentEntity({
+  const CommentEntity({
     this.commentId,
     this.postId,
     this.creatorUid,
