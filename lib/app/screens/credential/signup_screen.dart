@@ -37,7 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // local variables
   bool isPressed = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(2000);
   bool _isSigningUp = false;
   // ignore: unused_field, prefer_final_fields
   bool _isUploading = false;
@@ -215,6 +215,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         followingCount: 0,
         stories: const [],
         imageFile: _image,
+        work: "",
+        college: "",
+        school: "",
+        location: "",
+        coverImage: "",
+        dob: Timestamp.fromDate(_selectedDate),
       ),
       // ignore: use_build_context_synchronously
       ctx: context,

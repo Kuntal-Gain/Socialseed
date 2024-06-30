@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
@@ -93,6 +94,20 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   .then((value) => Navigator.of(context).push(MaterialPageRoute(
                       builder: (ctx) => FeedScreen(user: widget.user)))),
               child: const Text('Delete'),
+            ),
+          ],
+        ),
+      ),
+      PopupMenuItem<MenuOptions>(
+        value: MenuOptions.Copy,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.copy),
+            sizeHor(10),
+            GestureDetector(
+              onTap: () => {},
+              child: const Text('Copy'),
             ),
           ],
         ),

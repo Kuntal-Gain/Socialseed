@@ -15,11 +15,17 @@ class UserModel extends UserEntity {
   final List? likedPages;
   final List? posts;
   final Timestamp? joinedDate;
+  final Timestamp? dob;
   final bool? isVerified;
   final List? badges;
   final num? followerCount;
   final num? followingCount;
   final List? stories;
+  final String? work;
+  final String? college;
+  final String? school;
+  final String? location;
+  final String? coverImage;
 
   const UserModel({
     this.uid,
@@ -38,6 +44,12 @@ class UserModel extends UserEntity {
     this.followerCount,
     this.followingCount,
     this.stories,
+    this.work,
+    this.college,
+    this.school,
+    this.location,
+    this.coverImage,
+    this.dob,
   }) : super(
           uid: uid,
           username: username,
@@ -55,6 +67,12 @@ class UserModel extends UserEntity {
           followerCount: followerCount,
           followingCount: followingCount,
           stories: stories,
+          work: work,
+          college: college,
+          school: school,
+          location: location,
+          coverImage: coverImage,
+          dob: dob,
         );
 
   factory UserModel.fromSnapShot(DocumentSnapshot snap) {
@@ -77,6 +95,12 @@ class UserModel extends UserEntity {
       followerCount: ss['followerCount'],
       followingCount: ss['followingCount'],
       stories: ss['stories'],
+      work: ss["work"],
+      college: ss["college"],
+      school: ss["school"],
+      location: ss["location"],
+      coverImage: ss["coverImage"],
+      dob: ss["dob"],
     );
   }
 
@@ -97,5 +121,11 @@ class UserModel extends UserEntity {
         "followerCount": followerCount,
         "followingCount": followingCount,
         "stories": stories,
+        "work": work,
+        "college": college,
+        "school": school,
+        "location": location,
+        "coverImage": coverImage,
+        "dob": dob,
       };
 }

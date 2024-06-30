@@ -15,11 +15,19 @@ class UserEntity extends Equatable {
   final List? likedPages;
   final List? posts;
   final Timestamp? joinedDate;
+  final Timestamp? dob;
   final bool? isVerified;
   final List? badges;
   final num? followerCount;
   final num? followingCount;
   final List? stories;
+  final String? coverImage;
+
+  // user info
+  final String? work;
+  final String? college;
+  final String? school;
+  final String? location;
 
   // not gonna stored into DB
   final File? imageFile;
@@ -46,6 +54,12 @@ class UserEntity extends Equatable {
     this.password,
     this.otherUid,
     this.imageFile,
+    this.work,
+    this.college,
+    this.school,
+    this.location,
+    this.coverImage,
+    this.dob,
   });
 
   @override
@@ -69,5 +83,11 @@ class UserEntity extends Equatable {
         password,
         otherUid,
         imageFile,
+        work,
+        college,
+        school,
+        location,
+        coverImage,
+        dob,
       ];
 }

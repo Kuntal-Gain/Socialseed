@@ -27,6 +27,7 @@ abstract class FirebaseRepository {
   // Posts
   Future<void> createPost(PostEntity post);
   Stream<List<PostEntity>> fetchPost(PostEntity post);
+  Stream<List<PostEntity>> fetchPostByUid(String uid);
   Stream<List<PostEntity>> fetchSinglePost(String postId);
   Future<void> updatePost(PostEntity post);
   Future<void> deletePost(PostEntity post);

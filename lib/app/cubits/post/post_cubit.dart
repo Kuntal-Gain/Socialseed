@@ -6,6 +6,7 @@ import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/usecases/post/create_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/delete_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/fetch_post_usecase.dart';
+import 'package:socialseed/domain/usecases/post/fetch_single_post_by_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/post/like_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/update_post_usecase.dart';
 
@@ -17,6 +18,7 @@ class PostCubit extends Cubit<PostState> {
   final FetchPostUsecase fetchPostUsecase;
   final LikePostUsecase likePostUsecase;
   final UpdatePostUsecase updatePostUsecase;
+  final FetchPostByUid fetchPostByUid;
 
   PostCubit({
     required this.createPostUsecase,
@@ -24,6 +26,7 @@ class PostCubit extends Cubit<PostState> {
     required this.fetchPostUsecase,
     required this.likePostUsecase,
     required this.updatePostUsecase,
+    required this.fetchPostByUid,
   }) : super(PostInitial());
 
   Future<void> getPosts({required PostEntity post}) async {
@@ -32,6 +35,24 @@ class PostCubit extends Cubit<PostState> {
       final streamResponse = fetchPostUsecase.call(post);
       streamResponse.listen((posts) {
         emit(PostLoaded(posts: posts));
+      });
+    } on SocketException catch (_) {
+      emit(PostFailure());
+    } catch (_) {
+      emit(PostFailure());
+    }
+  }
+
+  Future<void> getPostsBySameUid({required String uid}) async {
+    emit(PostLoading());
+    try {
+      final streamResponse = fetchPostByUid.call(uid);
+      streamResponse.listen((posts) {
+        if (posts.isEmpty) {
+          emit(const PostLoaded(posts: []));
+        } else {
+          emit(PostLoaded(posts: posts));
+        }
       });
     } on SocketException catch (_) {
       emit(PostFailure());

@@ -20,6 +20,7 @@ import 'package:socialseed/domain/usecases/comment/update_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/post/create_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/delete_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/fetch_post_usecase.dart';
+import 'package:socialseed/domain/usecases/post/fetch_single_post_by_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/post/fetch_single_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/like_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/update_post_usecase.dart';
@@ -74,6 +75,7 @@ Future<void> init() async {
       fetchPostUsecase: sl.call(),
       likePostUsecase: sl.call(),
       updatePostUsecase: sl.call(),
+      fetchPostByUid: sl.call(),
     ),
   );
 
@@ -114,6 +116,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LikePostUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => FetchPostUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => FetchSinglePostUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => FetchPostByUid(repository: sl.call()));
 
   // comment usecases
   sl.registerLazySingleton(() => CreateCommentUsecase(repository: sl.call()));

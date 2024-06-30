@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
@@ -39,6 +40,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<CommentCubit>()),
       ],
       child: MaterialApp(
+        // ignore: deprecated_member_use
+
         title: "Socialseed",
         darkTheme: ThemeData.dark(),
         debugShowCheckedModeBanner: false,

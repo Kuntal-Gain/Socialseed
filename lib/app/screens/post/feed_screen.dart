@@ -98,8 +98,8 @@ class _FeedScreenState extends State<FeedScreen> {
 
                       if (state is PostLoaded) {
                         return (state.posts.isNotEmpty)
-                            ? postCardWidget(
-                                context, state.posts, widget.user, false)
+                            ? postCardWidget(context, state.posts, widget.user,
+                                widget.user.uid.toString())
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

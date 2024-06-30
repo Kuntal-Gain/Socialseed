@@ -50,6 +50,12 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         followerCount: user.followerCount,
         followingCount: user.followingCount,
         stories: user.stories,
+        work: user.work,
+        college: user.college,
+        school: user.school,
+        location: user.location,
+        coverImage: user.coverImage,
+        dob: user.dob,
       ).toJson();
 
       if (!newDoc.exists) {
@@ -77,7 +83,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Stream<List<UserEntity>> getUsers(UserEntity user) {
-    throw UnimplementedError();
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    return userCollection.snapshots().map((querySnapshot) =>
+        querySnapshot.docs.map((e) => UserModel.fromSnapShot(e)).toList());
   }
 
   @override
@@ -204,6 +212,21 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     if (user.followingCount != "" && user.followingCount != null)
       userInformation['followingCount'] = user.followingCount;
 
+    if (user.work != "" && user.work != null)
+      userInformation['work'] = user.work;
+
+    if (user.college != "" && user.college != null)
+      userInformation['college'] = user.college;
+
+    if (user.school != "" && user.school != null)
+      userInformation['school'] = user.school;
+
+    if (user.location != "" && user.location != null)
+      userInformation['location'] = user.location;
+
+    if (user.coverImage != "" && user.coverImage != null)
+      userInformation['coverImage'] = user.coverImage;
+
     userCollection.doc(user.uid).update(userInformation);
   }
 
@@ -232,6 +255,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   @override
   Future<void> createPost(PostEntity post) async {
     final postCollection = firebaseFirestore.collection(FirebaseConst.posts);
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
 
     final newPost = PostModel(
       postid: post.postid,
@@ -254,11 +278,21 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
     try {
       final postRef = await postCollection.doc(post.postid).get();
+      final userRef = await userCollection.doc(post.uid).get();
 
       if (!postRef.exists) {
         postCollection.doc(post.postid).set(newPost);
       } else {
         postCollection.doc(post.postid).update(newPost);
+      }
+
+      if (userRef.exists) {
+        userRef.get("posts");
+        final postId = post.postid;
+
+        userCollection.doc(post.uid).update({
+          "posts": FieldValue.arrayUnion([postId]),
+        });
       }
     } catch (_) {
       debugPrint('Something went wrong');
@@ -268,9 +302,13 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   @override
   Future<void> deletePost(PostEntity post) async {
     final postCollection = firebaseFirestore.collection(FirebaseConst.posts);
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
 
     try {
       postCollection.doc(post.postid).delete();
+      userCollection.doc(post.uid).update({
+        "posts": FieldValue.arrayRemove([post.postid])
+      });
     } catch (_) {
       debugPrint('something went wrong');
     }
@@ -458,5 +496,16 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       commentInfo["content"] = comment.content;
 
     commentCollection.doc(comment.commentId).update(commentInfo);
+  }
+
+  @override
+  Stream<List<PostEntity>> fetchPostByUid(String uid) {
+    final postCollection = firebaseFirestore
+        .collection(FirebaseConst.posts)
+        .where("uid", isEqualTo: uid)
+        .orderBy("creationDate", descending: true);
+
+    return postCollection.snapshots().map((querySnapshot) =>
+        querySnapshot.docs.map((e) => PostModel.fromSnapShot(e)).toList());
   }
 }

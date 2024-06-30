@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/widgets/image_tile_widget.dart';
 import 'package:socialseed/app/widgets/more_menu_items.dart';
@@ -18,16 +19,16 @@ import '../cubits/post/post_cubit.dart';
 import '../screens/post/edit_post_screen.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
-import '../screens/post/feed_screen.dart';
-
-Widget postCardWidget(BuildContext context, List<PostEntity> posts,
-    UserEntity currentUser, bool isSinglePost) {
+Widget postCardWidget(
+    BuildContext context, List<PostEntity> posts, UserEntity user, String uid) {
   return ListView.builder(
+    physics: const ScrollPhysics(),
+    shrinkWrap: true,
     itemCount: posts.length,
     itemBuilder: (ctx, idx) {
       PostEntity post = posts[idx];
 
-      double size = 380;
+      double size = (post.images!.isEmpty) ? 150 : 380;
 
       String caption = posts[idx].content.toString();
 
@@ -45,8 +46,8 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                 sizeHor(10),
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (ctx) => EditPostScreen(
-                          currentUser: currentUser, post: post))),
+                      builder: (ctx) =>
+                          EditPostScreen(currentUser: user, post: post))),
                   child: const Text('Edit'),
                 ),
               ],
@@ -62,7 +63,8 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                 GestureDetector(
                   onTap: () => di.sl<PostCubit>().deletePost(post: post).then(
                       (value) => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (ctx) => FeedScreen(user: currentUser)))),
+                          builder: (ctx) =>
+                              HomeScreen(uid: user.uid.toString())))),
                   child: const Text('Delete'),
                 ),
               ],
@@ -101,10 +103,20 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  post.username.toString(),
-                                  style:
-                                      TextConst.MediumStyle(14, Colors.black),
+                                GestureDetector(
+                                  // onTap: () => Navigator.of(context).push(
+                                  //   MaterialPageRoute(
+                                  //     builder: (ctx) => ProfileScreen(
+                                  //       user: pos,
+                                  //       currentUid: uid,
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                  child: Text(
+                                    post.username.toString(),
+                                    style:
+                                        TextConst.MediumStyle(14, Colors.black),
+                                  ),
                                 ),
                                 if (post.isVerified!)
                                   Row(
@@ -171,7 +183,7 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                       builder: (ctx) =>
-                          PostViewScreen(post: post, user: currentUser))),
+                          PostViewScreen(post: post, user: user))),
                   child: Container(
                     padding: const EdgeInsets.only(
                       left: 12,
@@ -189,6 +201,7 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                   ),
                 ),
               ),
+              if (post.images!.isEmpty) const SizedBox(),
               if (post.images!.length == 1)
                 Container(
                   height: 250,
@@ -324,7 +337,7 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                       BlocProvider.of<PostCubit>(context).likePost(post: post);
                     },
                     child: postItem(
-                        !post.likes!.contains(currentUser.uid)
+                        !post.likes!.contains(user.uid)
                             ? IconConst.likeIcon
                             : IconConst.likePressedIcon,
                         post.totalLikes),
@@ -333,7 +346,7 @@ Widget postCardWidget(BuildContext context, List<PostEntity> posts,
                   GestureDetector(
                       onTap: () => Navigator.of(context).push(MaterialPageRoute(
                           builder: (ctx) =>
-                              PostViewScreen(post: post, user: currentUser))),
+                              PostViewScreen(post: post, user: user))),
                       child:
                           postItem(IconConst.commentIcon, post.totalComments)),
                   sizeHor(10),

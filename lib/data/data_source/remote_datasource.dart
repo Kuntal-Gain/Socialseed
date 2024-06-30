@@ -26,6 +26,7 @@ abstract class RemoteDataSource {
   Future<void> createPost(PostEntity post);
   Stream<List<PostEntity>> fetchPost(PostEntity post);
   Stream<List<PostEntity>> fetchSinglePost(String postId);
+  Stream<List<PostEntity>> fetchPostByUid(String uid);
   Future<void> updatePost(PostEntity post);
   Future<void> deletePost(PostEntity post);
   Future<void> likePost(PostEntity post);

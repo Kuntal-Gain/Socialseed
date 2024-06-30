@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
+import 'package:socialseed/app/screens/friend/search_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
+import 'package:socialseed/app/screens/user/profile_screen.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/utils/constants/text_const.dart';
 
 class HomeScreen extends StatefulWidget {
   final String uid;
@@ -76,43 +78,88 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<GetSingleUserCubit, GetSingleUserState>(
-        builder: (context, state) {
-          if (state is GetSingleUsersLoaded) {
-            final currentUser = state.user;
+      body: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Container(
+                height: 60,
+                margin: const EdgeInsets.all(12),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50),
+                  color: AppColor.greyColor,
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(18.0),
+                      child: Image.asset(
+                        'assets/icons/search.png',
+                        color: AppColor.textGreyColor,
+                      ),
+                    ),
+                    Expanded(
+                        child: GestureDetector(
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (ctx) => SearchScreen(
+                                currentUid: widget.uid,
+                              ))),
+                      child: Text(
+                        'Search User',
+                        style: TextConst.MediumStyle(
+                          16,
+                          AppColor.textGreyColor,
+                        ),
+                      ),
+                    )),
+                  ],
+                )),
+            const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Divider()),
+            Expanded(
+              child: BlocBuilder<GetSingleUserCubit, GetSingleUserState>(
+                builder: (context, state) {
+                  if (state is GetSingleUsersLoaded) {
+                    final currentUser = state.user;
 
-            List<Widget> screens = [
-              FeedScreen(user: currentUser),
-              const Center(child: Text('Friends')),
-              const Center(child: Text('Chat')),
-              const Center(child: Text('Notfication')),
-              Center(
-                  child: ElevatedButton(
-                      onPressed: () {
-                        BlocProvider.of<AuthCubit>(context).logout();
+                    List<Widget> screens = [
+                      FeedScreen(user: currentUser),
+                      const Center(child: Text('Friends')),
+                      const Center(child: Text('Chat')),
+                      const Center(child: Text('Notfication')),
+                      ProfileScreen(
+                        user: currentUser,
+                        currentUid: currentUser.uid.toString(),
+                      ),
+                    ];
+
+                    return PageView(
+                      controller: _controller,
+                      onPageChanged: (val) {
+                        setState(() {
+                          currentIdx = val;
+                        });
                       },
-                      child: const Text('Logout'))),
-            ];
-
-            return PageView(
-              controller: _controller,
-              onPageChanged: (val) {
-                setState(() {
-                  currentIdx = val;
-                });
-              },
-              children: screens,
-            );
-          } else if (state is GetSingleUsersLoading) {
-            return const Center(
-              child: CircularProgressIndicator(), // Show loading indicator
-            );
-          } else {
-            return const Center(
-              child: Text('Failed to load user data'), // Show error message
-            );
-          }
-        },
+                      children: screens,
+                    );
+                  } else if (state is GetSingleUsersLoading) {
+                    return const Center(
+                      child:
+                          CircularProgressIndicator(), // Show loading indicator
+                    );
+                  } else {
+                    return const Center(
+                      child: Text(
+                          'Failed to load user data'), // Show error message
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         height: 80,
