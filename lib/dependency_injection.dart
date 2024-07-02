@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
+import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_post/cubit/get_single_post_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -34,6 +35,13 @@ import 'package:socialseed/domain/usecases/user/sign_in_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_out_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_up_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_usecase.dart';
+import 'package:socialseed/domain/usecases/user_controllers/accept_request_usecase.dart';
+import 'package:socialseed/domain/usecases/user_controllers/follow_user_usecase.dart';
+import 'package:socialseed/domain/usecases/user_controllers/reject_request_usecase.dart';
+import 'package:socialseed/domain/usecases/user_controllers/send_request_usecase.dart';
+
+import 'domain/usecases/user/get_single_other_user_usecase.dart';
+import 'domain/usecases/user_controllers/unfollow_user_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -59,6 +67,11 @@ Future<void> init() async {
     () => UserCubit(
       updateUserUseCase: sl.call(),
       getUsersUseCase: sl.call(),
+      acceptRequestUsecase: sl.call(),
+      followUserUsecase: sl.call(),
+      sendRequestUsecase: sl.call(),
+      unFollowUserUsecase: sl.call(),
+      rejectRequestUsecase: sl.call(),
     ),
   );
 
@@ -96,6 +109,12 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => GetSingleOtherUserCubit(
+      getSingleOtherUserUseCase: sl.call(),
+    ),
+  );
+
   // usecase
 
   // user usecases
@@ -108,6 +127,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetUserUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => CreateUserUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => GetSingleUserUsecase(repository: sl.call()));
+  sl.registerLazySingleton(
+      () => GetSingleOtherUserUseCase(repository: sl.call()));
+  sl.registerLazySingleton(() => FollowUserUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => UnFollowUserUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => SendRequestUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => AcceptRequestUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => RejectRequestUsecase(repository: sl.call()));
 
   // post usecases
   sl.registerLazySingleton(() => CreatePostUsecase(repository: sl.call()));

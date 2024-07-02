@@ -11,6 +11,9 @@ class UserModel extends UserEntity {
   final String? bio;
   final String? imageUrl;
   final List? friends;
+  final List? followers;
+  final List? following;
+  final List? requests;
   final List? milestones;
   final List? likedPages;
   final List? posts;
@@ -50,6 +53,9 @@ class UserModel extends UserEntity {
     this.location,
     this.coverImage,
     this.dob,
+    this.followers,
+    this.following,
+    this.requests,
   }) : super(
           uid: uid,
           username: username,
@@ -73,6 +79,9 @@ class UserModel extends UserEntity {
           location: location,
           coverImage: coverImage,
           dob: dob,
+          followers: followers,
+          following: following,
+          requests: requests,
         );
 
   factory UserModel.fromSnapShot(DocumentSnapshot snap) {
@@ -101,6 +110,9 @@ class UserModel extends UserEntity {
       location: ss["location"],
       coverImage: ss["coverImage"],
       dob: ss["dob"],
+      followers: ss['followers'],
+      following: ss['following'],
+      requests: ss['requests'],
     );
   }
 
@@ -127,5 +139,8 @@ class UserModel extends UserEntity {
         "location": location,
         "coverImage": coverImage,
         "dob": dob,
+        "following": following,
+        "followers": followers,
+        "requests": requests,
       };
 }

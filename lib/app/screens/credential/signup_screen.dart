@@ -221,6 +221,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         location: "",
         coverImage: "",
         dob: Timestamp.fromDate(_selectedDate),
+        followers: const [],
+        following: const [],
+        requests: const [],
       ),
       // ignore: use_build_context_synchronously
       ctx: context,

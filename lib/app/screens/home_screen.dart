@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
+import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
 import 'package:socialseed/app/screens/friend/search_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/screens/user/profile_screen.dart';
@@ -126,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     List<Widget> screens = [
                       FeedScreen(user: currentUser),
-                      const Center(child: Text('Friends')),
+                      FriendSuggestion(user: currentUser),
                       const Center(child: Text('Chat')),
                       const Center(child: Text('Notfication')),
                       ProfileScreen(

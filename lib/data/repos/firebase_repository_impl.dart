@@ -97,4 +97,28 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Stream<List<PostEntity>> fetchPostByUid(String uid) =>
       remoteDataSource.fetchPostByUid(uid);
+
+  @override
+  Stream<List<UserEntity>> getSingleOtherUser(String otherUid) =>
+      remoteDataSource.getSingleOtherUser(otherUid);
+
+  @override
+  Future<void> acceptRequest(UserEntity user) async =>
+      remoteDataSource.acceptRequest(user);
+
+  @override
+  Future<void> followUser(UserEntity user) async =>
+      remoteDataSource.followUser(user);
+
+  @override
+  Future<void> sendRequest(UserEntity user) async =>
+      remoteDataSource.sendRequest(user);
+
+  @override
+  Future<void> unfollowUser(UserEntity user) async =>
+      remoteDataSource.unfollowUser(user);
+
+  @override
+  Future<void> rejectRequest(UserEntity user) async =>
+      remoteDataSource.rejectRequest(user);
 }

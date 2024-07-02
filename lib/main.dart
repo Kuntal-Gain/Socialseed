@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
+import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<GetSingleUserCubit>()),
         BlocProvider(create: (_) => di.sl<PostCubit>()),
         BlocProvider(create: (_) => di.sl<CommentCubit>()),
+        BlocProvider(create: (_) => di.sl<GetSingleOtherUserCubit>())
       ],
       child: MaterialApp(
         // ignore: deprecated_member_use

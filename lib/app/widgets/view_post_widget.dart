@@ -19,6 +19,8 @@ import '../cubits/post/post_cubit.dart';
 import '../screens/post/edit_post_screen.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
+import '../screens/user/other_user_profile.dart';
+
 Widget postCardWidget(
     BuildContext context, List<PostEntity> posts, UserEntity user, String uid) {
   return ListView.builder(
@@ -104,14 +106,11 @@ Widget postCardWidget(
                             Row(
                               children: [
                                 GestureDetector(
-                                  // onTap: () => Navigator.of(context).push(
-                                  //   MaterialPageRoute(
-                                  //     builder: (ctx) => ProfileScreen(
-                                  //       user: pos,
-                                  //       currentUid: uid,
-                                  //     ),
-                                  //   ),
-                                  // ),
+                                  onTap: () => Navigator.of(context)
+                                      .push(MaterialPageRoute(
+                                          builder: (ctx) => OtherUserProfile(
+                                                otherUid: post.uid.toString(),
+                                              ))),
                                   child: Text(
                                     post.username.toString(),
                                     style:

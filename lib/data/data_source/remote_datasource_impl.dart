@@ -56,6 +56,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         location: user.location,
         coverImage: user.coverImage,
         dob: user.dob,
+        followers: user.followers,
+        following: user.following,
+        requests: user.requests,
       ).toJson();
 
       if (!newDoc.exists) {
@@ -507,5 +510,169 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
     return postCollection.snapshots().map((querySnapshot) =>
         querySnapshot.docs.map((e) => PostModel.fromSnapShot(e)).toList());
+  }
+
+  @override
+  Stream<List<UserEntity>> getSingleOtherUser(String otherUid) {
+    final userCollection = firebaseFirestore
+        .collection(FirebaseConst.users)
+        .where("uid", isEqualTo: otherUid)
+        .limit(1);
+    return userCollection.snapshots().map((querySnapshot) =>
+        querySnapshot.docs.map((e) => UserModel.fromSnapShot(e)).toList());
+  }
+
+  @override
+  Future<void> acceptRequest(UserEntity user) async {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final currentUid = await getCurrentUid();
+
+    final targetUserRef = userCollection.doc(currentUid);
+    final requesterRef = userCollection.doc(user.uid);
+
+    try {
+      // Remove current user's UID from requester's "requests" field
+      await requesterRef.update({
+        'requests': FieldValue.arrayRemove([currentUid]),
+      });
+
+      // Add requester's UID to current user's "friends" field
+      await targetUserRef.update({
+        'friends': FieldValue.arrayUnion([user.uid]),
+      });
+    } catch (e) {
+      print("Error accepting request: $e");
+    }
+  }
+
+  @override
+  Future<void> followUser(UserEntity user) async {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final currentUid = await getCurrentUid();
+
+    final targetUserRef = userCollection.doc(user.uid);
+    final currentUserRef = userCollection.doc(currentUid);
+
+    try {
+      // Create or update target user's document with "followers" field and initialize followerCount if not exists
+      await targetUserRef.set({
+        'followers': [],
+        'followerCount': FieldValue.increment(0),
+        'followingCount': FieldValue.increment(0),
+      }, SetOptions(merge: true));
+
+      // Add current user's UID to target user's "followers" array and increment followerCount
+      await targetUserRef.update({
+        'followers': FieldValue.arrayUnion([currentUid]),
+        'followerCount': FieldValue.increment(1),
+      });
+
+      // Add target user's UID to current user's "following" array
+      await currentUserRef.update({
+        'following': FieldValue.arrayUnion([user.uid]),
+        'followingCount': FieldValue.increment(1)
+      });
+    } catch (e) {
+      print("Error following user: $e");
+    }
+  }
+
+  @override
+  Future<void> sendRequest(UserEntity user) async {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final currentUid = await getCurrentUid();
+
+    final targetUserRef = userCollection.doc(user.uid);
+
+    try {
+      final targetUserDoc = await targetUserRef.get();
+
+      if (targetUserDoc.exists) {
+        // Retrieve current requests or initialize an empty list
+        List requests = targetUserDoc.data()?['requests'] ?? [];
+
+        if (!requests.contains(currentUid)) {
+          // Add current user's UID to requests list
+          requests.add(currentUid);
+          // Update the document with the new requests list
+          targetUserRef.update({'requests': requests});
+        } else {
+          requests.remove(currentUid);
+          targetUserRef.update({'requests': requests});
+        }
+      } else {
+        // If the document doesn't exist, create it with requests list containing current user's UID
+        await targetUserRef.set({
+          'requests': [currentUid]
+        });
+      }
+    } catch (e) {
+      print("Error sending request: $e");
+    }
+  }
+
+  @override
+  Future<void> unfollowUser(UserEntity user) async {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final currentUid = await getCurrentUid();
+
+    final targetUserRef = userCollection.doc(user.uid);
+    final currentUserRef = userCollection.doc(currentUid);
+
+    try {
+      // Add current user's UID to target user's "followers" array and decrement followerCount
+      await targetUserRef.update({
+        'followers': FieldValue.arrayRemove([currentUid]),
+        'followerCount': FieldValue.increment(-1),
+      });
+
+      // Ensure followerCount is not negative
+      final targetUserDoc = await targetUserRef.get();
+      final targetFollowerCount = targetUserDoc.data()!['followerCount'] ?? 0;
+      if (targetFollowerCount < 0) {
+        await targetUserRef.update({'followerCount': 0});
+      }
+
+      // Add target user's UID to current user's "following" array and decrement followingCount
+      await currentUserRef.update({
+        'following': FieldValue.arrayRemove([user.uid]),
+        'followingCount': FieldValue.increment(-1),
+      });
+
+      // Ensure followingCount is not negative
+      final currentUserDoc = await currentUserRef.get();
+      final currentFollowingCount =
+          currentUserDoc.data()!['followingCount'] ?? 0;
+      if (currentFollowingCount < 0) {
+        await currentUserRef.update({'followingCount': 0});
+      }
+    } catch (e) {
+      print("Error unfollowing user: $e");
+    }
+  }
+
+  @override
+  Future<void> rejectRequest(UserEntity user) async {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final currentUid = await getCurrentUid();
+
+    final targetUserRef = userCollection.doc(currentUid);
+
+    try {
+      final targetUserDoc = await targetUserRef.get();
+
+      if (targetUserDoc.exists) {
+        // Retrieve current requests or initialize an empty list
+        List requests = targetUserDoc.data()?['requests'] ?? [];
+
+        // Remove the requested user's UID from requests list
+        requests.remove(user.uid);
+
+        // Update the document with the updated requests list
+        await targetUserRef.update({'requests': requests});
+      }
+    } catch (e) {
+      print("Error rejecting request: $e");
+    }
   }
 }

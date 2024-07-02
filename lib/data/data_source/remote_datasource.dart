@@ -16,6 +16,7 @@ abstract class RemoteDataSource {
   // User Features
   Stream<List<UserEntity>> getUsers(UserEntity user);
   Stream<List<UserEntity>> getSingleUsers(String uid);
+  Stream<List<UserEntity>> getSingleOtherUser(String otherUid);
   Future<String> getCurrentUid();
   Future<void> createUser(UserEntity user);
   Future<void> updateUser(UserEntity user);
@@ -37,4 +38,11 @@ abstract class RemoteDataSource {
   Future<void> updateComment(CommentEntity comment);
   Future<void> deleteComment(CommentEntity comment);
   Future<void> likeComment(CommentEntity comment);
+
+  // user controller
+  Future<void> followUser(UserEntity user);
+  Future<void> unfollowUser(UserEntity user);
+  Future<void> sendRequest(UserEntity user);
+  Future<void> acceptRequest(UserEntity user);
+  Future<void> rejectRequest(UserEntity user);
 }

@@ -11,6 +11,9 @@ class UserEntity extends Equatable {
   final String? bio;
   final String? imageUrl;
   final List? friends;
+  final List? followers;
+  final List? following;
+  final List? requests;
   final List? milestones;
   final List? likedPages;
   final List? posts;
@@ -60,6 +63,9 @@ class UserEntity extends Equatable {
     this.location,
     this.coverImage,
     this.dob,
+    this.followers,
+    this.following,
+    this.requests,
   });
 
   @override
@@ -89,5 +95,8 @@ class UserEntity extends Equatable {
         location,
         coverImage,
         dob,
+        followers,
+        following,
+        requests,
       ];
 }
