@@ -29,6 +29,8 @@ class UserModel extends UserEntity {
   final String? school;
   final String? location;
   final String? coverImage;
+  final bool? activeStatus;
+  final List? messages;
 
   const UserModel({
     this.uid,
@@ -56,6 +58,8 @@ class UserModel extends UserEntity {
     this.followers,
     this.following,
     this.requests,
+    this.activeStatus,
+    this.messages,
   }) : super(
           uid: uid,
           username: username,
@@ -82,6 +86,8 @@ class UserModel extends UserEntity {
           followers: followers,
           following: following,
           requests: requests,
+          activeStatus: activeStatus,
+          messages: messages,
         );
 
   factory UserModel.fromSnapShot(DocumentSnapshot snap) {
@@ -113,6 +119,8 @@ class UserModel extends UserEntity {
       followers: ss['followers'],
       following: ss['following'],
       requests: ss['requests'],
+      activeStatus: ss['active_status'],
+      messages: ss['messages'],
     );
   }
 
@@ -142,5 +150,7 @@ class UserModel extends UserEntity {
         "following": following,
         "followers": followers,
         "requests": requests,
+        "active_status": activeStatus,
+        "messages": messages,
       };
 }

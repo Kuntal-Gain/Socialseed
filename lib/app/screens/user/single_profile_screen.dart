@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:socialseed/app/screens/user/other_user_profile.dart';
+import 'package:socialseed/app/screens/user/user_profile.dart';
 
 import '../../cubits/post/post_cubit.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
@@ -19,7 +19,7 @@ class SingleUserProfilePage extends StatelessWidget {
           create: (context) => di.sl<PostCubit>(),
         ),
       ],
-      child: OtherUserProfile(otherUid: otherUserId),
+      child: UserProfile(otherUid: otherUserId),
     );
   }
 }

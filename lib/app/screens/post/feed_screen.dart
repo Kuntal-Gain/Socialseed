@@ -9,6 +9,8 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 
 import '../../../utils/constants/color_const.dart';
+import '../../../utils/constants/text_const.dart';
+import '../friend/search_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   final UserEntity user;
@@ -34,6 +36,43 @@ class _FeedScreenState extends State<FeedScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              Container(
+                  height: 60,
+                  margin: const EdgeInsets.all(12),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    color: AppColor.greyColor,
+                  ),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Image.asset(
+                          'assets/icons/search.png',
+                          color: AppColor.textGreyColor,
+                        ),
+                      ),
+                      Expanded(
+                          child: GestureDetector(
+                        onTap: () =>
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (ctx) => SearchScreen(
+                                      currentUid: widget.user.uid!,
+                                    ))),
+                        child: Text(
+                          'Search User',
+                          style: TextConst.MediumStyle(
+                            16,
+                            AppColor.textGreyColor,
+                          ),
+                        ),
+                      )),
+                    ],
+                  )),
+              const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Divider()),
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

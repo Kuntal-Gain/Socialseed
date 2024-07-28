@@ -63,21 +63,24 @@ class _PostScreenState extends State<PostScreen> {
     BlocProvider.of<PostCubit>(context)
         .createPost(
             post: PostEntity(
-      postid: post.postid,
-      profileId: widget.currentUser.imageUrl,
-      uid: widget.currentUser.uid,
-      username: widget.currentUser.username,
-      postType: type,
-      content: _captionController.text,
-      images: imageFiles,
-      likes: const [],
-      comments: const [],
-      shares: 0,
-      location: location,
-      tags: const [],
-      creationDate: Timestamp.now(),
-      isVerified: widget.currentUser.isVerified,
-    ))
+                postid: post.postid,
+                profileId: widget.currentUser.imageUrl,
+                uid: widget.currentUser.uid,
+                username: widget.currentUser.username,
+                postType: type,
+                content: _captionController.text,
+                images: imageFiles,
+                likes: const [],
+                comments: const [],
+                shares: 0,
+                location: location,
+                tags: const [],
+                creationDate: Timestamp.now(),
+                isVerified: widget.currentUser.isVerified,
+                work: widget.currentUser.work,
+                school: widget.currentUser.school,
+                college: widget.currentUser.college,
+                home: widget.currentUser.location))
         .then((value) {
       setState(() {
         _captionController.clear();

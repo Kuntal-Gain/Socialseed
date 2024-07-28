@@ -19,6 +19,10 @@ class PostEntity extends Equatable {
   final List? tags;
   final Timestamp? creationDate;
   final bool? isVerified;
+  final String? work;
+  final String? college;
+  final String? school;
+  final String? home;
 
   const PostEntity({
     this.postid,
@@ -37,6 +41,10 @@ class PostEntity extends Equatable {
     this.creationDate,
     this.profileId,
     this.isVerified,
+    this.college,
+    this.school,
+    this.work,
+    this.home,
   });
 
   @override
@@ -56,5 +64,10 @@ class PostEntity extends Equatable {
         totalComments,
         creationDate,
         profileId,
+        isVerified,
+        home,
+        school,
+        college,
+        work,
       ];
 }

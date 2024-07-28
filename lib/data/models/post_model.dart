@@ -21,6 +21,10 @@ class PostModel extends PostEntity {
   final Timestamp? creationDate;
   final String? profileId;
   final bool? isVerified;
+  final String? work;
+  final String? college;
+  final String? school;
+  final String? home;
 
   const PostModel({
     this.postid,
@@ -39,6 +43,10 @@ class PostModel extends PostEntity {
     this.creationDate,
     this.profileId,
     this.isVerified,
+    this.home,
+    this.college,
+    this.school,
+    this.work,
   }) : super(
           postid: postid,
           uid: uid,
@@ -56,6 +64,10 @@ class PostModel extends PostEntity {
           creationDate: creationDate,
           profileId: profileId,
           isVerified: isVerified,
+          home: home,
+          work: work,
+          college: college,
+          school: school,
         );
 
   factory PostModel.fromSnapShot(DocumentSnapshot snap) {
@@ -78,6 +90,10 @@ class PostModel extends PostEntity {
       creationDate: ss['creationDate'],
       profileId: ss['profileId'],
       isVerified: ss['isVerified'],
+      work: ss['work'],
+      college: ss['college'],
+      school: ss['school'],
+      home: ss['home'],
     );
   }
 
@@ -98,5 +114,9 @@ class PostModel extends PostEntity {
         "creationDate": creationDate,
         "profileId": profileId,
         'isVerified': isVerified,
+        "home": home,
+        "work": work,
+        "college": college,
+        "school": school,
       };
 }

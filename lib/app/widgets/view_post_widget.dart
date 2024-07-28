@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
+import 'package:socialseed/app/screens/user/single_profile_screen.dart';
 import 'package:socialseed/app/widgets/image_tile_widget.dart';
 import 'package:socialseed/app/widgets/more_menu_items.dart';
 import 'package:socialseed/app/widgets/post_widget.dart';
@@ -14,12 +15,11 @@ import 'package:socialseed/utils/constants/page_const.dart';
 
 import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
+import '../../utils/constants/tags_const.dart';
 import '../../utils/constants/text_const.dart';
 import '../cubits/post/post_cubit.dart';
 import '../screens/post/edit_post_screen.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
-
-import '../screens/user/other_user_profile.dart';
 
 Widget postCardWidget(
     BuildContext context, List<PostEntity> posts, UserEntity user, String uid) {
@@ -106,11 +106,12 @@ Widget postCardWidget(
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () => Navigator.of(context)
-                                      .push(MaterialPageRoute(
-                                          builder: (ctx) => OtherUserProfile(
-                                                otherUid: post.uid.toString(),
-                                              ))),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (ctx) => SingleUserProfilePage(
+                                          otherUserId: post.uid.toString()),
+                                    ),
+                                  ),
                                   child: Text(
                                     post.username.toString(),
                                     style:
@@ -146,22 +147,47 @@ Widget postCardWidget(
                                 ),
                               ],
                             ),
-                            sizeVar(5),
-                            Container(
-                              height: 20,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 144, 205, 255),
-                                borderRadius: BorderRadius.circular(14),
+                            if (user.uid != post.uid)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (post.work!.toLowerCase() != "none" &&
+                                      user.work!.toLowerCase() ==
+                                          post.work!.toLowerCase())
+                                    mutualTag("work"),
+                                  if (post.school!.toLowerCase() != "none" &&
+                                      user.school!.toLowerCase() ==
+                                          post.school!.toLowerCase())
+                                    mutualTag("school"),
+                                  if (post.college!.toLowerCase() != "none" &&
+                                      user.college!.toLowerCase() ==
+                                          post.college!.toLowerCase())
+                                    mutualTag("college"),
+                                  if (post.location!.toLowerCase() != "none" &&
+                                      user.location!.toLowerCase() ==
+                                          post.location!.toLowerCase())
+                                    mutualTag("home"),
+                                ],
                               ),
-                              child: Center(
-                                child: Text(
-                                  'Home',
-                                  style: TextConst.headingStyle(
-                                      12, AppColor.whiteColor),
+                            if (user.uid == post.uid)
+                              Container(
+                                width: 55,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: AppColor.redColor,
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              ),
-                            ),
+                                margin: const EdgeInsets.all(5),
+                                child: Center(
+                                  child: Text(
+                                    "You",
+                                    style: TextConst.headingStyle(
+                                      14,
+                                      AppColor.whiteColor,
+                                    ),
+                                  ),
+                                ),
+                              )
                           ],
                         ),
                       ],
@@ -202,19 +228,51 @@ Widget postCardWidget(
               ),
               if (post.images!.isEmpty) const SizedBox(),
               if (post.images!.length == 1)
-                Container(
-                  height: 250,
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: CachedNetworkImage(
-                      imageUrl: post.images![0],
-                      placeholder: (ctx, url) => Container(
-                        color: Colors.grey,
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: ctx,
+                      builder: (_) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                post.images![idx],
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(ctx).pop();
+                              },
+                              child: const Text(
+                                "Close",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      errorWidget: (ctx, url, err) => const Icon(Icons.error),
-                      fit: BoxFit.cover,
+                    );
+                  },
+                  child: Container(
+                    height: 250,
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: CachedNetworkImage(
+                        imageUrl: post.images![0],
+                        placeholder: (ctx, url) => Container(
+                          color: Colors.grey,
+                        ),
+                        errorWidget: (ctx, url, err) => const Icon(Icons.error),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -222,39 +280,103 @@ Widget postCardWidget(
                 Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        height: 250,
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: CachedNetworkImage(
-                            imageUrl: post.images![0],
-                            placeholder: (ctx, url) => Container(
-                              color: Colors.grey,
+                      child: GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: ctx,
+                            builder: (_) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      post.images![idx],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(ctx).pop();
+                                    },
+                                    child: const Text(
+                                      "Close",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            errorWidget: (ctx, url, err) =>
-                                const Icon(Icons.error),
-                            fit: BoxFit.cover,
+                          );
+                        },
+                        child: Container(
+                          height: 250,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: CachedNetworkImage(
+                              imageUrl: post.images![0],
+                              placeholder: (ctx, url) => Container(
+                                color: Colors.grey,
+                              ),
+                              errorWidget: (ctx, url, err) =>
+                                  const Icon(Icons.error),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Container(
-                        height: 250,
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: CachedNetworkImage(
-                            imageUrl: post.images![1],
-                            placeholder: (ctx, url) => Container(
-                              color: Colors.grey,
+                      child: GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: ctx,
+                            builder: (_) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      post.images![idx],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(ctx).pop();
+                                    },
+                                    child: const Text(
+                                      "Close",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            errorWidget: (ctx, url, err) =>
-                                const Icon(Icons.error),
-                            fit: BoxFit.cover,
+                          );
+                        },
+                        child: Container(
+                          height: 250,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: CachedNetworkImage(
+                              imageUrl: post.images![1],
+                              placeholder: (ctx, url) => Container(
+                                color: Colors.grey,
+                              ),
+                              errorWidget: (ctx, url, err) =>
+                                  const Icon(Icons.error),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -266,11 +388,110 @@ Widget postCardWidget(
                   children: [
                     Row(
                       children: [
-                        Expanded(child: imageTile(imageId: post.images![0])),
-                        Expanded(child: imageTile(imageId: post.images![1])),
+                        Expanded(
+                            child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![idx],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: imageTile(imageId: post.images![0]))),
+                        Expanded(
+                            child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![idx],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: imageTile(imageId: post.images![1]))),
                       ],
                     ),
-                    imageTile(imageId: post.images![2]),
+                    GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: ctx,
+                            builder: (_) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      post.images![idx],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(ctx).pop();
+                                    },
+                                    child: const Text(
+                                      "Close",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        child: imageTile(imageId: post.images![2])),
                   ],
                 ),
               if (post.images!.length >= 4)
@@ -278,49 +499,183 @@ Widget postCardWidget(
                   children: [
                     Row(
                       children: [
-                        Expanded(child: imageTile(imageId: post.images![0])),
-                        Expanded(child: imageTile(imageId: post.images![1])),
+                        Expanded(
+                            child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![idx],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: imageTile(imageId: post.images![0]))),
+                        Expanded(
+                            child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![idx],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: imageTile(imageId: post.images![1]))),
                       ],
                     ),
                     Row(
                       children: [
-                        Expanded(child: imageTile(imageId: post.images![2])),
                         Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.all(12),
-                            height: 125,
-                            width: double.infinity,
-                            decoration: const BoxDecoration(),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: CachedNetworkImage(
-                                    imageUrl: post.images![3],
-                                    placeholder: (ctx, url) => Container(
-                                      color: Colors.grey,
+                            child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![idx],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    errorWidget: (ctx, url, err) =>
-                                        const Icon(Icons.error),
-                                    fit: BoxFit.cover,
+                                  );
+                                },
+                                child: imageTile(imageId: post.images![2]))),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: ctx,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          post.images![idx],
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                        },
+                                        child: const Text(
+                                          "Close",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                Container(
-                                  color: Colors.black.withOpacity(
-                                      0.5), // Adjust opacity as needed
-                                  child: Center(
-                                    child: Text(
-                                      "${post.images!.length - 3}+",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.all(12),
+                              height: 125,
+                              width: double.infinity,
+                              decoration: const BoxDecoration(),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: CachedNetworkImage(
+                                      imageUrl: post.images![3],
+                                      placeholder: (ctx, url) => Container(
+                                        color: Colors.grey,
+                                      ),
+                                      errorWidget: (ctx, url, err) =>
+                                          const Icon(Icons.error),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Container(
+                                    color: Colors.black.withOpacity(
+                                        0.5), // Adjust opacity as needed
+                                    child: Center(
+                                      child: Text(
+                                        "${post.images!.length - 3}+",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

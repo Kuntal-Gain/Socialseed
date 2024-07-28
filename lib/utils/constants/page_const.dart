@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socialseed/utils/constants/color_const.dart';
 
 class PageConst {
   static const String loginPage = "login";
@@ -27,4 +28,12 @@ Widget sizeVar(double height) {
 
 Widget sizeHor(double width) {
   return SizedBox(width: width);
+}
+
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showAlert(
+    String content, bool isErr, BuildContext ctx) {
+  return ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+    content: Text(content),
+    backgroundColor: isErr ? AppColor.redColor : Colors.green,
+  ));
 }

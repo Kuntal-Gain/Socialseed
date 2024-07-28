@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
@@ -18,21 +19,47 @@ import 'package:socialseed/dependency_injection.dart' as di;
 
 import '../../widgets/view_post_widget.dart';
 
-class OtherUserProfile extends StatefulWidget {
+class UserProfile extends StatefulWidget {
   final String otherUid;
-  const OtherUserProfile({super.key, required this.otherUid});
+  const UserProfile({super.key, required this.otherUid});
 
   @override
-  State<OtherUserProfile> createState() => _OtherUserProfileState();
+  State<UserProfile> createState() => _UserProfileState();
 }
 
-class _OtherUserProfileState extends State<OtherUserProfile>
+class _UserProfileState extends State<UserProfile>
     with SingleTickerProviderStateMixin {
   late TabController _controller;
 
   int currentIdx = 0;
   List<String> images = [];
   String currentUid = "";
+
+  Future<void> fetchPosts(String uid) async {
+    // Step 1: Fetch the user's document from Firestore
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+    if (userDoc.exists) {
+      // Step 2: Get the list of post IDs from the user's document
+      List<dynamic> postIds = userDoc.data()!['posts'];
+
+      // Step 3: Fetch the post images for each post ID
+      for (String postId in postIds) {
+        final postDoc = await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(postId)
+            .get();
+
+        if (postDoc.exists) {
+          List<dynamic> postImages = postDoc.data()!['images'];
+          setState(() {
+            images.addAll(postImages.cast<String>());
+          });
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -47,20 +74,8 @@ class _OtherUserProfileState extends State<OtherUserProfile>
         currentUid = value;
       });
     });
-    // Populate images list here
-    BlocProvider.of<PostCubit>(context).stream.listen((state) {
-      if (state is PostLoaded) {
-        final posts = state.posts;
-        for (var post in posts) {
-          if (post.images!.length > 1) {
-            images.addAll(post.images!.cast<String>());
-          } else {
-            images.add(post.images!.first.toString());
-          }
-        }
-        setState(() {}); // Trigger a rebuild after populating images list
-      }
-    });
+
+    fetchPosts(widget.otherUid);
   }
 
   @override
@@ -72,6 +87,8 @@ class _OtherUserProfileState extends State<OtherUserProfile>
 
           return Scaffold(
             appBar: AppBar(
+              surfaceTintColor: AppColor.whiteColor,
+              elevation: 0,
               backgroundColor: AppColor.whiteColor,
               title: Text('${user.fullname.toString()} • Profile'),
             ),
@@ -108,7 +125,8 @@ class _OtherUserProfileState extends State<OtherUserProfile>
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          user.fullname.toString(),
+                                          user.fullname ??
+                                              '', // Use empty string as default if fullname is null
                                           style: TextConst.headingStyle(
                                             18,
                                             AppColor.blackColor,
@@ -125,12 +143,16 @@ class _OtherUserProfileState extends State<OtherUserProfile>
                                       height: 30,
                                       width: 100,
                                       decoration: BoxDecoration(
-                                        color: AppColor.redColor,
+                                        color: (user.activeStatus ?? false)
+                                            ? AppColor.redColor
+                                            : AppColor.greyShadowColor,
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'Online Now',
+                                          (user.activeStatus ?? false)
+                                              ? 'Online Now'
+                                              : 'Offline',
                                           style: TextConst.headingStyle(
                                               14, AppColor.whiteColor),
                                         ),
@@ -154,7 +176,9 @@ class _OtherUserProfileState extends State<OtherUserProfile>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: AppColor.redColor,
+                                  color: (user.activeStatus ?? false)
+                                      ? AppColor.redColor
+                                      : AppColor.greyShadowColor,
                                   width: 5,
                                 ),
                               ),
@@ -176,48 +200,86 @@ class _OtherUserProfileState extends State<OtherUserProfile>
                               vertical: 5, horizontal: 15),
                           child: Row(
                             children: [
-                              Expanded(
-                                flex: 3,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    BlocProvider.of<UserCubit>(context)
-                                        .sendRequestUsecase(user);
-                                  },
-                                  child: Container(
-                                    height: 60,
-                                    margin: const EdgeInsets.all(3),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: AppColor.redColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        (!user.requests!.contains(currentUid))
-                                            ? Image.asset(
-                                                'assets/icons/add-user.png',
-                                                height: 20,
-                                                width: 20,
-                                                color: AppColor.whiteColor,
-                                              )
-                                            : const Icon(
-                                                Icons.cancel,
-                                                color: Colors.white,
-                                              ),
-                                        Text(
+                              if (!user.friends!.contains(currentUid))
+                                Expanded(
+                                  flex: 3,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      BlocProvider.of<UserCubit>(context)
+                                          .sendRequestUsecase(user);
+                                    },
+                                    child: Container(
+                                      height: 60,
+                                      margin: const EdgeInsets.all(3),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.redColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
                                           (!user.requests!.contains(currentUid))
-                                              ? 'Send Request'
-                                              : 'Cancel Request',
-                                          style: TextConst.headingStyle(
-                                              12, AppColor.whiteColor),
-                                        ),
-                                      ],
+                                              ? Image.asset(
+                                                  'assets/icons/add-user.png',
+                                                  height: 20,
+                                                  width: 20,
+                                                  color: AppColor.whiteColor,
+                                                )
+                                              : const Icon(
+                                                  Icons.cancel,
+                                                  color: Colors.white,
+                                                ),
+                                          Text(
+                                            (!user.requests!
+                                                    .contains(currentUid))
+                                                ? 'Send Request'
+                                                : 'Cancel Request',
+                                            style: TextConst.headingStyle(
+                                                12, AppColor.whiteColor),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              if (user.friends!.contains(currentUid))
+                                Expanded(
+                                  flex: 3,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // toggle to remove friend
+                                    },
+                                    child: Container(
+                                      height: 60,
+                                      margin: const EdgeInsets.all(3),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.redColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Image.asset(
+                                            'assets/icons/check-mark.png',
+                                            height: 20,
+                                            width: 20,
+                                            color: AppColor.whiteColor,
+                                          ),
+                                          sizeHor(10),
+                                          Text(
+                                            'Friend',
+                                            style: TextConst.headingStyle(
+                                                12, AppColor.whiteColor),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               Expanded(
                                 flex: 2,
                                 child: GestureDetector(
@@ -377,20 +439,54 @@ class _OtherUserProfileState extends State<OtherUserProfile>
                                   itemCount: images.length,
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 3,
-                                          mainAxisSpacing: 0,
-                                          crossAxisSpacing: 0,
-                                          childAspectRatio: 1),
+                                    crossAxisCount: 3,
+                                    mainAxisSpacing: 0,
+                                    crossAxisSpacing: 0,
+                                    childAspectRatio: 1,
+                                  ),
                                   itemBuilder: (ctx, idx) {
-                                    // write code
-
-                                    return Container(
-                                      margin: const EdgeInsets.all(10),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Image.network(
-                                          images[idx],
-                                          fit: BoxFit.cover,
+                                    return GestureDetector(
+                                      onTap: () {
+                                        showDialog(
+                                          context: ctx,
+                                          builder: (_) => Dialog(
+                                            backgroundColor: Colors.transparent,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: Image.network(
+                                                    images[idx],
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(ctx).pop();
+                                                  },
+                                                  child: const Text(
+                                                    "Close",
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.all(10),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Image.network(
+                                            images[idx],
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     );

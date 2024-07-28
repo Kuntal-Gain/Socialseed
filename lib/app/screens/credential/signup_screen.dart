@@ -33,6 +33,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _workController = TextEditingController();
+  final _schoolController = TextEditingController();
+  final _collegeController = TextEditingController();
+  final _homeController = TextEditingController();
 
   // local variables
   bool isPressed = false;
@@ -94,6 +98,56 @@ class _SignUpScreenState extends State<SignUpScreen> {
           border: InputBorder.none,
           hintText: label,
         ),
+      ),
+    );
+  }
+
+  Widget getTextFieldWithCareer(
+      TextEditingController controller, String label, TextInputType key) {
+    return Container(
+      height: 66,
+      width: double.infinity,
+      margin: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppColor.greyColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 7,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: key,
+              validator: (value) {
+                // Add your validation logic here
+                if (value!.isEmpty) {
+                  return 'Please enter $label';
+                }
+
+                return null;
+              },
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: label,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    // CODE
+                    controller.text = "NONE";
+                  });
+                },
+                child: Text('NONE',
+                    style: TextConst.headingStyle(15, AppColor.redColor))),
+          )
+        ],
       ),
     );
   }
@@ -209,16 +263,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         likedPages: const [],
         posts: const [],
         joinedDate: Timestamp.now(),
-        isVerified: true,
+        isVerified: false,
         badges: const [],
         followerCount: 0,
         followingCount: 0,
         stories: const [],
         imageFile: _image,
-        work: "",
-        college: "",
-        school: "",
-        location: "",
+        work: _workController.text,
+        college: _collegeController.text,
+        school: _schoolController.text,
+        location: _homeController.text,
         coverImage: "",
         dob: Timestamp.fromDate(_selectedDate),
         followers: const [],
@@ -317,6 +371,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
             ),
+
+            getTextFieldWithCareer(_homeController, "Home", TextInputType.text),
+            getTextFieldWithCareer(_workController, "work", TextInputType.text),
+            getTextFieldWithCareer(
+                _collegeController, "college", TextInputType.text),
+            getTextFieldWithCareer(
+                _schoolController, "school", TextInputType.text),
 
             // Submit Button
             GestureDetector(

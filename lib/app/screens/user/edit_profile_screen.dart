@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socialseed/app/cubits/users/user_cubit.dart';
+import 'package:socialseed/app/screens/home_screen.dart';
+import 'package:socialseed/app/widgets/profile_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/utils/constants/text_const.dart';
 
 import '../../../utils/constants/color_const.dart';
+import '../../../utils/constants/page_const.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key, required this.user});
@@ -31,30 +37,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget getTextField(TextEditingController controller, String label) {
-    return Container(
-      height: 66,
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppColor.greyColor,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: TextFormField(
-        controller: controller,
-        validator: (value) {
-          // Add your validation logic here
-          if (value!.isEmpty) {
-            return 'Please enter $label';
-          }
-
-          return null;
-        },
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: label,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            label,
+            style: TextConst.headingStyle(
+              16,
+              AppColor.blackColor,
+            ),
+          ),
         ),
-      ),
+        Container(
+          height: 66,
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          decoration: BoxDecoration(
+            color: AppColor.greyColor,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: TextFormField(
+            controller: controller,
+            validator: (value) {
+              // Add your validation logic here
+              if (value!.isEmpty) {
+                return 'Please enter $label';
+              }
+
+              return null;
+            },
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: label,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -115,6 +136,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               getTextField(_collegeController, "College"),
               getTextField(_schoolController, "School"),
               getTextField(_locationController, "Location"),
+              getButton("Update Profile", () {
+                BlocProvider.of<UserCubit>(context).updateUser(
+                    user: UserEntity(
+                  uid: widget.user.uid,
+                  work: _workController.text,
+                  college: _collegeController.text,
+                  school: _schoolController.text,
+                  location: _locationController.text,
+                  imageUrl: widget.user.imageUrl,
+                ));
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Profile Updated Successfully!!!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (ctx) => HomeScreen(uid: widget.user.uid!),
+                  ),
+                );
+              }, false),
+              sizeVar(30),
+              Center(
+                child: Text(
+                  'Socialseed @2024 Copyright (c)',
+                  style: TextConst.RegularStyle(18, AppColor.blackColor),
+                ),
+              ),
+              sizeVar(30),
             ],
           ),
         ),

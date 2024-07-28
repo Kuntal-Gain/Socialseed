@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
+import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
+import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/domain/repos/firebase_repository.dart';
@@ -121,4 +123,24 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Future<void> rejectRequest(UserEntity user) async =>
       remoteDataSource.rejectRequest(user);
+
+  @override
+  Stream<List<MessageEntity>> fetchMessages(String messageId) =>
+      remoteDataSource.fetchMessages(messageId);
+
+  @override
+  Future<void> sendMessage(String messageId, String msg) async =>
+      remoteDataSource.sendMessage(messageId, msg);
+
+  @override
+  Future<void> createMessageWithId(ChatEntity chat) async =>
+      remoteDataSource.createMessageWithId(chat);
+
+  @override
+  Stream<List<ChatEntity>> fetchConversations() =>
+      remoteDataSource.fetchConversations();
+
+  @override
+  Future<bool> isMessageIdExists(String messageId) =>
+      remoteDataSource.isMessageIdExists(messageId);
 }

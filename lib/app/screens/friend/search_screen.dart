@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
-import 'package:socialseed/app/screens/user/single_profile_screen.dart';
+import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/app/widgets/search_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
@@ -92,14 +92,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     return ListView.builder(
                       itemCount: filteredUsers.length,
                       itemBuilder: (ctx, idx) {
-                        final user = users[idx];
+                        final user = filteredUsers[idx];
 
                         return GestureDetector(
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (ctx) => SingleUserProfilePage(
-                                    otherUserId: user.uid!),
+                                builder: (ctx) =>
+                                    UserProfile(otherUid: user.uid!),
                               ),
                             );
                           },

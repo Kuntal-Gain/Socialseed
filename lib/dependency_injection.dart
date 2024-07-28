@@ -7,12 +7,19 @@ import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_post/cubit/get_single_post_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
+import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
+import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
 import 'package:socialseed/data/data_source/remote_datasource_impl.dart';
 import 'package:socialseed/data/repos/firebase_repository_impl.dart';
 import 'package:socialseed/domain/repos/firebase_repository.dart';
+import 'package:socialseed/domain/usecases/chat/create_messageid_usecase.dart';
+import 'package:socialseed/domain/usecases/chat/fetch_conversations_usecase.dart';
+import 'package:socialseed/domain/usecases/chat/fetch_message_usecase.dart';
+import 'package:socialseed/domain/usecases/chat/is_messageid_exists_usecase.dart';
+import 'package:socialseed/domain/usecases/chat/send_message_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/create_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/delete_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/fetch_comment_usecase.dart';
@@ -92,6 +99,19 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(() => MessageCubit(
+        sendMessageUsecase: sl.call(),
+        fetchMessageUsecase: sl.call(),
+      ));
+
+  sl.registerFactory(
+    () => ChatCubit(
+      createMessageWithId: sl.call(),
+      fetchConversationUsecase: sl.call(),
+      isMessageIdExistsUsecase: sl.call(),
+    ),
+  );
+
   sl.registerFactory(
     () => GetSinglePostCubit(
       fetchSinglePostUsecase: sl.call(),
@@ -150,6 +170,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateCommentUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => LikeCommentUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => FetchCommentUsecase(repository: sl.call()));
+
+  // message usecase
+  sl.registerLazySingleton(() => SendMessageUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => FetchMessageUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => CreateMessageWithId(repository: sl.call()));
+  sl.registerLazySingleton(
+      () => FetchConversationUsecase(repository: sl.call()));
+  sl.registerLazySingleton(
+      () => IsMessageIdExistsUsecase(repository: sl.call()));
 
   // repository
 

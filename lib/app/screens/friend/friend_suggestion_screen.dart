@@ -3,10 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
-import 'package:socialseed/app/screens/user/other_user_profile.dart';
+import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
+import 'package:socialseed/utils/constants/tags_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import '../../../data/models/user_model.dart';
 
@@ -27,7 +28,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
   void initState() {
     super.initState();
     fetchRequests();
-    fetchSuggestions();
+    fetchSuggestions(widget.user.uid!);
     currentUid = FirebaseAuth.instance.currentUser!.uid;
   }
 
@@ -60,15 +61,21 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
     } catch (e) {}
   }
 
-  Future<void> fetchSuggestions() async {
+  Future<void> fetchSuggestions(String currentUid) async {
     try {
-      final userCollection =
-          FirebaseFirestore.instance.collection(FirebaseConst.users);
-      final querySnapshot = await userCollection.get();
+      final userCollection = FirebaseFirestore.instance.collection('users');
 
+      // Fetch current user's friends
+      final currentUserDoc = await userCollection.doc(currentUid).get();
+      final List<dynamic> currentFriends =
+          currentUserDoc.data()!['friends'] ?? [];
+
+      // Fetch all users and filter suggestions
+      final querySnapshot = await userCollection.get();
       final List<UserModel> fetchedSuggestions = querySnapshot.docs
           .map((doc) => UserModel.fromSnapShot(doc))
-          .where((user) => user.uid != currentUid) // Filter out current user
+          .where((user) =>
+              user.uid != currentUid && !currentFriends.contains(user.uid))
           .toList();
 
       setState(() {
@@ -78,7 +85,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
     } catch (e) {}
   }
 
-  Widget suggestionCard(UserEntity user) {
+  Widget suggestionCard(UserEntity otherUser, UserEntity currentUser) {
     return Container(
       height: 100,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -92,9 +99,9 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundImage: NetworkImage(user.imageUrl != null &&
-                    user.imageUrl!.isNotEmpty
-                ? user.imageUrl!
+            backgroundImage: NetworkImage(otherUser.imageUrl != null &&
+                    otherUser.imageUrl!.isNotEmpty
+                ? otherUser.imageUrl!
                 : 'https://static.vecteezy.com/system/resources/thumbnails/005/545/335/small/user-sign-icon-person-symbol-human-avatar-isolated-on-white-backogrund-vector.jpg'),
           ),
           const SizedBox(width: 10),
@@ -102,18 +109,38 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                user.fullname!,
-                style: TextConst.headingStyle(
-                  16,
-                  AppColor.blackColor,
-                ),
+              Row(
+                children: [
+                  Text(
+                    otherUser.fullname!,
+                    style: TextConst.headingStyle(
+                      16,
+                      AppColor.blackColor,
+                    ),
+                  ),
+                  if (otherUser.work!.toLowerCase() != "none" &&
+                      currentUser.work!.toLowerCase() ==
+                          otherUser.work!.toLowerCase())
+                    mutualTag("work"),
+                  if (otherUser.school!.toLowerCase() != "none" &&
+                      currentUser.school!.toLowerCase() ==
+                          otherUser.school!.toLowerCase())
+                    mutualTag("school"),
+                  if (otherUser.college!.toLowerCase() != "none" &&
+                      currentUser.college!.toLowerCase() ==
+                          otherUser.college!.toLowerCase())
+                    mutualTag("college"),
+                  if (otherUser.location!.toLowerCase() != "none" &&
+                      currentUser.location!.toLowerCase() ==
+                          otherUser.location!.toLowerCase())
+                    mutualTag("home"),
+                ],
               ),
               Row(
                 children: [
                   GestureDetector(
                     onTap: () => BlocProvider.of<UserCubit>(context)
-                        .sendRequest(user: user),
+                        .sendRequest(user: otherUser),
                     child: Container(
                       height: 40,
                       width: 100,
@@ -123,7 +150,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                       ),
                       child: Center(
                         child: Text(
-                          (user.requests!.contains(currentUid))
+                          (otherUser.requests!.contains(currentUid))
                               ? 'Cancel'
                               : 'Add Friend',
                           style: TextConst.headingStyle(
@@ -140,7 +167,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (ctx) =>
-                              OtherUserProfile(otherUid: user.uid!),
+                              UserProfile(otherUid: otherUser.uid!),
                         ),
                       );
                     },
@@ -211,7 +238,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                           .acceptRequest(user: user)
                           .then((value) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          const SnackBar(
                             backgroundColor: Colors.green,
                             content: Text('Request Accepted'),
                           ),
@@ -314,7 +341,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                     itemCount: suggestion.length,
                     itemBuilder: (ctx, idx) {
                       final user = suggestion[idx];
-                      return suggestionCard(user);
+                      return suggestionCard(user, widget.user);
                     },
                   ),
           ),

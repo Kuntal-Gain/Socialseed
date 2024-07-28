@@ -2,6 +2,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:socialseed/domain/entities/chat_entity.dart';
+import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
@@ -47,4 +49,11 @@ abstract class FirebaseRepository {
   Future<void> sendRequest(UserEntity user);
   Future<void> acceptRequest(UserEntity user);
   Future<void> rejectRequest(UserEntity user);
+
+  // message
+  Future<void> createMessageWithId(ChatEntity chat);
+  Future<bool> isMessageIdExists(String messageId);
+  Stream<List<ChatEntity>> fetchConversations();
+  Future<void> sendMessage(String messageId, String message);
+  Stream<List<MessageEntity>> fetchMessages(String messageId);
 }

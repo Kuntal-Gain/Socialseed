@@ -13,17 +13,26 @@ Widget infoCard(IconData icon, String info, String brand) {
           color: AppColor.redColor,
         ),
       ),
-      Row(
-        children: [
-          Text(info),
-          Text(
-            brand,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+      if (brand.toLowerCase() == "none") const Text('Nothing'),
+      if (brand.toLowerCase() != "none")
+        Flexible(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(info, overflow: TextOverflow.ellipsis),
+              ),
+              Flexible(
+                child: Text(
+                  brand,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
     ],
   );
 }
@@ -46,6 +55,7 @@ Widget getButton(String label, Function()? onClick, bool isColorExists) {
           18,
           !isColorExists ? AppColor.whiteColor : AppColor.redColor,
         ),
+        overflow: TextOverflow.ellipsis,
       )),
     ),
   );

@@ -7,15 +7,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
+import 'package:socialseed/data/models/chat_model.dart';
 import 'package:socialseed/data/models/comment_model.dart';
 import 'package:socialseed/data/models/post_model.dart';
 import 'package:socialseed/data/models/user_model.dart';
+import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
+import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
+
+import '../models/message_model.dart';
 
 class RemoteDataSourceImpl implements RemoteDataSource {
   final FirebaseAuth firebaseAuth;
@@ -59,6 +64,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         followers: user.followers,
         following: user.following,
         requests: user.requests,
+        activeStatus: user.activeStatus,
       ).toJson();
 
       if (!newDoc.exists) {
@@ -103,6 +109,15 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           password: user.password!,
         );
 
+        final uid = await getCurrentUid();
+
+        await firebaseFirestore
+            .collection(FirebaseConst.users)
+            .doc(uid)
+            .update({
+          "active_status": true,
+        });
+
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -137,7 +152,18 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
-  Future<void> signOut() async => await firebaseAuth.signOut();
+  Future<void> signOut() async {
+    final user = firebaseAuth.currentUser;
+    if (user != null) {
+      await firebaseFirestore
+          .collection(FirebaseConst.users)
+          .doc(user.uid)
+          .update({
+        'active_status': false,
+      });
+      await firebaseAuth.signOut();
+    }
+  }
 
   @override
   Future<void> signUpUser(UserEntity user, BuildContext context) async {
@@ -277,6 +303,10 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       creationDate: post.creationDate,
       profileId: post.profileId,
       isVerified: post.isVerified,
+      work: post.work,
+      college: post.college,
+      school: post.school,
+      home: post.home,
     ).toJson();
 
     try {
@@ -527,21 +557,22 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     final userCollection = firebaseFirestore.collection(FirebaseConst.users);
     final currentUid = await getCurrentUid();
 
-    final targetUserRef = userCollection.doc(currentUid);
-    final requesterRef = userCollection.doc(user.uid);
+    final targetUserRef = await userCollection.doc(currentUid).get();
+    // final requesterRef = await userCollection.doc(user.uid).get();
 
-    try {
-      // Remove current user's UID from requester's "requests" field
-      await requesterRef.update({
-        'requests': FieldValue.arrayRemove([currentUid]),
-      });
+    if (targetUserRef.exists) {
+      List requests = targetUserRef.get('requests');
 
-      // Add requester's UID to current user's "friends" field
-      await targetUserRef.update({
-        'friends': FieldValue.arrayUnion([user.uid]),
-      });
-    } catch (e) {
-      print("Error accepting request: $e");
+      if (requests.contains(user.uid)) {
+        userCollection.doc(currentUid).update({
+          "requests": FieldValue.arrayRemove([user.uid]),
+          "friends": FieldValue.arrayUnion([user.uid]),
+        });
+
+        userCollection.doc(user.uid).update({
+          "friends": FieldValue.arrayUnion([currentUid]),
+        });
+      }
     }
   }
 
@@ -673,6 +704,138 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       }
     } catch (e) {
       print("Error rejecting request: $e");
+    }
+  }
+
+  @override
+  Future<void> createMessageWithId(ChatEntity message) async {
+    final uid = await getCurrentUid();
+
+    final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+
+    final newMessage = ChatModel(
+      messageId: message.messageId,
+      members: message.members,
+      lastMessage: message.lastMessage,
+      isRead: message.isRead,
+    ).toJson();
+
+    try {
+      final messageExists = await isMessageIdExists(message.messageId!);
+
+      if (!messageExists) {
+        await chatCollection.doc(message.messageId).set(newMessage);
+
+        final userRef = await userCollection.doc(uid).get();
+        if (!userRef.exists) {
+          await userCollection.doc(uid).set({
+            "messages": FieldValue.arrayUnion([message.messageId]),
+          });
+        } else {
+          await userCollection.doc(uid).update({
+            "messages": FieldValue.arrayUnion([message.messageId]),
+          });
+        }
+      } else {
+        await chatCollection.doc(message.messageId).update(newMessage);
+
+        final userRef = await userCollection.doc(uid).get();
+        if (!userRef.exists) {
+          await userCollection.doc(uid).set({
+            "messages": FieldValue.arrayUnion([message.messageId]),
+          });
+        } else {
+          await userCollection.doc(uid).update({
+            "messages": FieldValue.arrayUnion([message.messageId]),
+          });
+        }
+      }
+    } catch (error) {
+      debugPrint(error.toString());
+    }
+  }
+
+  @override
+  Stream<List<MessageEntity>> fetchMessages(String messageId) {
+    final chatCollection = FirebaseFirestore.instance
+        .collection(FirebaseConst.messages)
+        .doc(messageId)
+        .collection(FirebaseConst.messages)
+        .orderBy("createAt", descending: false); // Check field name
+
+    return chatCollection.snapshots().map((querySnapshot) {
+      print(
+          "Received ${querySnapshot.docs.length} messages from Firestore"); // Debug print
+      return querySnapshot.docs.map((doc) {
+        print("Document data: ${doc.data()}"); // Debug print each document
+        return MessageModel.fromSnapshot(doc);
+      }).toList();
+    });
+  }
+
+  @override
+  Future<void> sendMessage(String messageId, String message) async {
+    final uid = await getCurrentUid();
+    final userDoc = firebaseFirestore
+        .collection(FirebaseConst.messages)
+        .doc(messageId)
+        .collection(FirebaseConst.messages);
+
+    final msgDoc = firebaseFirestore.collection(FirebaseConst.messages);
+
+    // Create the message data structure
+    final messageData = MessageModel(
+      message: message,
+      senderId: uid,
+      createAt: Timestamp.now(),
+    ).toJson();
+
+    final mid = const Uuid().v4();
+
+    try {
+      final chatRef = await userDoc.doc(messageId).get();
+
+      if (!chatRef.exists) {
+        userDoc.doc(mid).set(messageData);
+        msgDoc.doc(messageId).update({
+          "lastMessage": message,
+          "isRead": false,
+        });
+      } else {
+        userDoc.doc(mid).update(messageData);
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+      // Handle error, maybe rethrow or handle it within the UI
+    }
+  }
+
+  @override
+  Stream<List<ChatEntity>> fetchConversations() {
+    final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
+
+    return chatCollection.snapshots().map((querySnapshot) {
+      print(
+          "Received ${querySnapshot.docs.length} messages from Firestore"); // Debug print
+      return querySnapshot.docs.map((doc) {
+        print("Document data: ${doc.data()}"); // Debug print each document
+        return ChatModel.fromJson(doc);
+      }).toList();
+    });
+  }
+
+  @override
+  Future<bool> isMessageIdExists(String messageId) async {
+    try {
+      final doc = await firebaseFirestore
+          .collection(FirebaseConst.messages)
+          .doc(messageId)
+          .get();
+
+      return doc.exists;
+    } catch (_) {
+      return false;
     }
   }
 }

@@ -25,6 +25,8 @@ class UserEntity extends Equatable {
   final num? followingCount;
   final List? stories;
   final String? coverImage;
+  final bool? activeStatus;
+  final List? messages;
 
   // user info
   final String? work;
@@ -66,6 +68,8 @@ class UserEntity extends Equatable {
     this.followers,
     this.following,
     this.requests,
+    this.activeStatus,
+    this.messages,
   });
 
   @override
@@ -98,5 +102,7 @@ class UserEntity extends Equatable {
         followers,
         following,
         requests,
+        activeStatus,
+        messages,
       ];
 }

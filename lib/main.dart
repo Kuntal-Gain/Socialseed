@@ -6,8 +6,10 @@ import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
+import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
+import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/opacity_leaf_animation.dart';
 import 'package:socialseed/firebase_options.dart';
@@ -39,11 +41,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<GetSingleUserCubit>()),
         BlocProvider(create: (_) => di.sl<PostCubit>()),
         BlocProvider(create: (_) => di.sl<CommentCubit>()),
-        BlocProvider(create: (_) => di.sl<GetSingleOtherUserCubit>())
+        BlocProvider(create: (_) => di.sl<GetSingleOtherUserCubit>()),
+        BlocProvider(create: (_) => di.sl<ChatCubit>()),
+        BlocProvider(create: (_) => di.sl<MessageCubit>()),
       ],
       child: MaterialApp(
-        // ignore: deprecated_member_use
-
         title: "Socialseed",
         darkTheme: ThemeData.dark(),
         debugShowCheckedModeBanner: false,
