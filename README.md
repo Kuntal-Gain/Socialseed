@@ -29,7 +29,7 @@
 - Kuntal Gain
 - Abhisekh Rajak
 - Rupam Das
-- Abhishak Biswas
+- Aisha Halder
 
 ## Contributors
 
