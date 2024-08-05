@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
+
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
@@ -32,7 +33,6 @@ import 'package:socialseed/domain/usecases/post/fetch_single_post_by_uid_usecase
 import 'package:socialseed/domain/usecases/post/fetch_single_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/like_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/update_post_usecase.dart';
-
 import 'package:socialseed/domain/usecases/user/create_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_single_user_usecase.dart';
@@ -151,9 +151,9 @@ Future<void> init() async {
       () => GetSingleOtherUserUseCase(repository: sl.call()));
   sl.registerLazySingleton(() => FollowUserUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => UnFollowUserUsecase(repository: sl.call()));
-  sl.registerLazySingleton(() => SendRequestUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => AcceptRequestUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => RejectRequestUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => SendRequestUsecase(repository: sl.call()));
 
   // post usecases
   sl.registerLazySingleton(() => CreatePostUsecase(repository: sl.call()));

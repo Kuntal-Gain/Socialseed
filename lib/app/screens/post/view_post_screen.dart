@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
+
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/screens/post/edit_post_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
@@ -113,6 +114,24 @@ class _PostViewScreenState extends State<PostViewScreen> {
         ),
       ),
     ];
+  }
+
+  Future<void> _handleCommentSubmit() async {
+    final comment = CommentEntity(
+      commentId: const Uuid().v4(),
+      postId: widget.post.postid,
+      creatorUid: widget.user.uid,
+      content: _commentController.text,
+      username: widget.post.username,
+      profileUrl: widget.user.imageUrl,
+      createAt: Timestamp.now(),
+      likes: const [],
+    );
+
+    BlocProvider.of<CommentCubit>(context).createComment(comment: comment);
+    setState(() {
+      isPressed = false;
+    });
   }
 
   @override
@@ -380,30 +399,13 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: IconButton(
-                onPressed: () {
+                onPressed: () async {
                   if (isPressed == false) {
                     setState(() {
                       isPressed = true;
                     });
                   } else if (_commentController.text.isNotEmpty) {
-                    BlocProvider.of<CommentCubit>(context)
-                        .createComment(
-                            comment: CommentEntity(
-                      commentId: const Uuid().v4(),
-                      postId: widget.post.postid,
-                      creatorUid: widget.user.uid,
-                      content: _commentController.text,
-                      username: widget.post.username,
-                      profileUrl: widget.user.imageUrl,
-                      createAt: Timestamp.now(),
-                      likes: const [],
-                    ))
-                        .then((value) {
-                      setState(() {
-                        _commentController.clear();
-                        isPressed = false;
-                      });
-                    });
+                    _handleCommentSubmit();
                   } else {
                     debugPrint("NO ARGUMENT");
                     setState(() {

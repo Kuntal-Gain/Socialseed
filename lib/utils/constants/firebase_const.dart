@@ -3,4 +3,5 @@ class FirebaseConst {
   static const String posts = "posts";
   static const String comments = "comments";
   static const String messages = "messages";
+  static const String notification = 'notification';
 }

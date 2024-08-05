@@ -27,15 +27,28 @@ class _SearchScreenState extends State<SearchScreen> {
     super.initState();
     // Fetch users when the screen initializes
     context.read<UserCubit>().getUsers(user: const UserEntity());
+    // Initialize the filteredUsers list
+    _controller.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    filterUsers(_controller.text);
   }
 
   void filterUsers(String query) {
     setState(() {
       filteredUsers = users.where((user) {
-        final name = user.username!.toLowerCase();
+        final name = user.username?.toLowerCase() ?? '';
         return name.contains(query.toLowerCase());
       }).toList();
     });
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onSearchChanged);
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -63,7 +76,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   Expanded(
                     child: TextField(
-                      onChanged: filterUsers,
                       controller: _controller,
                       decoration: InputDecoration(
                         border: InputBorder.none,
@@ -89,6 +101,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   } else if (state is UserLoaded) {
                     // Update users list when loaded
                     users = state.users;
+                    // Use postFrameCallback to update the state after build completes
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      filterUsers(_controller.text);
+                    });
                     return ListView.builder(
                       itemCount: filteredUsers.length,
                       itemBuilder: (ctx, idx) {

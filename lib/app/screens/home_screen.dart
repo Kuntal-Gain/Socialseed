@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/screens/chat/chat_screen.dart';
 import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
+import 'package:socialseed/app/screens/notification/notification_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       FeedScreen(user: currentUser),
                       FriendSuggestion(user: currentUser),
                       ChatScreen(user: currentUser),
-                      const Center(child: Text('Notfication')),
+                      NotificationScreen(uid: currentUser.uid!),
                       UserProfile(
                         otherUid: currentUser.uid.toString(),
                       ),

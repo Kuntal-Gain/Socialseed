@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
 import 'package:socialseed/data/models/chat_model.dart';
 import 'package:socialseed/data/models/comment_model.dart';
+
 import 'package:socialseed/data/models/post_model.dart';
 import 'package:socialseed/data/models/user_model.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
@@ -360,23 +361,44 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   @override
   Future<void> likePost(PostEntity post) async {
     final postCollection = firebaseFirestore.collection(FirebaseConst.posts);
+    final userCollection = firebaseFirestore
+        .collection(FirebaseConst.users); // Access the user collection
 
     final currentUid = await getCurrentUid();
-
     final postRef = await postCollection.doc(post.postid).get();
 
     if (postRef.exists) {
       List likes = postRef.get('likes');
       final totalLikes = postRef.get("totalLikes");
+
+      // Fetch the current user's username
+      final currentUserDoc = await userCollection.doc(currentUid).get();
+      String currentUsername = "";
+      if (currentUserDoc.exists) {
+        currentUsername = currentUserDoc.get('username');
+      }
+
       if (likes.contains(currentUid)) {
-        postCollection.doc(post.postid).update({
+        await postCollection.doc(post.postid).update({
           "likes": FieldValue.arrayRemove([currentUid]),
           "totalLikes": totalLikes - 1
         });
       } else {
-        postCollection.doc(post.postid).update({
+        await postCollection.doc(post.postid).update({
           "likes": FieldValue.arrayUnion([currentUid]),
           "totalLikes": totalLikes + 1
+        });
+
+        // Add notification
+        await userCollection
+            .doc(post
+                .uid) // Assuming the creator's UID is stored in post.creatorId
+            .collection('notifications')
+            .add({
+          "message": "$currentUsername liked your post",
+          "createdAt": FieldValue.serverTimestamp(),
+          "postId": post.postid,
+          "type": "like"
         });
       }
     }
@@ -434,24 +456,53 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       final commentRef = await commentCollection.doc(comment.commentId).get();
 
       if (!commentRef.exists) {
-        commentCollection.doc(comment.commentId).set(newComment).then((value) {
-          final postCollection = firebaseFirestore
-              .collection(FirebaseConst.posts)
-              .doc(comment.postId);
+        await commentCollection.doc(comment.commentId).set(newComment);
+        final postCollection = firebaseFirestore
+            .collection(FirebaseConst.posts)
+            .doc(comment.postId);
 
-          postCollection.get().then((value) {
-            if (value.exists) {
-              final totalComments = value.get('totalComments');
-              postCollection.update({"totalComments": totalComments + 1});
-              return;
-            } else {
-              commentCollection.doc(comment.commentId).update(newComment);
-            }
+        final postSnapshot = await postCollection.get();
+
+        if (postSnapshot.exists) {
+          final totalComments = postSnapshot.get('totalComments') ?? 0;
+          await postCollection.update({"totalComments": totalComments + 1});
+
+          // Fetch the post creator's ID
+          final postCreatorId = postSnapshot.get('uid');
+
+          // Fetch the current user's username
+          final userCollection =
+              firebaseFirestore.collection(FirebaseConst.users);
+          final currentUid = await getCurrentUid();
+          final currentUserDoc = await userCollection.doc(currentUid).get();
+          String currentUsername = "";
+          if (currentUserDoc.exists) {
+            currentUsername = currentUserDoc.get('username');
+          }
+
+          // Add notification
+          await userCollection
+              .doc(postCreatorId)
+              .collection('notifications')
+              .add({
+            "message": "$currentUsername commented on your post",
+            "createdAt": FieldValue.serverTimestamp(),
+            "postId": comment.postId,
+            "commentId": comment.commentId,
+            "type": "comment"
           });
-        });
+
+          // Log or debug print before sending notification
+          debugPrint('Sending comment notification');
+        } else {
+          // If the post doesn't exist, log an error
+          debugPrint('Post does not exist');
+        }
+      } else {
+        debugPrint('Comment already exists');
       }
     } catch (e) {
-      print("some error occured $e");
+      debugPrint("Error in createComment: $e");
     }
   }
 
@@ -581,13 +632,29 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     final userCollection = firebaseFirestore.collection(FirebaseConst.users);
     final currentUid = await getCurrentUid();
 
+    // Fetch the current user's username
+    final currentUserSnapshot = await userCollection.doc(currentUid).get();
+    final currentUsername = currentUserSnapshot.get('username') as String?;
+    final currentImage = currentUserSnapshot.get('imageUrl') as String?;
+
     final targetUserRef = userCollection.doc(user.uid);
     final currentUserRef = userCollection.doc(currentUid);
 
     try {
+      // Fetch target user's document
+      final targetUserSnapshot = await targetUserRef.get();
+      final List followers = targetUserSnapshot.get('followers') ?? [];
+
+      // Check if the current user is already following the target user
+      if (followers.contains(currentUid)) {
+        print('User is already following this user');
+        return;
+      }
+
       // Create or update target user's document with "followers" field and initialize followerCount if not exists
       await targetUserRef.set({
-        'followers': [],
+        'followers':
+            FieldValue.arrayUnion([]), // Ensures 'followers' field exists
         'followerCount': FieldValue.increment(0),
         'followingCount': FieldValue.increment(0),
       }, SetOptions(merge: true));
@@ -598,11 +665,22 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         'followerCount': FieldValue.increment(1),
       });
 
-      // Add target user's UID to current user's "following" array
+      // Add target user's UID to current user's "following" array and increment followingCount
       await currentUserRef.update({
         'following': FieldValue.arrayUnion([user.uid]),
-        'followingCount': FieldValue.increment(1)
+        'followingCount': FieldValue.increment(1),
       });
+
+      // Create a notification for the target user
+      final notificationCollection = targetUserRef.collection('notifications');
+      await notificationCollection.add({
+        'message': '$currentUsername started following you!',
+        'createdAt': FieldValue.serverTimestamp(),
+        'type': 'follow',
+        'userId': currentImage,
+      });
+
+      print('Follow and notification added successfully');
     } catch (e) {
       print("Error following user: $e");
     }
@@ -626,15 +704,42 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           // Add current user's UID to requests list
           requests.add(currentUid);
           // Update the document with the new requests list
-          targetUserRef.update({'requests': requests});
+          await targetUserRef.update({'requests': requests});
+
+          // Add notification for the target user
+          await targetUserRef.collection('notifications').add({
+            'type': 'friend_request',
+            'message': 'You have a new friend request.',
+            'userId': currentUid, // Assuming this is the image URL
+            'createdAt': FieldValue.serverTimestamp(),
+          });
         } else {
           requests.remove(currentUid);
-          targetUserRef.update({'requests': requests});
+          await targetUserRef.update({'requests': requests});
+
+          // Optionally, remove the friend request notification
+          final notificationsQuery = await targetUserRef
+              .collection('notifications')
+              .where('type', isEqualTo: 'friend_request')
+              .where('userId', isEqualTo: currentUid)
+              .get();
+
+          for (var doc in notificationsQuery.docs) {
+            await doc.reference.delete();
+          }
         }
       } else {
         // If the document doesn't exist, create it with requests list containing current user's UID
         await targetUserRef.set({
           'requests': [currentUid]
+        });
+
+        // Add notification for the target user
+        await targetUserRef.collection('notifications').add({
+          'type': 'friend_request',
+          'message': 'You have a new friend request.',
+          'userId': user.imageUrl, // Assuming this is the image URL
+          'createdAt': FieldValue.serverTimestamp(),
         });
       }
     } catch (e) {

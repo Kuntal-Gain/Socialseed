@@ -91,6 +91,10 @@ class _UserProfileState extends State<UserProfile>
               elevation: 0,
               backgroundColor: AppColor.whiteColor,
               title: Text('${user.fullname.toString()} • Profile'),
+              actions: [
+                if (widget.otherUid == currentUid)
+                  IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
+              ],
             ),
             body: SafeArea(
               child: SingleChildScrollView(
