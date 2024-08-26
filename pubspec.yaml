@@ -37,6 +37,7 @@ dependencies:
   like_button: ^2.0.5
   popup_menu: ^2.0.0
   image_preview: ^1.0.7
+  delightful_toast: ^1.1.0
   
 
   
@@ -61,6 +62,7 @@ flutter:
   assets:
     - assets/
     - assets/icons/
+    - assets/images/
 
   
   # fonts:

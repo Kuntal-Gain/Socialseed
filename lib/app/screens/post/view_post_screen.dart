@@ -92,6 +92,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
               onTap: () => di
                   .sl<PostCubit>()
                   .deletePost(post: widget.post)
+                  // ignore: use_build_context_synchronously
                   .then((value) => Navigator.of(context).push(MaterialPageRoute(
                       builder: (ctx) => FeedScreen(user: widget.user)))),
               child: const Text('Delete'),

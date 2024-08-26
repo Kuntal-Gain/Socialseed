@@ -11,6 +11,7 @@ import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart
 import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
+import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
 import 'package:socialseed/data/data_source/remote_datasource_impl.dart';
@@ -33,6 +34,9 @@ import 'package:socialseed/domain/usecases/post/fetch_single_post_by_uid_usecase
 import 'package:socialseed/domain/usecases/post/fetch_single_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/like_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/update_post_usecase.dart';
+import 'package:socialseed/domain/usecases/story/add_story_usecase.dart';
+import 'package:socialseed/domain/usecases/story/fetch_story_usecase.dart';
+import 'package:socialseed/domain/usecases/story/view_story_usecase.dart';
 import 'package:socialseed/domain/usecases/user/create_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_single_user_usecase.dart';
@@ -135,6 +139,14 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => StoryCubit(
+      addStoryUsecase: sl.call(),
+      viewStoryUsecase: sl.call(),
+      fetchStoryUsecase: sl.call(),
+    ),
+  );
+
   // usecase
 
   // user usecases
@@ -179,6 +191,11 @@ Future<void> init() async {
       () => FetchConversationUsecase(repository: sl.call()));
   sl.registerLazySingleton(
       () => IsMessageIdExistsUsecase(repository: sl.call()));
+
+  // story usecase
+  sl.registerLazySingleton(() => AddStoryUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => FetchStoryUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => ViewStoryUsecase(repository: sl.call()));
 
   // repository
 

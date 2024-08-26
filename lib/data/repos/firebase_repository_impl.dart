@@ -6,6 +6,7 @@ import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
 import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
+import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/domain/repos/firebase_repository.dart';
 
@@ -143,4 +144,16 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Future<bool> isMessageIdExists(String messageId) =>
       remoteDataSource.isMessageIdExists(messageId);
+
+  @override
+  Future<void> addStory(StoryEntity story) async =>
+      remoteDataSource.addStory(story);
+
+  @override
+  Stream<List<StoryEntity>> fetchStories(String uid) =>
+      remoteDataSource.fetchStories(uid);
+
+  @override
+  Future<void> viewStory(StoryEntity story) async =>
+      remoteDataSource.viewStory(story);
 }

@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
-import 'package:socialseed/app/screens/user/edit_profile_screen.dart';
+import 'package:socialseed/app/screens/settings/settings_screen.dart';
+import 'package:socialseed/app/screens/user/milestone_screen.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 
 import 'package:socialseed/domain/entities/user_entity.dart';
@@ -93,7 +93,15 @@ class _UserProfileState extends State<UserProfile>
               title: Text('${user.fullname.toString()} • Profile'),
               actions: [
                 if (widget.otherUid == currentUid)
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
+                  IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => SettingsScreen(user: user),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.settings))
               ],
             ),
             body: SafeArea(
@@ -437,66 +445,74 @@ class _UserProfileState extends State<UserProfile>
                                         user.uid.toString())),
                               );
                             } else if (currentIdx == 1) {
-                              return SizedBox(
-                                height: 450,
-                                child: GridView.builder(
-                                  itemCount: images.length,
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    mainAxisSpacing: 0,
-                                    crossAxisSpacing: 0,
-                                    childAspectRatio: 1,
-                                  ),
-                                  itemBuilder: (ctx, idx) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        showDialog(
-                                          context: ctx,
-                                          builder: (_) => Dialog(
-                                            backgroundColor: Colors.transparent,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                  child: Image.network(
-                                                    images[idx],
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(ctx).pop();
-                                                  },
-                                                  child: const Text(
-                                                    "Close",
-                                                    style: TextStyle(
-                                                        color: Colors.white),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.all(10),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          child: Image.network(
-                                            images[idx],
-                                            fit: BoxFit.cover,
-                                          ),
+                              return posts.isEmpty
+                                  ? const CircularProgressIndicator()
+                                  : SizedBox(
+                                      height: 450,
+                                      child: GridView.builder(
+                                        itemCount: images.length,
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          mainAxisSpacing: 0,
+                                          crossAxisSpacing: 0,
+                                          childAspectRatio: 1,
                                         ),
+                                        itemBuilder: (ctx, idx) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              showDialog(
+                                                context: ctx,
+                                                builder: (_) => Dialog(
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        child: Image.network(
+                                                          images[idx],
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 10),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(ctx)
+                                                              .pop();
+                                                        },
+                                                        child: const Text(
+                                                          "Close",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              margin: const EdgeInsets.all(10),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  images[idx],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     );
-                                  },
-                                ),
-                              );
                             } else {
                               return getInformtion(user, context, currentUid);
                             }
@@ -536,23 +552,12 @@ Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
         infoCard(Icons.school, "Studied at ", user.college.toString()),
         infoCard(Icons.school, "Went to ", user.school.toString()),
         infoCard(Icons.home, "Live at ", user.location.toString()),
-        if (user.uid.toString() == currentUid)
+        if (user.uid == currentUid)
           getButton(
-            "Edit Profile",
-            () => Navigator.of(ctx).push(MaterialPageRoute(
-                builder: (ctx) => EditProfileScreen(
-                      user: user,
-                    ))),
-            true,
-          ),
-        if (user.uid.toString() == currentUid)
-          getButton(
-            "Logout",
-            () {
-              BlocProvider.of<AuthCubit>(ctx).logout();
-            },
-            false,
-          ),
+              "Milestones",
+              () => Navigator.of(ctx).push(
+                  MaterialPageRoute(builder: (ctx) => const MilestoneScreen())),
+              true),
       ],
     ),
   );

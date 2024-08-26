@@ -27,7 +27,7 @@ Widget mutualTag(String role) {
       color = colors[3];
       break;
     default:
-      color = colors[4];
+      color = AppColor.redColor;
       break;
   }
 

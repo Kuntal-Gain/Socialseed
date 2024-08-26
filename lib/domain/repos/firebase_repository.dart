@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
+import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
 import '../entities/comment_entity.dart';
@@ -56,4 +57,9 @@ abstract class FirebaseRepository {
   Stream<List<ChatEntity>> fetchConversations();
   Future<void> sendMessage(String messageId, String message);
   Stream<List<MessageEntity>> fetchMessages(String messageId);
+
+  // story
+  Future<void> addStory(StoryEntity story);
+  Stream<List<StoryEntity>> fetchStories(String uid);
+  Future<void> viewStory(StoryEntity story);
 }

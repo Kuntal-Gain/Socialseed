@@ -7,6 +7,7 @@ import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
+import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<GetSingleOtherUserCubit>()),
         BlocProvider(create: (_) => di.sl<ChatCubit>()),
         BlocProvider(create: (_) => di.sl<MessageCubit>()),
+        BlocProvider(create: (_) => di.sl<StoryCubit>()),
       ],
       child: MaterialApp(
         title: "Socialseed",

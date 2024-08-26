@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
+import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
 import '../../domain/entities/comment_entity.dart';
@@ -54,4 +55,9 @@ abstract class RemoteDataSource {
   Future<bool> isMessageIdExists(String messageId);
   Future<void> createMessageWithId(ChatEntity chat);
   Stream<List<MessageEntity>> fetchMessages(String messageId);
+
+  // story
+  Future<void> addStory(StoryEntity story);
+  Stream<List<StoryEntity>> fetchStories(String uid);
+  Future<void> viewStory(StoryEntity story);
 }

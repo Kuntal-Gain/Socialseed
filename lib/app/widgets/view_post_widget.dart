@@ -65,6 +65,7 @@ Widget postCardWidget(
                 sizeHor(10),
                 GestureDetector(
                   onTap: () => di.sl<PostCubit>().deletePost(post: post).then(
+                      // ignore: use_build_context_synchronously
                       (value) => Navigator.of(context).push(MaterialPageRoute(
                           builder: (ctx) =>
                               HomeScreen(uid: user.uid.toString())))),

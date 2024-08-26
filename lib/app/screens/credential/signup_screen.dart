@@ -252,7 +252,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     BlocProvider.of<CredentialCubit>(context)
         .signUpUser(
       user: UserEntity(
-        username: _nameController.text,
+        username: _nameController.text.split(' ').join(''),
         fullname: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,

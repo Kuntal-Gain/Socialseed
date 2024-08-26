@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, curly_braces_in_flow_control_structures, unrelated_type_equality_checks
+// ignore_for_file: avoid_print, curly_braces_in_flow_control_structures, unrelated_type_equality_checks, use_build_context_synchronously
 
 import 'dart:io';
 
@@ -11,16 +11,19 @@ import 'package:socialseed/data/models/chat_model.dart';
 import 'package:socialseed/data/models/comment_model.dart';
 
 import 'package:socialseed/data/models/post_model.dart';
+import 'package:socialseed/data/models/story_model.dart';
 import 'package:socialseed/data/models/user_model.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
 import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
+import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/custom/custom_snackbar.dart';
 import '../models/message_model.dart';
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -41,7 +44,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     userCollection.doc(uid).get().then((newDoc) {
       final newUser = UserModel(
         uid: uid,
-        username: user.username,
+        username: user.username.toString(),
         fullname: user.fullname,
         email: user.email,
         bio: user.bio,
@@ -119,35 +122,15 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           "active_status": true,
         });
 
+        // ignore: duplicate_ignore
         // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Login Successfull',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+        successBar(context, "Login Successfull");
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-          'User Not Exist',
-        )));
+        failureBar(context, "User not found");
       } else if (e.code == 'wrong-password') {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-          'Password Is Wrong , Try Again',
-        )));
-      } else {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-          'Something Went Wrong',
-        )));
+        failureBar(context, "Password is Invalid");
       }
     }
   }
@@ -179,15 +162,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           if (value.user?.uid != null) {
             await createUser(user);
           }
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Account Creation Successfull',
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
+          successBar(context, "Account Creation Successfull");
         });
 
         return;
@@ -941,6 +916,87 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       return doc.exists;
     } catch (_) {
       return false;
+    }
+  }
+
+  @override
+  Future<void> addStory(StoryEntity story) async {
+    final uid = await getCurrentUid();
+
+    // Reference to the user's document in the users collection
+    final userDoc = firebaseFirestore.collection(FirebaseConst.users).doc(uid);
+
+    // Reference to the stories subcollection under the user's document
+    final storySubcollection = userDoc.collection(FirebaseConst.story);
+
+    // Reference to the global stories collection
+    final globalStoryCollection =
+        firebaseFirestore.collection(FirebaseConst.story);
+
+    // Convert the story data to a map
+    final storyData = StoryModel(
+      id: story.id,
+      userId: story.userId,
+      storyData: story.storyData,
+      createdAt: story.createdAt,
+      expiresAt: story.expiresAt,
+      viewers: story.viewers,
+      content: story.content,
+    ).toJson();
+
+    try {
+      // Set or update the story document in the user's subcollection
+      final userStoryRef = await storySubcollection.doc(story.id).get();
+
+      if (!userStoryRef.exists) {
+        await storySubcollection.doc(story.id).set(storyData);
+      } else {
+        await storySubcollection.doc(story.id).update(storyData);
+      }
+
+      // Set or update the story document in the global collection
+      final globalStoryRef = await globalStoryCollection.doc(story.id).get();
+
+      if (!globalStoryRef.exists) {
+        await globalStoryCollection.doc(story.id).set(storyData);
+      } else {
+        await globalStoryCollection.doc(story.id).update(storyData);
+      }
+
+      print('Story added successfully to both collections');
+    } catch (e) {
+      print('Error adding story: $e');
+    }
+  }
+
+  @override
+  Stream<List<StoryEntity>> fetchStories(String uid) {
+    final userCollection = firebaseFirestore.collection(FirebaseConst.story);
+
+    return userCollection.snapshots().map((querySnapshot) {
+      final currentTime = DateTime.now();
+
+      return querySnapshot.docs
+          .map((e) => StoryModel.fromSnapshot(e))
+          .where((story) => story.expiresAt.toDate().isAfter(currentTime))
+          .toList();
+    });
+  }
+
+  @override
+  Future<void> viewStory(StoryEntity story) async {
+    final uid = await getCurrentUid();
+
+    final storyCollection = firebaseFirestore.collection(FirebaseConst.story);
+    final storyRef = await storyCollection.doc(story.id).get();
+
+    if (storyRef.exists) {
+      List viewers = storyRef.get('viewers');
+      if (!viewers.contains(uid)) {
+        await storyCollection.doc(story.id).update({
+          "viewers": FieldValue.arrayUnion([uid]),
+        });
+      }
     }
   }
 }

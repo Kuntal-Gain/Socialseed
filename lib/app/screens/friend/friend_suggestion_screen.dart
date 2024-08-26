@@ -237,6 +237,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                       BlocProvider.of<UserCubit>(context)
                           .acceptRequest(user: user)
                           .then((value) {
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             backgroundColor: Colors.green,

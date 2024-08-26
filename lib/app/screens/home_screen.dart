@@ -25,8 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    _controller = PageController();
-    // Fetch user data when the screen initializes
+    // Initialize PageController with initialPage
+    _controller = PageController(initialPage: 0);
     BlocProvider.of<GetSingleUserCubit>(context)
         .getSingleUsers(uid: widget.uid);
   }
@@ -110,13 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   } else if (state is GetSingleUsersLoading) {
                     return const Center(
-                      child:
-                          CircularProgressIndicator(), // Show loading indicator
+                      child: CircularProgressIndicator(),
                     );
                   } else {
                     return const Center(
-                      child: Text(
-                          'Failed to load user data'), // Show error message
+                      child: Text('Failed to load user data'),
                     );
                   }
                 },
