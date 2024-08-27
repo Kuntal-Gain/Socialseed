@@ -12,6 +12,7 @@ import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
 import '../../cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import '../../widgets/profile_widget.dart';
@@ -519,9 +520,7 @@ class _UserProfileState extends State<UserProfile>
                           }
 
                           if (state is PostFailure) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Something went wrong')));
+                            failureBar(context, "Something Went wrong");
                           }
 
                           return const SizedBox();

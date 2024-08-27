@@ -19,7 +19,6 @@ import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
-import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
 
@@ -169,19 +168,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'User Already Exists',
-          ),
-          backgroundColor: AppColor.redColor,
-        ));
+        failureBar(context, "User Already Exists");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-            'Something Went wrong (${e.code})',
-          ),
-          backgroundColor: AppColor.redColor,
-        ));
+        failureBar(context, "Something Went Wrong");
       }
     }
   }

@@ -5,6 +5,7 @@ import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/profile_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/page_const.dart';
@@ -147,12 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   imageUrl: widget.user.imageUrl,
                 ));
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Profile Updated Successfully!!!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                successBar(context, "Updated Profile Successfully");
 
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(

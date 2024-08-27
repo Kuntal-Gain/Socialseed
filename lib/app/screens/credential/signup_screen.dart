@@ -20,6 +20,8 @@ import 'package:socialseed/utils/constants/text_const.dart';
 // ignore: unused_import
 import 'package:uuid/uuid.dart';
 
+import '../../../utils/custom/custom_snackbar.dart';
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -43,11 +45,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime(2000);
   bool _isSigningUp = false;
-  // ignore: unused_field, prefer_final_fields
-  bool _isUploading = false;
-
-  // ignore: unused_field
-  String _dobController = "Date of Birth";
   File? _image;
 
   // upload
@@ -86,14 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: key,
-        validator: (value) {
-          // Add your validation logic here
-          if (value!.isEmpty) {
-            return 'Please enter $label';
-          }
-
-          return null;
-        },
+        validator: _validateNotEmpty,
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: label,
@@ -121,14 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: TextFormField(
               controller: controller,
               keyboardType: key,
-              validator: (value) {
-                // Add your validation logic here
-                if (value!.isEmpty) {
-                  return 'Please enter $label';
-                }
-
-                return null;
-              },
+              validator: _validateNotEmpty,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: label,
@@ -173,14 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               controller: controller,
               obscureText:
                   !isPressed, // Invert the value for password visibility
-              validator: (value) {
-                // Add your validation logic here
-                if (value!.isEmpty) {
-                  return 'Please enter $label';
-                }
-                // You can add more complex validation rules as needed
-                return null; // Return null if the input is valid
-              },
+              validator: _validateNotEmpty,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: label,
@@ -220,8 +196,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     setState(() {
                       _selectedDate = value;
                     });
-
-                    _dobController = _selectedDate.toString();
                   },
                 ),
               ),
@@ -238,60 +212,75 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  // Example validator function for text fields
+  String? _validateNotEmpty(String? value) {
+    if (value == null || value.isEmpty) {
+      return "This field is required";
+    }
+    return null;
+  }
+
   void _signUp() async {
-    Reference ref = FirebaseStorage.instance
-        .ref()
-        .child('profiles')
-        .child("${_nameController.text}.jpg");
+    if (_formKey.currentState!.validate()) {
+      if (_image == null) {
+        failureBar(context, "No Image is Selected");
+      }
+    } else {
+      Reference ref = FirebaseStorage.instance
+          .ref()
+          .child('profiles')
+          .child("${_nameController.text}.jpg");
 
-    final uploadTask = ref.putFile(_image!);
+      final uploadTask = ref.putFile(_image!);
 
-    final imageUrl = await (await uploadTask).ref.getDownloadURL();
+      final imageUrl = await (await uploadTask).ref.getDownloadURL();
 
-    // ignore: use_build_context_synchronously
-    BlocProvider.of<CredentialCubit>(context)
-        .signUpUser(
-      user: UserEntity(
-        username: _nameController.text.split(' ').join(''),
-        fullname: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
-        bio: "",
-        imageUrl: imageUrl,
-        friends: const [],
-        milestones: const [],
-        likedPages: const [],
-        posts: const [],
-        joinedDate: Timestamp.now(),
-        isVerified: false,
-        badges: const [],
-        followerCount: 0,
-        followingCount: 0,
-        stories: const [],
-        imageFile: _image,
-        work: _workController.text,
-        college: _collegeController.text,
-        school: _schoolController.text,
-        location: _homeController.text,
-        coverImage: "",
-        dob: Timestamp.fromDate(_selectedDate),
-        followers: const [],
-        following: const [],
-        requests: const [],
-      ),
       // ignore: use_build_context_synchronously
-      ctx: context,
-    )
-        .then((val) {
-      // If sign up is successful, clear the text fields and reset the signing up flag
-      setState(() {
-        _nameController.clear();
-        _emailController.clear();
-        _passwordController.clear();
-        _confirmPasswordController.clear();
-        _isSigningUp = false;
+      BlocProvider.of<CredentialCubit>(context)
+          .signUpUser(
+        user: UserEntity(
+          username: _nameController.text.split(' ').join(''),
+          fullname: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          bio: "",
+          imageUrl: imageUrl,
+          friends: const [],
+          milestones: const [],
+          likedPages: const [],
+          posts: const [],
+          joinedDate: Timestamp.now(),
+          isVerified: false,
+          badges: const [],
+          followerCount: 0,
+          followingCount: 0,
+          stories: const [],
+          imageFile: _image,
+          work: _workController.text,
+          college: _collegeController.text,
+          school: _schoolController.text,
+          location: _homeController.text,
+          coverImage: "",
+          dob: Timestamp.fromDate(_selectedDate),
+          followers: const [],
+          following: const [],
+          requests: const [],
+          activeStatus: true,
+        ),
+        // ignore: use_build_context_synchronously
+        ctx: context,
+      )
+          .then((val) {
+        // If sign up is successful, clear the text fields and reset the signing up flag
+        setState(() {
+          _nameController.clear();
+          _emailController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          _isSigningUp = false;
+        });
       });
-    });
+    }
   }
 
   _bodyWidget() {
@@ -382,11 +371,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // Submit Button
             GestureDetector(
               onTap: () {
-                setState(() {
-                  _isSigningUp = true;
-                });
-
-                _signUp();
+                if (_formKey.currentState?.validate() ?? false) {
+                  setState(() {
+                    _isSigningUp = true;
+                  });
+                  _signUp();
+                } else {
+                  print("Form is invalid");
+                }
               },
               child: Container(
                 height: 66,
@@ -395,21 +387,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
-                  color: AppColor.redColor,
+                  color: _formKey.currentState?.validate() ?? false
+                      ? AppColor.redColor
+                      : AppColor.whiteColor,
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xffc2c2c2),
+                  ),
                 ),
                 child: Center(
-                    child: !_isSigningUp
-                        ? Text(
-                            "Create Account",
-                            style:
-                                TextConst.headingStyle(18, AppColor.whiteColor),
-                          )
-                        : const CircularProgressIndicator(
-                            color: Colors.white,
-                          )),
+                  child: !_isSigningUp
+                      ? Text(
+                          "Create Account",
+                          style: TextConst.headingStyle(
+                              18,
+                              _formKey.currentState?.validate() ?? false
+                                  ? AppColor.whiteColor
+                                  : AppColor.redColor),
+                        )
+                      : const CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                ),
               ),
             ),
+
             Row(
               children: [
                 Padding(
@@ -445,24 +447,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  // ignore: unused_element
-  Future<void> _signUpUser() async {
-    setState(() {
-      // _isSigningUp = true;
-    });
-  }
-
-  // ignore: unused_element
-  _clear() {
-    setState(() {
-      _nameController.clear();
-      _emailController.clear();
-      _passwordController.clear();
-      _confirmPasswordController.clear();
-      // _isSigningUp = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -474,10 +458,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           }
 
           if (state is CredentialFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ));
+            failureBar(context, state.message);
           }
         },
         builder: (context, state) {

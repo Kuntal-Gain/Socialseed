@@ -14,6 +14,7 @@ import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -247,8 +248,7 @@ class _SignInScreenState extends State<SignInScreen> {
           }
 
           if (state is CredentialFailure) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('Invalid Credentials')));
+            failureBar(context, "Invalid Credentials");
           }
         },
         builder: (context, state) {

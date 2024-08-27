@@ -19,6 +19,7 @@ import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
@@ -345,8 +346,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   }
 
                   if (state is CommentFailure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Error has occurred')));
+                    failureBar(context, "Something went wrong");
                   }
 
                   return const SizedBox();

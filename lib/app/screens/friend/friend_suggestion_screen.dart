@@ -9,6 +9,7 @@ import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/tags_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import '../../../data/models/user_model.dart';
 
 class FriendSuggestion extends StatefulWidget {
@@ -238,12 +239,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                           .acceptRequest(user: user)
                           .then((value) {
                         // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            backgroundColor: Colors.green,
-                            content: Text('Request Accepted'),
-                          ),
-                        );
+                        successBar(context, "Request Accepted");
                       });
                     },
                     child: Container(

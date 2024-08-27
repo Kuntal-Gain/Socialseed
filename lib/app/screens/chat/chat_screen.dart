@@ -10,6 +10,7 @@ import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../data/models/user_model.dart';
@@ -264,12 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   }
 
                   if (state is ChatIDCreationError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Messages not Found'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    failureBar(context, "Message Not Found");
                   }
 
                   return const SizedBox();
