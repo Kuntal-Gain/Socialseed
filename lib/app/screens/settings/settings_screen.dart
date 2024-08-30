@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               child: Center(
                 child: Text(
-                  'Logout @${widget.user.username!.split(' ').join('')}',
+                  'Logout @${widget.user.fullname!.split(' ')[0]}',
                   style: TextConst.headingStyle(16, AppColor.whiteColor),
                 ),
               ),

@@ -40,6 +40,7 @@ class _StoryScreenState extends State<StoryScreen> {
       backgroundColor: const Color.fromARGB(255, 24, 17, 17),
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
               height: 80,
@@ -113,7 +114,6 @@ class _StoryScreenState extends State<StoryScreen> {
               widget.story.storyData,
               fit: BoxFit.cover,
             ),
-            sizeVar(15),
             Text(
               widget.story.content,
               style: TextConst.MediumStyle(
@@ -121,7 +121,6 @@ class _StoryScreenState extends State<StoryScreen> {
                 AppColor.whiteColor,
               ),
             ),
-            sizeVar(15),
             if (widget.story.userId == widget.curruser.uid)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -131,7 +130,6 @@ class _StoryScreenState extends State<StoryScreen> {
                     color: AppColor.whiteColor,
                     size: 35,
                   ),
-                  sizeHor(10),
                   Text(
                     stories.length.toString(),
                     style: TextConst.MediumStyle(
@@ -140,7 +138,8 @@ class _StoryScreenState extends State<StoryScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
+            SizedBox(),
           ],
         ),
       ),

@@ -180,7 +180,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          user.username!,
+                          user.fullname!.split(' ')[0],
                           style: TextConst.MediumStyle(
                             16,
                             AppColor.whiteColor,

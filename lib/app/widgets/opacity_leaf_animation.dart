@@ -149,7 +149,7 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
                   ),
                 if (_controller.value >= 0.6)
                   Positioned(
-                    top: 520,
+                    top: 620,
                     child: Opacity(
                       opacity: _opacityAnimation.value,
                       child: const Text(

@@ -224,62 +224,75 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       if (_image == null) {
         failureBar(context, "No Image is Selected");
-      }
-    } else {
-      Reference ref = FirebaseStorage.instance
-          .ref()
-          .child('profiles')
-          .child("${_nameController.text}.jpg");
-
-      final uploadTask = ref.putFile(_image!);
-
-      final imageUrl = await (await uploadTask).ref.getDownloadURL();
-
-      // ignore: use_build_context_synchronously
-      BlocProvider.of<CredentialCubit>(context)
-          .signUpUser(
-        user: UserEntity(
-          username: _nameController.text.split(' ').join(''),
-          fullname: _nameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          bio: "",
-          imageUrl: imageUrl,
-          friends: const [],
-          milestones: const [],
-          likedPages: const [],
-          posts: const [],
-          joinedDate: Timestamp.now(),
-          isVerified: false,
-          badges: const [],
-          followerCount: 0,
-          followingCount: 0,
-          stories: const [],
-          imageFile: _image,
-          work: _workController.text,
-          college: _collegeController.text,
-          school: _schoolController.text,
-          location: _homeController.text,
-          coverImage: "",
-          dob: Timestamp.fromDate(_selectedDate),
-          followers: const [],
-          following: const [],
-          requests: const [],
-          activeStatus: true,
-        ),
-        // ignore: use_build_context_synchronously
-        ctx: context,
-      )
-          .then((val) {
-        // If sign up is successful, clear the text fields and reset the signing up flag
         setState(() {
-          _nameController.clear();
-          _emailController.clear();
-          _passwordController.clear();
-          _confirmPasswordController.clear();
-          _isSigningUp = false;
+          _isSigningUp = false; // Reset if image is not selected
         });
-      });
+        return;
+      } else {
+        try {
+          Reference ref = FirebaseStorage.instance
+              .ref()
+              .child('profiles')
+              .child("${_nameController.text}.jpg");
+
+          final uploadTask = ref.putFile(_image!);
+          final imageUrl = await (await uploadTask).ref.getDownloadURL();
+
+          BlocProvider.of<CredentialCubit>(context)
+              .signUpUser(
+            user: UserEntity(
+              username: _nameController.text.split(' ').join(''),
+              fullname: _nameController.text,
+              email: _emailController.text,
+              password: _passwordController.text,
+              bio: "",
+              imageUrl: imageUrl,
+              friends: const [],
+              milestones: const [],
+              likedPages: const [],
+              posts: const [],
+              joinedDate: Timestamp.now(),
+              isVerified: false,
+              badges: const [],
+              followerCount: 0,
+              followingCount: 0,
+              stories: const [],
+              imageFile: _image,
+              work: _workController.text,
+              college: _collegeController.text,
+              school: _schoolController.text,
+              location: _homeController.text,
+              coverImage: "",
+              dob: Timestamp.fromDate(_selectedDate),
+              followers: const [],
+              following: const [],
+              requests: const [],
+              activeStatus: true,
+            ),
+          )
+              .then((val) {
+            // If sign up is successful, clear the text fields and reset the signing up flag
+            setState(() {
+              _nameController.clear();
+              _emailController.clear();
+              _passwordController.clear();
+              _confirmPasswordController.clear();
+              _isSigningUp = false;
+            });
+          }).catchError((error) {
+            // Handle error and reset signing up flag
+            setState(() {
+              _isSigningUp = false;
+            });
+            failureBar(context, error.toString());
+          });
+        } catch (e) {
+          setState(() {
+            _isSigningUp = false;
+          });
+          failureBar(context, e.toString());
+        }
+      }
     }
   }
 

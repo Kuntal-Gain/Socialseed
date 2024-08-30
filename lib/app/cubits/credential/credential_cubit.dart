@@ -23,8 +23,7 @@ class CredentialCubit extends Cubit<CredentialState> {
       required BuildContext ctx}) async {
     emit(CredentialLoading());
     try {
-      await signInUsecase.call(
-          UserEntity(email: email, password: password), ctx);
+      await signInUsecase.call(UserEntity(email: email, password: password));
       emit(CredentialSuccess());
     } on SocketException {
       emit(const CredentialFailure(message: 'No Internet Connection'));
@@ -33,11 +32,10 @@ class CredentialCubit extends Cubit<CredentialState> {
     }
   }
 
-  Future<void> signUpUser(
-      {required UserEntity user, required BuildContext ctx}) async {
+  Future<void> signUpUser({required UserEntity user}) async {
     emit(CredentialLoading());
     try {
-      await signUpUsecase.call(user, ctx);
+      await signUpUsecase.call(user);
       emit(CredentialSuccess());
     } on SocketException {
       emit(const CredentialFailure(message: 'No Internet Connection'));

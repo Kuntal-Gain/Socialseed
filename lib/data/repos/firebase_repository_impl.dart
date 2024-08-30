@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
@@ -34,15 +33,15 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   Future<bool> isSignIn() async => remoteDataSource.isSignIn();
 
   @override
-  Future<void> signInUser(UserEntity user, BuildContext ctx) async =>
-      remoteDataSource.signInUser(user, ctx);
+  Future<void> signInUser(UserEntity user) async =>
+      remoteDataSource.signInUser(user);
 
   @override
   Future<void> signOut() async => remoteDataSource.signOut();
 
   @override
-  Future<void> signUpUser(UserEntity user, BuildContext ctx) async =>
-      remoteDataSource.signUpUser(user, ctx);
+  Future<void> signUpUser(UserEntity user) async =>
+      remoteDataSource.signUpUser(user);
 
   @override
   Future<void> updateUser(UserEntity user) async =>

@@ -137,7 +137,9 @@ class _PostStoryState extends State<PostStory> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              SizedBox(),
               if (_imageFile == null) ...[
                 const Center(
                   child: Text(

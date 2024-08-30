@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
@@ -11,8 +10,8 @@ import '../../domain/entities/post_entity.dart';
 
 abstract class RemoteDataSource {
   // credential
-  Future<void> signInUser(UserEntity user, BuildContext context);
-  Future<void> signUpUser(UserEntity user, BuildContext context);
+  Future<void> signInUser(UserEntity user);
+  Future<void> signUpUser(UserEntity user);
   Future<bool> isSignIn();
   Future<void> signOut();
 

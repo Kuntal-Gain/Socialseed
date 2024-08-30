@@ -22,7 +22,6 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../utils/custom/custom_snackbar.dart';
 import '../models/message_model.dart';
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -104,7 +103,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   Future<bool> isSignIn() async => firebaseAuth.currentUser?.uid != null;
 
   @override
-  Future<void> signInUser(UserEntity user, BuildContext context) async {
+  Future<void> signInUser(UserEntity user) async {
     try {
       if (user.email!.isNotEmpty || user.password!.isNotEmpty) {
         await firebaseAuth.signInWithEmailAndPassword(
@@ -120,16 +119,12 @@ class RemoteDataSourceImpl implements RemoteDataSource {
             .update({
           "active_status": true,
         });
-
-        // ignore: duplicate_ignore
-        // ignore: use_build_context_synchronously
-        successBar(context, "Login Successfull");
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        failureBar(context, "User not found");
+        print(e.code);
       } else if (e.code == 'wrong-password') {
-        failureBar(context, "Password is Invalid");
+        print(e.code);
       }
     }
   }
@@ -149,7 +144,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
-  Future<void> signUpUser(UserEntity user, BuildContext context) async {
+  Future<void> signUpUser(UserEntity user) async {
     try {
       if (user.email!.isNotEmpty || user.password!.isNotEmpty) {
         await firebaseAuth
@@ -161,16 +156,16 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           if (value.user?.uid != null) {
             await createUser(user);
           }
-          successBar(context, "Account Creation Successfull");
+          print("Account Creation Successfull");
         });
 
         return;
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
-        failureBar(context, "User Already Exists");
+        print(e.code);
       } else {
-        failureBar(context, "Something Went Wrong");
+        print('something went wrong');
       }
     }
   }
