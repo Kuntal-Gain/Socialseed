@@ -22,9 +22,9 @@ Socialseed is a dynamic social media platform designed with a wide range of feat
 - **Rupam Das** (Privacy & Securities)
 - **Aisha Halder** (AI Integration)
 
-### Contributors
+<!------------------------ ### Contributors ------------------------------->
 
-<img src="https://contrib.rocks/image?repo=Kuntal-Gain/Socialseed" />
+<!------------------------ <img src="https://contrib.rocks/image?repo=Kuntal-Gain/Socialseed" /> ------------------------------->
 
 ## 📷 Snapshots
 
