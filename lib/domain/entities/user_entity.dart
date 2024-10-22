@@ -27,6 +27,7 @@ class UserEntity extends Equatable {
   final String? coverImage;
   final bool? activeStatus;
   final List? messages;
+  final Timestamp? lastSeen;
 
   // user info
   final String? work;
@@ -70,6 +71,7 @@ class UserEntity extends Equatable {
     this.requests,
     this.activeStatus,
     this.messages,
+    this.lastSeen,
   });
 
   @override
@@ -104,5 +106,6 @@ class UserEntity extends Equatable {
         requests,
         activeStatus,
         messages,
+        lastSeen,
       ];
 }

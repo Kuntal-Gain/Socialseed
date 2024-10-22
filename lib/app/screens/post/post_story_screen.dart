@@ -139,7 +139,7 @@ class _PostStoryState extends State<PostStory> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(),
+              const SizedBox(),
               if (_imageFile == null) ...[
                 const Center(
                   child: Text(

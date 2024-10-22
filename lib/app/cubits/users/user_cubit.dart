@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/domain/usecases/user/get_user_usecase.dart';
+import 'package:socialseed/domain/usecases/user/update_user_status_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/accept_request_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/follow_user_usecase.dart';
@@ -21,6 +22,7 @@ class UserCubit extends Cubit<UserState> {
   final SendRequestUsecase sendRequestUsecase;
   final AcceptRequestUsecase acceptRequestUsecase;
   final RejectRequestUsecase rejectRequestUsecase;
+  final UpdateUserStatusUsecase updateUserStatusUsecase;
   UserCubit({
     required this.updateUserUseCase,
     required this.getUsersUseCase,
@@ -29,6 +31,7 @@ class UserCubit extends Cubit<UserState> {
     required this.sendRequestUsecase,
     required this.unFollowUserUsecase,
     required this.rejectRequestUsecase,
+    required this.updateUserStatusUsecase,
   }) : super(UserInitial());
 
   Future<void> getUsers({required UserEntity user}) async {
@@ -100,6 +103,15 @@ class UserCubit extends Cubit<UserState> {
       await rejectRequestUsecase.call(user);
     } on SocketException catch (_) {
       emit(UserFailure());
+    } catch (_) {
+      emit(UserFailure());
+    }
+  }
+
+  Future<void> updateStatus(
+      {required String uid, required bool isOnline}) async {
+    try {
+      await updateUserStatusUsecase.call(uid, isOnline);
     } catch (_) {
       emit(UserFailure());
     }

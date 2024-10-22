@@ -26,6 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _collegeController;
   late TextEditingController _schoolController;
   late TextEditingController _locationController;
+  late TextEditingController _bioController;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _collegeController = TextEditingController(text: widget.user.college);
     _schoolController = TextEditingController(text: widget.user.school);
     _locationController = TextEditingController(text: widget.user.location);
+    _bioController = TextEditingController(text: widget.user.bio);
     super.initState();
   }
 
@@ -82,6 +84,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen width and height for responsiveness
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -91,19 +97,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               Stack(
                 children: [
                   SizedBox(
-                    height: 250,
+                    height: screenHeight * 0.3, // 30% of the screen height
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // cover image
                         Container(
-                          height: 140,
+                          height: screenHeight *
+                              0.18, // Responsive height for the cover image
                           width: double.infinity,
                           margin: const EdgeInsets.all(12),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.asset(
-                              'assets/post-2.jpg',
+                            child: Image.network(
+                              widget.user.coverImage!,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -113,8 +120,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                   Positioned(
-                    top: 90,
-                    left: 135,
+                    top: screenHeight *
+                        0.12, // Responsive positioning of the avatar
+                    left: screenWidth *
+                        0.4, // Centers the avatar based on screen width
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -124,7 +133,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
                       child: CircleAvatar(
-                        radius: 55,
+                        radius:
+                            screenWidth * 0.15, // Responsive size for avatar
                         backgroundImage:
                             NetworkImage(widget.user.imageUrl.toString()),
                       ),
@@ -137,6 +147,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               getTextField(_collegeController, "College"),
               getTextField(_schoolController, "School"),
               getTextField(_locationController, "Location"),
+              getTextField(_bioController, "Bio"),
               getButton("Update Profile", () {
                 BlocProvider.of<UserCubit>(context).updateUser(
                     user: UserEntity(
@@ -146,6 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   school: _schoolController.text,
                   location: _locationController.text,
                   imageUrl: widget.user.imageUrl,
+                  bio: _bioController.text,
                 ));
 
                 successBar(context, "Updated Profile Successfully");
@@ -156,14 +168,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 );
               }, false),
-              sizeVar(30),
+              SizedBox(height: screenHeight * 0.03), // Responsive spacing
               Center(
                 child: Text(
                   'Socialseed @2024 Copyright (c)',
                   style: TextConst.RegularStyle(18, AppColor.blackColor),
                 ),
               ),
-              sizeVar(30),
+              SizedBox(height: screenHeight * 0.03), // Responsive spacing
             ],
           ),
         ),

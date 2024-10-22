@@ -71,117 +71,138 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<List<String>> getUserMessageIds(String currentUid) async {
+    final userCollection =
+        FirebaseFirestore.instance.collection(FirebaseConst.users);
+
+    try {
+      final userDoc = await userCollection.doc(currentUid).get();
+      if (userDoc.exists) {
+        return List<String>.from(userDoc.data()?['messages'] ?? []);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching user message IDs: $e');
+      }
+    }
+    return []; // Return an empty list if there's an error or no IDs found
+  }
+
   @override
   void initState() {
-    fetchFriends(widget.user.uid!);
-    context.read<ChatCubit>().fetchConversation();
     super.initState();
+    fetchFriends(widget.user.uid!);
+    context.read<ChatCubit>().fetchConversation(widget.user.uid!);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                'Friends',
-                style: TextConst.headingStyle(
-                  22,
-                  AppColor.blackColor,
+            // Display Friends section only if user has friends
+            if (friendList.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  'Friends',
+                  style: TextConst.headingStyle(
+                    22,
+                    AppColor.blackColor,
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (ctx, idx) {
-                  final friend = friendList[idx];
+              Expanded(
+                flex: 1,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: friendList.length,
+                  itemBuilder: (ctx, idx) {
+                    final friend = friendList[idx];
 
-                  return GestureDetector(
-                    onTap: () async {
-                      final existingMessageId = await getExistingMessageId(
-                        widget.user.uid!,
-                        friend.uid!,
-                      );
+                    return GestureDetector(
+                      onTap: () async {
+                        final existingMessageId = await getExistingMessageId(
+                          widget.user.uid!,
+                          friend.uid!,
+                        );
 
-                      if (existingMessageId == null) {
-                        // Create a new chat
-                        final newMessageId = const Uuid().v4();
-                        // ignore: use_build_context_synchronously
-                        context.read<ChatCubit>().createMessageId(
-                              chat: ChatEntity(
-                                messageId: newMessageId,
-                                members: [friend.uid!, widget.user.uid!],
-                                lastMessage: "",
-                                isRead: false,
-                              ),
-                            );
+                        if (existingMessageId == null) {
+                          // Create a new chat
+                          final newMessageId = const Uuid().v4();
+                          // ignore: use_build_context_synchronously
+                          context.read<ChatCubit>().createMessageId(
+                                chat: ChatEntity(
+                                  messageId: newMessageId,
+                                  members: [friend.uid!, widget.user.uid!],
+                                  lastMessage: "",
+                                  isRead: false,
+                                ),
+                              );
 
-                        // Navigate to MessageScreen with newMessageId
-                        // ignore: use_build_context_synchronously
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (ctx) => BlocProvider<MessageCubit>(
-                              create: (context) => di.sl<MessageCubit>(),
-                              child: MessageScreen(
-                                sender: widget.user,
-                                receiver: friend,
-                                messageId: newMessageId,
+                          // Navigate to MessageScreen with newMessageId
+                          // ignore: use_build_context_synchronously
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (ctx) => BlocProvider<MessageCubit>(
+                                create: (context) => di.sl<MessageCubit>(),
+                                child: MessageScreen(
+                                  sender: widget.user,
+                                  receiver: friend,
+                                  messageId: newMessageId,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      } else {
-                        // Navigate to MessageScreen with existingMessageId
-                        // ignore: use_build_context_synchronously
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (ctx) => BlocProvider<MessageCubit>(
-                              create: (context) => di.sl<MessageCubit>(),
-                              child: MessageScreen(
-                                sender: widget.user,
-                                receiver: friend,
-                                messageId: existingMessageId,
+                          );
+                        } else {
+                          // Navigate to MessageScreen with existingMessageId
+                          // ignore: use_build_context_synchronously
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (ctx) => BlocProvider<MessageCubit>(
+                                create: (context) => di.sl<MessageCubit>(),
+                                child: MessageScreen(
+                                  sender: widget.user,
+                                  receiver: friend,
+                                  messageId: existingMessageId,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: (friend.activeStatus ?? false)
-                              ? AppColor.redColor
-                              : AppColor.greyShadowColor,
-                          width: 5,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 35,
-                        backgroundImage: NetworkImage(friend.imageUrl!),
-                        child: ClipOval(
-                          child: Image.network(
-                            friend.imageUrl!,
-                            fit: BoxFit.cover,
-                            width: 70,
-                            height: 70,
+                          );
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: (friend.activeStatus ?? false)
+                                ? AppColor.redColor
+                                : AppColor.greyShadowColor,
+                            width: 5,
                           ),
                         ),
+                        child: CircleAvatar(
+                          radius: 35,
+                          backgroundImage: NetworkImage(friend.imageUrl!),
+                          child: ClipOval(
+                            child: Image.network(
+                              friend.imageUrl!,
+                              fit: BoxFit.cover,
+                              width: 70,
+                              height: 70,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                },
-                itemCount: friendList.length,
+                    );
+                  },
+                ),
               ),
-            ),
+            ],
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Text(
@@ -197,7 +218,11 @@ class _ChatScreenState extends State<ChatScreen> {
               child: BlocBuilder<ChatCubit, ChatState>(
                 builder: (context, state) {
                   if (state is ChatLoading) {
-                    debugPrint('loading chat...');
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColor.redColor,
+                      ),
+                    );
                   }
 
                   if (state is ChatLoaded) {
@@ -217,10 +242,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator(
-                                color: AppColor.redColor,
-                              ));
+                              return const SizedBox(); // Don't show anything for now
                             } else if (snapshot.hasError) {
                               return Text('Error: ${snapshot.error}');
                             } else if (!snapshot.hasData ||
@@ -268,7 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     failureBar(context, "Message Not Found");
                   }
 
-                  return const SizedBox();
+                  return const SizedBox(); // Display nothing if no relevant state
                 },
               ),
             ),

@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
-import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/app/widgets/search_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
 
-class SearchScreen extends StatefulWidget {
+class TagPeopleScreen extends StatefulWidget {
   final String currentUid;
-  const SearchScreen({Key? key, required this.currentUid}) : super(key: key);
+  final Function(UserEntity) onUserSelected; // Add this line
+
+  const TagPeopleScreen(
+      {Key? key, required this.currentUid, required this.onUserSelected})
+      : super(key: key);
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  State<TagPeopleScreen> createState() => _TagPeopleScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _TagPeopleScreenState extends State<TagPeopleScreen> {
   final _controller = TextEditingController();
-
   List<UserEntity> users = [];
   List<UserEntity> filteredUsers = [];
 
@@ -54,7 +56,6 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -113,16 +114,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
                         return GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (ctx) =>
-                                    UserProfile(otherUid: user.uid!),
-                              ),
-                            );
+                            widget.onUserSelected(
+                                user); // Call the callback function
+                            Navigator.of(context)
+                                .pop(); // Optionally pop the screen
                           },
-                          child: searchWidget(
-                            filteredUsers[idx],
-                          ),
+                          child: searchWidget(filteredUsers[idx]),
                         );
                       },
                     );

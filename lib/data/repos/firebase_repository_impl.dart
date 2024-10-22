@@ -155,4 +155,8 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Future<void> viewStory(StoryEntity story) async =>
       remoteDataSource.viewStory(story);
+
+  @override
+  Future<void> updateUserStatus(String uid, bool isOnline) async =>
+      remoteDataSource.updateUserStatus(uid, isOnline);
 }

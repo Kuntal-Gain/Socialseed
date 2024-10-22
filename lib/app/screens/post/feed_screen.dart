@@ -52,25 +52,31 @@ class _FeedScreenState extends State<FeedScreen> {
     }
   }
 
-  @override
+  // ignore: annotate_overrides
   Widget build(BuildContext context) {
+    // Get the screen width and height using MediaQuery
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: BlocProvider<PostCubit>(
         create: (context) =>
             di.sl<PostCubit>()..getPosts(post: const PostEntity()),
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {
-              di.sl<PostCubit>().getPosts(post: const PostEntity());
-              di
-                  .sl<StoryCubit>()
-                  .fetchStory(uid: widget.user.uid!, context: context);
+              // Fetch posts and stories when the user pulls to refresh
+              await Future.wait([
+                di.sl<PostCubit>().getPosts(post: const PostEntity()),
+                di
+                    .sl<StoryCubit>()
+                    .fetchStory(uid: widget.user.uid!, context: context),
+              ]);
             },
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildSearchBar(context),
-                  // _buildStorySection(widget.user),
+                  _buildSearchBar(context, screenWidth),
                   BlocProvider<StoryCubit>(
                     create: (ctx) => di.sl<StoryCubit>()
                       ..fetchStory(uid: widget.user.uid!, context: context),
@@ -83,7 +89,8 @@ class _FeedScreenState extends State<FeedScreen> {
                                   widget.user.uid == story.userId)
                               .toList();
 
-                          return _buildStorySection(stories, widget.user);
+                          return _buildStorySection(
+                              stories, widget.user, screenWidth);
                         } else if (state is StoryInitial) {
                           return const Center(
                               child: CircularProgressIndicator());
@@ -95,10 +102,11 @@ class _FeedScreenState extends State<FeedScreen> {
                       },
                     ),
                   ),
-                  _buildCreatePostSection(context),
+                  _buildCreatePostSection(context, screenWidth),
                   const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Divider()),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Divider(),
+                  ),
                   _buildPostSection(context),
                 ],
               ),
@@ -109,10 +117,10 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildSearchBar(BuildContext context, double screenWidth) {
     return Container(
       height: 60,
-      margin: const EdgeInsets.all(12),
+      margin: EdgeInsets.all(screenWidth * 0.03), // Responsive margin
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
@@ -150,13 +158,14 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildStorySection(List<StoryEntity> stories, UserEntity user) {
+  Widget _buildStorySection(
+      List<StoryEntity> stories, UserEntity user, double screenWidth) {
     return Container(
-      height: 135, // Adjust the height according to your design
+      height: 135,
       margin: const EdgeInsets.only(bottom: 10.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: stories.length + 1, // +1 for Add Story
+        itemCount: stories.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
             return Stack(
@@ -166,7 +175,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       builder: (ctx) => PostStory(user: user))),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                    width: 90, // Adjust the width according to your design
+                    width: screenWidth * 0.24, // Responsive width
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: NetworkImage(user.imageUrl!),
@@ -211,22 +220,51 @@ class _FeedScreenState extends State<FeedScreen> {
           } else {
             final story = stories[index - 1];
 
-            return GestureDetector(
-              onTap: () async {
-                BlocProvider.of<StoryCubit>(context)
-                    .viewStory(story: story, context: context);
+            // Use a FutureBuilder to load the creator asynchronously
+            return FutureBuilder<UserEntity?>(
+              future: getUserByUid(story.userId), // Fetch the creator by userId
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    width: screenWidth * 0.24,
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                    color: Colors.grey[300], // Placeholder while loading
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
 
-                final creator = await getUserByUid(story.userId);
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Container(
+                    width: screenWidth * 0.24,
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                    color: Colors.grey[300], // Placeholder on error
+                    child: const Center(
+                      child: Icon(Icons.error, color: Colors.red),
+                    ),
+                  );
+                }
 
-                // ignore: use_build_context_synchronously
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (ctx) => StoryScreen(
-                          story: story,
-                          storyUser: creator!,
-                          curruser: user,
-                        )));
+                // Creator loaded successfully
+                final creator = snapshot.data;
+
+                return GestureDetector(
+                  onTap: () {
+                    BlocProvider.of<StoryCubit>(context)
+                        .viewStory(story: story, context: context);
+
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (ctx) => StoryScreen(
+                              story: story,
+                              storyUser: creator,
+                              curruser: user,
+                            )));
+                  },
+                  child: storyCard(
+                      story, creator!.fullname!.split(' ')[0], creator),
+                );
               },
-              child: storyCard(story, user),
             );
           }
         },
@@ -234,9 +272,10 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildCreatePostSection(BuildContext context) {
+  Widget _buildCreatePostSection(BuildContext context, double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.03, vertical: 8), // Responsive padding
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).push(
@@ -290,15 +329,27 @@ class _FeedScreenState extends State<FeedScreen> {
 
         if (state is PostLoaded) {
           return (state.posts.isNotEmpty)
-              ? postCardWidget(
-                  context, state.posts, widget.user, widget.user.uid.toString())
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.no_photography_sharp),
-                    sizeVar(10),
-                    const Text('No Post Avaliable')
-                  ],
+              ? PostCardWidget(
+                  posts: state.posts,
+                  user: widget.user,
+                  uid: widget.user.uid.toString())
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      sizeVar(100),
+                      Image.network(
+                        'https://cdn-icons-png.flaticon.com/512/10036/10036774.png',
+                        height: 100,
+                        width: 100,
+                      ),
+                      sizeVar(10),
+                      Text(
+                        'No Post Available',
+                        style: TextConst.headingStyle(20, AppColor.blackColor),
+                      )
+                    ],
+                  ),
                 );
         }
 

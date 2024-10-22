@@ -138,7 +138,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var mq = MediaQuery.of(context).size;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         surfaceTintColor: AppColor.whiteColor,
         backgroundColor: AppColor.whiteColor,
@@ -363,16 +366,17 @@ class _PostViewScreenState extends State<PostViewScreen> {
             Expanded(
               child: Container(
                   margin: const EdgeInsets.all(14),
+                  height: mq.height * 0.07,
                   width: 200,
                   decoration: BoxDecoration(
                     color: AppColor.whiteColor,
                     border: Border.all(
-                      color: AppColor.redColor,
+                      color: AppColor.greyShadowColor,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.red.shade300,
-                        blurRadius: 2,
+                        color: AppColor.greyShadowColor,
+                        blurRadius: 1,
                         spreadRadius: 1,
                       )
                     ],
@@ -396,7 +400,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColor.redColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColor.greyShadowColor,
+                    spreadRadius: 1,
+                    blurRadius: 1,
+                  )
+                ],
+                color: AppColor.whiteColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: IconButton(
@@ -416,8 +427,9 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 },
                 icon: Image.asset(
                   IconConst.commentIcon,
-                  height: 35,
-                  width: 35,
+                  height: 32,
+                  width: 32,
+                  color: AppColor.redColor,
                 ),
               ),
             ),

@@ -17,15 +17,11 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Capture the context
-    BuildContext? currentContext = context;
-
     // Start the timer
     Timer(const Duration(seconds: 2), () {
-      // Check if the widget is still mounted before accessing the context
       if (mounted) {
-        Navigator.push(
-          currentContext,
+        Navigator.pushReplacement(
+          context,
           MaterialPageRoute(builder: (context) => const NewScreen()),
         );
       }
@@ -41,9 +37,11 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/leafImage.png.png', // Replace with your leaf image path
-              width: 200,
-              height: 200,
+              'assets/leafImage.png.png',
+              width: MediaQuery.of(context).size.width *
+                  0.5, // Adjust size based on screen width
+              height: MediaQuery.of(context).size.height *
+                  0.25, // Adjust size based on screen height
             ),
             const SizedBox(height: 30),
             const Text(
@@ -67,7 +65,7 @@ class NewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.white, // Red background color
+      backgroundColor: Colors.white,
       body: Center(
         child: OpacityAnimationWidget(),
       ),
@@ -93,7 +91,7 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Total duration for the animations
+      duration: const Duration(seconds: 3),
     );
 
     _opacityAnimation = Tween<double>(
@@ -102,7 +100,7 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0, 0.3), // Opacity animation duration
+        curve: const Interval(0, 1), // Full animation duration
       ),
     );
 
@@ -111,28 +109,32 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        // ignore: sized_box_for_whitespace
         return Padding(
           padding: const EdgeInsets.all(10),
           child: Container(
-            width: MediaQuery.of(context).size.width - 50,
-            height: MediaQuery.of(context).size.height - 50,
+            width: screenWidth * 0.9,
+            height: screenHeight * 0.9,
             color: Colors.white,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 if (_controller.value >= 0)
                   Positioned(
-                    top: 10, // Adjust the position as needed
+                    top: screenHeight * 0.02, // Adjust position based on height
                     child: Opacity(
                       opacity: _controller.value,
                       child: Image.asset(
                         'assets/logo.png',
-                        width: 360, // Adjust the width as needed
-                        height: 200, // Adjust the height as needed
+                        width: screenWidth *
+                            0.8, // Adjust width based on screen size
+                        height: screenHeight *
+                            0.25, // Adjust height based on screen size
                       ),
                     ),
                   ),
@@ -141,19 +143,21 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
                     opacity: _opacityAnimation.value,
                     child: Center(
                       child: Image.asset(
-                        'assets/splash.jpg', // Replace with your image path
-                        width: double.infinity,
-                        height: 300,
+                        'assets/splash.jpg',
+                        width: screenWidth *
+                            0.9, // Adjust width based on screen size
+                        height: screenHeight *
+                            0.3, // Adjust height based on screen size
                       ),
                     ),
                   ),
                 if (_controller.value >= 0.6)
                   Positioned(
-                    top: 620,
+                    top: screenHeight * 0.7, // Adjust based on screen size
                     child: Opacity(
                       opacity: _opacityAnimation.value,
                       child: const Text(
-                        'Feuling Connections,\nSparking Conversation',
+                        'Fueling Connections,\nSparking Conversation',
                         style: TextStyle(
                             fontSize: 24,
                             color: Colors.red,
@@ -164,7 +168,7 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
                   ),
                 if (_controller.value >= 0.9)
                   Positioned(
-                    bottom: 30 + (_controller.value - 0.9) * 100,
+                    bottom: 30 + (_controller.value - 1.25) * 100,
                     child: Opacity(
                       opacity: _opacityAnimation.value,
                       child: GestureDetector(
@@ -173,22 +177,26 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
                               builder: (ctx) => const SignUpScreen()));
                         },
                         child: Container(
-                          height: 70,
-                          width: 340,
+                          height:
+                              screenHeight * 0.08, // Responsive button height
+                          width: screenWidth * 0.85, // Responsive button width
                           decoration: BoxDecoration(
                             color: AppColor.redColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           margin: const EdgeInsets.all(12),
                           child: Center(
-                            child: Text('Start Your Journey Now',
-                                style: GoogleFonts.montserrat(
-                                  textStyle: const TextStyle(
-                                    color: AppColor.whiteColor,
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
+                            child: Text(
+                              'Start Your Journey Now',
+                              style: GoogleFonts.montserrat(
+                                textStyle: TextStyle(
+                                  color: AppColor.whiteColor,
+                                  fontSize: screenHeight *
+                                      0.025, // Responsive font size
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -98,9 +98,19 @@ Widget getIcon(String type) {
       break;
   }
 
-  return Icon(
-    icon,
-    color: AppColor.redColor,
-    size: 32,
+  return Stack(
+    alignment: Alignment.center,
+    children: [
+      Icon(
+        icon,
+        color: Colors.white, // Border color
+        size: 36, // Slightly larger to act as the "border"
+      ),
+      Icon(
+        icon,
+        color: AppColor.redColor, // Actual icon color
+        size: 32, // Original size
+      ),
+    ],
   );
 }

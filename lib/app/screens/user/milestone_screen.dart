@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
 class MilestoneScreen extends StatefulWidget {
-  const MilestoneScreen({super.key});
+  const MilestoneScreen({super.key, required this.user});
+
+  final UserEntity user;
 
   @override
   State<MilestoneScreen> createState() => _MilestoneScreenState();
@@ -11,27 +14,38 @@ class MilestoneScreen extends StatefulWidget {
 
 class _MilestoneScreenState extends State<MilestoneScreen> {
   // Example milestone data
-  final List<Milestones> milestones = [
-    const Milestones(
-      icon: 'https://cdn-icons-png.flaticon.com/128/2058/2058768.png',
-      title: 'First Friend',
-      currentValue: 300,
-      targetValue: 500,
-    ),
-    const Milestones(
-      icon: 'https://cdn-icons-png.flaticon.com/128/6081/6081941.png',
-      title: 'Rising Star',
-      currentValue: 1500,
-      targetValue: 2000,
-    ),
-    const Milestones(
-      icon: 'https://cdn-icons-png.flaticon.com/128/3032/3032220.png',
-      title: 'First Post',
-      currentValue: 120,
-      targetValue: 200,
-    ),
-    // Add more milestones as needed
-  ];
+  List<Milestones> milestones = [];
+  int followers = 0;
+  int friends = 0;
+  int posts = 0;
+
+  @override
+  void initState() {
+    followers = widget.user.followerCount!.toInt();
+    friends = widget.user.friends!.length;
+    posts = widget.user.posts!.length;
+    super.initState();
+    milestones = [
+      Milestones(
+        icon: 'https://cdn-icons-png.flaticon.com/128/2058/2058768.png',
+        title: 'First Friend',
+        currentValue: friends,
+        targetValue: 25,
+      ),
+      Milestones(
+        icon: 'https://cdn-icons-png.flaticon.com/128/6081/6081941.png',
+        title: 'Rising Star',
+        currentValue: followers,
+        targetValue: 1000,
+      ),
+      Milestones(
+        icon: 'https://cdn-icons-png.flaticon.com/128/3032/3032220.png',
+        title: 'First Post',
+        currentValue: posts,
+        targetValue: 100,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -15,7 +15,6 @@ import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
-import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 // ignore: unused_import
 import 'package:uuid/uuid.dart';
@@ -32,6 +31,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   // controllers
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -128,7 +128,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   });
                 },
                 child: Text('NONE',
-                    style: TextConst.headingStyle(15, AppColor.redColor))),
+                    style: TextConst.headingStyle(12, AppColor.redColor))),
           )
         ],
       ),
@@ -238,10 +238,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
           final uploadTask = ref.putFile(_image!);
           final imageUrl = await (await uploadTask).ref.getDownloadURL();
 
+          // ignore: use_build_context_synchronously
           BlocProvider.of<CredentialCubit>(context)
               .signUpUser(
             user: UserEntity(
-              username: _nameController.text.split(' ').join(''),
+              username: _usernameController.text,
               fullname: _nameController.text,
               email: _emailController.text,
               password: _passwordController.text,
@@ -284,177 +285,164 @@ class _SignUpScreenState extends State<SignUpScreen> {
             setState(() {
               _isSigningUp = false;
             });
+            // ignore: use_build_context_synchronously
             failureBar(context, error.toString());
           });
         } catch (e) {
           setState(() {
             _isSigningUp = false;
           });
+          // ignore: use_build_context_synchronously
           failureBar(context, e.toString());
         }
       }
     }
   }
 
-  _bodyWidget() {
+  // Body Widget
+  Widget _bodyWidget() {
+    final screenWidth = MediaQuery.of(context).size.width;
     return SingleChildScrollView(
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo
-            Image.asset('assets/SOCIALSEED.png'),
-
-            // JOIN NOW
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Text(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.05, // Adjust padding with MediaQuery
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.asset('assets/SOCIALSEED.png'),
+              const SizedBox(height: 20),
+              Text(
                 'Join Now',
-                style: TextConst.MediumStyle(49, AppColor.blackColor),
+                style: TextConst.MediumStyle(
+                  screenWidth * 0.1, // Adjust text size with MediaQuery
+                  AppColor.blackColor,
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Text(
+              const SizedBox(height: 8),
+              Text(
                 "Let's get started by filling out the form below.",
                 style: TextConst.RegularStyle(15, AppColor.textGreyColor),
               ),
-            ),
-
-            sizeVar(15),
-            // Upload Image
-
-            GestureDetector(
-              onTap: selectImage,
-              child: Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.white,
-                  backgroundImage: _image != null ? FileImage(_image!) : null,
-                  child: _image == null
-                      ? Image.asset('assets/icons/user.png')
-                      : null,
+              const SizedBox(height: 15),
+              GestureDetector(
+                onTap: selectImage,
+                child: Center(
+                  child: CircleAvatar(
+                    radius:
+                        screenWidth * 0.15, // Adjust image size with MediaQuery
+                    backgroundColor: Colors.white,
+                    backgroundImage: _image != null ? FileImage(_image!) : null,
+                    child: _image == null
+                        ? Image.asset('assets/icons/user.png')
+                        : null,
+                  ),
                 ),
               ),
-            ),
-
-            sizeVar(15),
-            // Form Fields
-            getTextField(_nameController, 'Name', TextInputType.name),
-            getTextField(_emailController, 'Email', TextInputType.emailAddress),
-            getTextFieldWithPassword(_passwordController, 'Password'),
-            getTextFieldWithPassword(
-                _confirmPasswordController, "Confirm Password"),
-
-            // dob
-
-            Container(
-              height: 66,
-              width: double.infinity,
-              margin: const EdgeInsets.all(5),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              decoration: BoxDecoration(
-                color: AppColor.greyColor,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                  TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _showDatePicker(context);
-                        });
-                      },
-                      child: Text('SET',
-                          style: TextConst.headingStyle(15, AppColor.redColor)))
-                ],
-              ),
-            ),
-
-            getTextFieldWithCareer(_homeController, "Home", TextInputType.text),
-            getTextFieldWithCareer(_workController, "work", TextInputType.text),
-            getTextFieldWithCareer(
-                _collegeController, "college", TextInputType.text),
-            getTextFieldWithCareer(
-                _schoolController, "school", TextInputType.text),
-
-            // Submit Button
-            GestureDetector(
-              onTap: () {
-                if (_formKey.currentState?.validate() ?? false) {
-                  setState(() {
-                    _isSigningUp = true;
-                  });
-                  _signUp();
-                } else {
-                  print("Form is invalid");
-                }
-              },
-              child: Container(
+              const SizedBox(height: 15),
+              getTextField(_usernameController, 'Username', TextInputType.name),
+              getTextField(_nameController, 'Name', TextInputType.name),
+              getTextField(
+                  _emailController, 'Email', TextInputType.emailAddress),
+              getTextFieldWithPassword(_passwordController, 'Password'),
+              getTextFieldWithPassword(
+                  _confirmPasswordController, "Confirm Password"),
+              Container(
                 height: 66,
-                width: double.infinity,
-                margin: const EdgeInsets.all(10),
+                margin: const EdgeInsets.all(5),
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
-                  color: _formKey.currentState?.validate() ?? false
-                      ? AppColor.redColor
-                      : AppColor.whiteColor,
+                  color: AppColor.greyColor,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xffc2c2c2),
-                  ),
                 ),
-                child: Center(
-                  child: !_isSigningUp
-                      ? Text(
-                          "Create Account",
-                          style: TextConst.headingStyle(
-                              18,
-                              _formKey.currentState?.validate() ?? false
-                                  ? AppColor.whiteColor
-                                  : AppColor.redColor),
-                        )
-                      : const CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
+                    TextButton(
+                      onPressed: () => _showDatePicker(context),
+                      child: Text(
+                        'SET',
+                        style: TextConst.headingStyle(15, AppColor.redColor),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    'Do You Have an Account?',
-                    style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+              getTextFieldWithCareer(
+                  _homeController, "Home", TextInputType.text),
+              getTextFieldWithCareer(
+                  _workController, "Work", TextInputType.text),
+              getTextFieldWithCareer(
+                  _collegeController, "College", TextInputType.text),
+              getTextFieldWithCareer(
+                  _schoolController, "School", TextInputType.text),
+              GestureDetector(
+                onTap: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    setState(() {
+                      _isSigningUp = true;
+                    });
+                    _signUp();
+                  }
+                },
+                child: Container(
+                  height: 66,
+                  margin: const EdgeInsets.all(10),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: _formKey.currentState?.validate() ?? false
+                        ? AppColor.redColor
+                        : AppColor.whiteColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xffc2c2c2)),
+                  ),
+                  child: Center(
+                    child: !_isSigningUp
+                        ? Text(
+                            "Create Account",
+                            style: TextConst.headingStyle(
+                                18,
+                                _formKey.currentState?.validate() ?? false
+                                    ? AppColor.whiteColor
+                                    : AppColor.redColor),
+                          )
+                        : const CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
+              ),
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 14.0),
+                    child: Text(
+                      'Do You Have an Account?',
+                      style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                            builder: (ctx) => const SignInScreen()));
-                  },
-                  child: Text('Login',
-                      style: TextConst.headingStyle(15, AppColor.redColor)),
-                )
-              ],
-            ),
-            sizeVar(30),
-            Center(
-              child: Text(
-                'Socialseed @2024 Copyright (c)',
-                style: TextConst.RegularStyle(18, AppColor.blackColor),
+                            builder: (context) => const SignInScreen()),
+                      );
+                    },
+                    child: Text(
+                      "Log in",
+                      style: TextConst.headingStyle(15, AppColor.redColor),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            sizeVar(30),
-          ],
+            ],
+          ),
         ),
       ),
     );

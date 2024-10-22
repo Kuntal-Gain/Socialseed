@@ -1,24 +1,40 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
+import 'package:socialseed/app/screens/chat/message_screen.dart';
 import 'package:socialseed/app/screens/settings/settings_screen.dart';
+import 'package:socialseed/app/screens/user/friend_list_screen.dart';
 import 'package:socialseed/app/screens/user/milestone_screen.dart';
+import 'package:socialseed/data/models/user_model.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../domain/entities/chat_entity.dart';
 import '../../cubits/get_single_other_user/get_single_other_user_cubit.dart';
+import '../../cubits/message/chat_id/chat_cubit.dart';
+import '../../cubits/message/message_cubit.dart';
 import '../../widgets/profile_widget.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
 import '../../widgets/view_post_widget.dart';
+import 'follower_list_screen.dart';
 
 class UserProfile extends StatefulWidget {
   final String otherUid;
@@ -34,7 +50,47 @@ class _UserProfileState extends State<UserProfile>
 
   int currentIdx = 0;
   List<String> images = [];
-  String currentUid = "";
+  String currentUid = FirebaseAuth.instance.currentUser!.uid;
+  late UserEntity? currentUser;
+  var selectedCoverImage = "";
+
+  Future<String?> getExistingMessageId(
+      String currentUid, String friendUid) async {
+    final messageCollection =
+        FirebaseFirestore.instance.collection(FirebaseConst.messages);
+
+    // Query messages where the 'members' array contains the currentUid
+    final query = await messageCollection
+        .where('members', arrayContains: currentUid)
+        .get();
+
+    // Filter the documents to find one where 'members' also contains friendUid
+    for (var doc in query.docs) {
+      final members = List<String>.from(doc['members']);
+      if (members.contains(friendUid)) {
+        return doc.id; // Return the existing messageId if found
+      }
+    }
+    return null; // Return null if no existing messageId is found
+  }
+
+  Future<void> fetchUser(String uid) async {
+    final userCollection =
+        FirebaseFirestore.instance.collection(FirebaseConst.users);
+
+    try {
+      final DocumentSnapshot doc = await userCollection.doc(uid).get();
+      if (doc.exists) {
+        setState(() {
+          currentUser = UserModel.fromSnapShot(doc); // Update the user state
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching user: $e');
+      }
+    }
+  }
 
   Future<void> fetchPosts(String uid) async {
     // Step 1: Fetch the user's document from Firestore
@@ -62,6 +118,32 @@ class _UserProfileState extends State<UserProfile>
     }
   }
 
+  Future<void> uploadCoverImage(String imagePath, String uid) async {
+    // Define the storage reference
+    final storageRef = FirebaseStorage.instance
+        .ref('/profile/$uid/cover-image/${const Uuid().v1()}.jpg');
+
+    try {
+      // Upload the image
+      await storageRef.putFile(File(imagePath));
+
+      // Get the download URL
+      String downloadURL = await storageRef.getDownloadURL();
+
+      // Update Firestore with the new cover image URL
+      await FirebaseFirestore.instance
+          .collection(FirebaseConst.users)
+          .doc(widget.otherUid)
+          .update({
+        'coverImage': downloadURL,
+      });
+
+      // Optionally, show a success message
+    } catch (e) {
+      // Optionally, show an error message to the user
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,17 +159,24 @@ class _UserProfileState extends State<UserProfile>
     });
 
     fetchPosts(widget.otherUid);
+    fetchUser(currentUid);
   }
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
+
     return BlocBuilder<GetSingleOtherUserCubit, GetSingleOtherUserState>(
       builder: (ctx, state) {
         if (state is GetSingleOtherUserLoaded) {
           final user = state.otherUser;
 
           return Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
+              automaticallyImplyLeading:
+                  widget.otherUid == currentUid ? false : true,
+              centerTitle: true,
               surfaceTintColor: AppColor.whiteColor,
               elevation: 0,
               backgroundColor: AppColor.whiteColor,
@@ -117,19 +206,225 @@ class _UserProfileState extends State<UserProfile>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // cover image
-                                Container(
-                                  height: 140,
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.all(12),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.asset(
-                                      'assets/post-2.jpg',
-                                      fit: BoxFit.cover,
+                                if (state.otherUser.coverImage != "")
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  state.otherUser.coverImage!,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        height:
+                                                            size.height * 0.05,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              AppColor.redColor,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(12),
+                                                        ),
+                                                        child: Center(
+                                                          child: Text(
+                                                            "Close",
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize:
+                                                                  size.height *
+                                                                      0.015,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                        width:
+                                                            10), // Add spacing between buttons
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () async {
+                                                          // Allow current user to select a new cover image
+                                                          final XFile? image =
+                                                              await ImagePicker()
+                                                                  .pickImage(
+                                                            source: ImageSource
+                                                                .gallery,
+                                                            imageQuality: 80,
+                                                          );
+
+                                                          Navigator.of(ctx)
+                                                              .pop();
+
+                                                          if (image != null) {
+                                                            setState(() {
+                                                              selectedCoverImage =
+                                                                  image.path;
+                                                            });
+
+                                                            // Generate a unique ID
+                                                            await uploadCoverImage(
+                                                                image.path,
+                                                                widget
+                                                                    .otherUid);
+                                                          }
+                                                        },
+                                                        child: Container(
+                                                          height: size.height *
+                                                              0.05,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: AppColor
+                                                                .redColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child: Center(
+                                                            child: Text(
+                                                              "Update",
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    size.height *
+                                                                        0.015,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                        width:
+                                                            10), // Add spacing between buttons
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                  FirebaseConst
+                                                                      .users)
+                                                              .doc(currentUid)
+                                                              .update({
+                                                            "coverImage": "",
+                                                          });
+
+                                                          Navigator.of(ctx)
+                                                              .pop();
+                                                        },
+                                                        child: Container(
+                                                          height: size.height *
+                                                              0.05,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: AppColor
+                                                                .redColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child: Center(
+                                                            child: Text(
+                                                              "Delete",
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 140,
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.all(12),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: CachedNetworkImage(
+                                          imageUrl: state.otherUser.coverImage!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+
+                                if (state.otherUser.coverImage == "")
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (widget.otherUid == currentUid) {
+                                        // Allow current user to select a new cover image
+                                        final XFile? image =
+                                            await ImagePicker().pickImage(
+                                          source: ImageSource.gallery,
+                                          imageQuality:
+                                              80, // Adjust image quality if needed
+                                        );
+
+                                        if (image != null) {
+                                          setState(() {
+                                            selectedCoverImage = image.path;
+                                          });
+
+                                          // Generate a unique ID
+                                          await uploadCoverImage(
+                                              image.path, widget.otherUid);
+                                        }
+                                      }
+                                    },
+                                    child: Container(
+                                      height: 140,
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.greyColor,
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "No Cover Image",
+                                          style: TextConst.headingStyle(
+                                              16, AppColor.blackColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                // cover image
+
                                 // profile data
                                 Column(
                                   children: [
@@ -151,10 +446,15 @@ class _UserProfileState extends State<UserProfile>
                                               'assets/3963-verified-developer-badge-red 1.png')
                                       ],
                                     ),
-                                    sizeVar(10),
+                                    Text(
+                                      '@${user.username}',
+                                      style: TextConst.headingStyle(
+                                          16, AppColor.redColor),
+                                    ),
                                     Container(
                                       height: 30,
                                       width: 100,
+                                      margin: EdgeInsets.only(top: 5),
                                       decoration: BoxDecoration(
                                         color: (user.activeStatus ?? false)
                                             ? AppColor.redColor
@@ -164,7 +464,7 @@ class _UserProfileState extends State<UserProfile>
                                       child: Center(
                                         child: Text(
                                           (user.activeStatus ?? false)
-                                              ? 'Online Now'
+                                              ? 'Online'
                                               : 'Offline',
                                           style: TextConst.headingStyle(
                                               14, AppColor.whiteColor),
@@ -185,6 +485,7 @@ class _UserProfileState extends State<UserProfile>
                           Positioned(
                             top: 90,
                             left: 135,
+                            right: 135,
                             child: Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -341,19 +642,79 @@ class _UserProfileState extends State<UserProfile>
                                 flex: 1,
                                 child: AspectRatio(
                                   aspectRatio: 1 / 1,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    margin: const EdgeInsets.all(3),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border:
-                                          Border.all(color: AppColor.redColor),
-                                    ),
-                                    child: Image.asset(
-                                      'assets/icons/messenger.png',
-                                      height: 35,
-                                      width: 35,
-                                      color: AppColor.redColor,
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      final existingMessageId =
+                                          await getExistingMessageId(
+                                              currentUid, widget.otherUid);
+
+                                      if (existingMessageId == null) {
+                                        // Create a new chat
+                                        final newMessageId = const Uuid().v4();
+                                        // ignore: use_build_context_synchronously
+                                        context
+                                            .read<ChatCubit>()
+                                            .createMessageId(
+                                              chat: ChatEntity(
+                                                messageId: newMessageId,
+                                                members: [
+                                                  widget.otherUid,
+                                                  currentUid
+                                                ],
+                                                lastMessage: "",
+                                                isRead: false,
+                                              ),
+                                            );
+
+                                        // Navigate to MessageScreen with newMessageId
+                                        // ignore: use_build_context_synchronously
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (ctx) =>
+                                                BlocProvider<MessageCubit>(
+                                              create: (context) =>
+                                                  di.sl<MessageCubit>(),
+                                              child: MessageScreen(
+                                                sender: currentUser!,
+                                                receiver: state.otherUser,
+                                                messageId: newMessageId,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        // Navigate to MessageScreen with existingMessageId
+                                        // ignore: use_build_context_synchronously
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (ctx) =>
+                                                BlocProvider<MessageCubit>(
+                                              create: (context) =>
+                                                  di.sl<MessageCubit>(),
+                                              child: MessageScreen(
+                                                sender: currentUser!,
+                                                receiver: state.otherUser,
+                                                messageId: existingMessageId,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      margin: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: AppColor.redColor),
+                                      ),
+                                      child: Image.asset(
+                                        'assets/icons/messenger.png',
+                                        height: 35,
+                                        width: 35,
+                                        color: AppColor.redColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -374,20 +735,32 @@ class _UserProfileState extends State<UserProfile>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Center(
-                              child: Text(
-                                '${user.friends!.length}\nFriends',
-                                textAlign: TextAlign.center,
-                                style: TextConst.MediumStyle(
-                                    16, AppColor.blackColor),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          FriendListScreen(user: user))),
+                              child: Center(
+                                child: Text(
+                                  '${user.friends!.length}\nFriends',
+                                  textAlign: TextAlign.center,
+                                  style: TextConst.MediumStyle(
+                                      16, AppColor.blackColor),
+                                ),
                               ),
                             ),
-                            Center(
-                              child: Text(
-                                '${user.followerCount!}\nFollowers',
-                                textAlign: TextAlign.center,
-                                style: TextConst.MediumStyle(
-                                    16, AppColor.blackColor),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          FollowerListScreen(user: user))),
+                              child: Center(
+                                child: Text(
+                                  '${user.followerCount!}\nFollowers',
+                                  textAlign: TextAlign.center,
+                                  style: TextConst.MediumStyle(
+                                      16, AppColor.blackColor),
+                                ),
                               ),
                             ),
                             Center(
@@ -410,6 +783,9 @@ class _UserProfileState extends State<UserProfile>
                         controller: _controller,
                         dividerHeight: 0,
                         indicatorColor: AppColor.redColor,
+                        labelColor: AppColor.redColor,
+                        overlayColor:
+                            const WidgetStatePropertyAll(AppColor.whiteColor),
                         tabs: const [
                           Text('Post'),
                           Text('Media'),
@@ -442,12 +818,14 @@ class _UserProfileState extends State<UserProfile>
                               return SizedBox(
                                 height: 450,
                                 child: Scrollbar(
-                                    child: postCardWidget(context, posts, user,
-                                        user.uid.toString())),
+                                    child: PostCardWidget(
+                                        posts: posts,
+                                        user: user,
+                                        uid: user.uid.toString())),
                               );
                             } else if (currentIdx == 1) {
                               return posts.isEmpty
-                                  ? const CircularProgressIndicator()
+                                  ? const Center(child: Text("No Posts"))
                                   : SizedBox(
                                       height: 450,
                                       child: GridView.builder(
@@ -504,8 +882,8 @@ class _UserProfileState extends State<UserProfile>
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
-                                                child: Image.network(
-                                                  images[idx],
+                                                child: CachedNetworkImage(
+                                                  imageUrl: images[idx],
                                                   fit: BoxFit.cover,
                                                 ),
                                               ),
@@ -554,8 +932,10 @@ Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
         if (user.uid == currentUid)
           getButton(
               "Milestones",
-              () => Navigator.of(ctx).push(
-                  MaterialPageRoute(builder: (ctx) => const MilestoneScreen())),
+              () => Navigator.of(ctx).push(MaterialPageRoute(
+                  builder: (ctx) => MilestoneScreen(
+                        user: user,
+                      ))),
               true),
       ],
     ),

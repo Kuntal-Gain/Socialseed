@@ -14,6 +14,8 @@ import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
+import '../../../utils/constants/color_const.dart';
+
 class EditPostScreen extends StatefulWidget {
   final UserEntity currentUser;
   final PostEntity post;
@@ -30,7 +32,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
   // Varibles
   late TextEditingController _captionController;
   List<File?> images = [];
-  List<String> tags = ['a', 'b'];
+  List<UserEntity> tags = [];
   String location = "";
   String type = 'public';
   String user = 'Devika';
@@ -72,8 +74,9 @@ class _EditPostScreenState extends State<EditPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
+        backgroundColor: AppColor.whiteColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pop(),

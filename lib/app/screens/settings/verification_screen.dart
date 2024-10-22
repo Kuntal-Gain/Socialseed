@@ -76,8 +76,10 @@ class _RequestForVerificationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
         title: const Text('Request Verification'),
+        backgroundColor: AppColor.whiteColor,
       ),
       body: Column(
         children: [

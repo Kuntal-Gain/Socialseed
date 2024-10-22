@@ -45,11 +45,13 @@ import 'package:socialseed/domain/usecases/user/is_signin_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_in_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_out_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_up_usecase.dart';
+import 'package:socialseed/domain/usecases/user/update_user_status_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/accept_request_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/follow_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/reject_request_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/send_request_usecase.dart';
+import 'package:socialseed/features/services/internet_service.dart';
 
 import 'domain/usecases/user/get_single_other_user_usecase.dart';
 import 'domain/usecases/user_controllers/unfollow_user_usecase.dart';
@@ -64,6 +66,8 @@ Future<void> init() async {
       signOutUsecase: sl.call(),
       isSignInUsecase: sl.call(),
       getCurrentUidUsecase: sl.call(),
+      updateUserStatusUsecase: sl.call(),
+      service: sl.call(),
     ),
   );
 
@@ -83,6 +87,7 @@ Future<void> init() async {
       sendRequestUsecase: sl.call(),
       unFollowUserUsecase: sl.call(),
       rejectRequestUsecase: sl.call(),
+      updateUserStatusUsecase: sl.call(),
     ),
   );
 
@@ -197,18 +202,29 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchStoryUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => ViewStoryUsecase(repository: sl.call()));
 
+  //external
+  sl.registerLazySingleton(
+      () => UpdateUserStatusUsecase(repository: sl.call()));
+
   // repository
 
   sl.registerLazySingleton<FirebaseRepository>(
       () => FirebaseRepositoryImpl(remoteDataSource: sl.call()));
-  sl.registerLazySingleton<RemoteDataSource>(() => RemoteDataSourceImpl(
-      firebaseFirestore: sl.call(), firebaseAuth: sl.call()));
+  sl.registerLazySingleton<RemoteDataSource>(
+    () => RemoteDataSourceImpl(
+      firebaseFirestore: sl.call(),
+      firebaseAuth: sl.call(),
+      connectivityService: sl.call(),
+    ),
+  );
 
   // external
 
   final firebaseFirestore = FirebaseFirestore.instance;
   final firebaseAuth = FirebaseAuth.instance;
+  final internetService = ConnectivityService();
 
   sl.registerLazySingleton(() => firebaseFirestore);
   sl.registerLazySingleton(() => firebaseAuth);
+  sl.registerLazySingleton(() => internetService);
 }

@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/widgets/message_card_widget.dart';
+import 'package:socialseed/app/widgets/view_post_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
@@ -49,6 +51,7 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.whiteColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -91,9 +94,29 @@ class _MessageScreenState extends State<MessageScreen> {
                           mutualTag("home"),
                       ],
                     ),
-                    Text(widget.receiver.activeStatus ?? false
-                        ? 'Online'
-                        : 'Offline'),
+                    StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(widget.receiver.uid)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Text('Loading...');
+                        }
+
+                        var userData = snapshot.data!;
+                        bool isActive = userData['active_status'] ?? false;
+                        DateTime lastSeen =
+                            (userData['last_seen'] as Timestamp).toDate();
+
+                        return Text(isActive
+                            ? 'Online'
+                            : getTime(Timestamp.fromDate(lastSeen)) ==
+                                    "Just Now"
+                                ? 'recently active'
+                                : 'last active ${getTime(Timestamp.fromDate(lastSeen))}');
+                      },
+                    ),
                   ],
                 ),
               ],

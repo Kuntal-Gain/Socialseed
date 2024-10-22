@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:socialseed/data/models/map_model.dart';
 import 'package:socialseed/features/services/map_service.dart';
+import 'package:socialseed/utils/constants/color_const.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -12,11 +13,21 @@ class LocationScreen extends StatefulWidget {
 
 class _LocationScreenState extends State<LocationScreen> {
   List<Feature> items = [];
+  bool isLoading = false; // Loading state variable
 
   void placeAutoComplete(String val) async {
+    setState(() {
+      isLoading = true; // Show loading indicator
+    });
+
     await MapService().getData(val).then((value) {
       setState(() {
         items = value;
+        isLoading = false; // Hide loading indicator
+      });
+    }).catchError((error) {
+      setState(() {
+        isLoading = false; // Hide loading indicator on error
       });
     });
   }
@@ -26,8 +37,10 @@ class _LocationScreenState extends State<LocationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
         title: const Text("Select Location"),
+        backgroundColor: AppColor.whiteColor,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -44,6 +57,10 @@ class _LocationScreenState extends State<LocationScreen> {
               onChanged: (val) => placeAutoComplete(val),
             ),
           ),
+          if (isLoading) // Show CircularProgressIndicator while loading
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
           Expanded(
             child: ListView.builder(
               itemCount: items.length,
@@ -65,7 +82,7 @@ class _LocationScreenState extends State<LocationScreen> {
                 );
               },
             ),
-          )
+          ),
         ],
       ),
     );

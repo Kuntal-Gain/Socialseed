@@ -12,6 +12,7 @@ class PostModel extends PostEntity {
   final String? content;
   final List? images;
   final List? likes;
+  final List? likedUsers;
   final List? comments;
   final num? totalLikes;
   final num? totalComments;
@@ -47,6 +48,7 @@ class PostModel extends PostEntity {
     this.college,
     this.school,
     this.work,
+    this.likedUsers,
   }) : super(
           postid: postid,
           uid: uid,
@@ -68,6 +70,7 @@ class PostModel extends PostEntity {
           work: work,
           college: college,
           school: school,
+          likedUsers: likedUsers,
         );
 
   factory PostModel.fromSnapShot(DocumentSnapshot snap) {
@@ -81,6 +84,7 @@ class PostModel extends PostEntity {
       content: ss['content'],
       images: List.from(snap.get('images')),
       likes: List.from(snap.get('likes')),
+      likedUsers: List.from(snap.get('likedUsers')),
       comments: List.from(snap.get('comments')),
       totalLikes: ss['totalLikes'],
       totalComments: ss['totalComments'],
@@ -106,7 +110,7 @@ class PostModel extends PostEntity {
         "images": images,
         "likes": likes,
         "comments": comments,
-        "totalLikes": totalComments,
+        "totalLikes": totalLikes, // Correctly use totalLikes here
         "totalComments": totalComments,
         "shares": shares,
         "location": location,
@@ -118,5 +122,6 @@ class PostModel extends PostEntity {
         "work": work,
         "college": college,
         "school": school,
+        "likedUsers": likedUsers, // Ensure likedUsers is included
       };
 }

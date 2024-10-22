@@ -61,4 +61,5 @@ abstract class FirebaseRepository {
   Future<void> addStory(StoryEntity story);
   Stream<List<StoryEntity>> fetchStories(String uid);
   Future<void> viewStory(StoryEntity story);
+  Future<void> updateUserStatus(String uid, bool isOnline);
 }

@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/internet_service.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,10 +29,12 @@ import '../models/message_model.dart';
 class RemoteDataSourceImpl implements RemoteDataSource {
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firebaseFirestore;
+  final ConnectivityService connectivityService;
 
   RemoteDataSourceImpl({
     required this.firebaseAuth,
     required this.firebaseFirestore,
+    required this.connectivityService,
   });
 
   @override
@@ -88,6 +92,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         .collection(FirebaseConst.users)
         .where("uid", isEqualTo: uid)
         .limit(1);
+
     return userCollection.snapshots().map((querySnapshot) =>
         querySnapshot.docs.map((e) => UserModel.fromSnapShot(e)).toList());
   }
@@ -112,12 +117,11 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         );
 
         final uid = await getCurrentUid();
+        await updateUserStatus(uid, true); // Set online status
 
-        await firebaseFirestore
-            .collection(FirebaseConst.users)
-            .doc(uid)
-            .update({
-          "active_status": true,
+        // Listen for connectivity changes
+        connectivityService.connectivityStream.listen((result) {
+          updateUserStatus(uid, result != ConnectivityResult.none);
         });
       }
     } on FirebaseAuthException catch (e) {
@@ -130,15 +134,37 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
+  Future<void> updateUserStatus(String uid, bool isOnline) async {
+    try {
+      print("Attempting to update status for user: $uid, isOnline: $isOnline");
+
+      // Reference the user's document
+      final docRef = firebaseFirestore.collection(FirebaseConst.users).doc(uid);
+
+      // Check if the user document exists before updating
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        // Update the active_status field in the Firestore document
+        await docRef.update({
+          "active_status": isOnline,
+          "last_seen": Timestamp.now(),
+        });
+        print("User status updated successfully for uid: $uid");
+      } else {
+        print("User document not found for uid: $uid");
+      }
+    } catch (e) {
+      // Log any errors that occur during the update process
+      print("Failed to update user status for uid: $uid. Error: $e");
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     final user = firebaseAuth.currentUser;
     if (user != null) {
-      await firebaseFirestore
-          .collection(FirebaseConst.users)
-          .doc(user.uid)
-          .update({
-        'active_status': false,
-      });
+      await updateUserStatus(user.uid, false); // Set offline status
       await firebaseAuth.signOut();
     }
   }
@@ -156,7 +182,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           if (value.user?.uid != null) {
             await createUser(user);
           }
-          print("Account Creation Successfull");
+          print("Account Creation Successful");
         });
 
         return;
@@ -165,7 +191,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       if (e.code == 'email-already-in-use') {
         print(e.code);
       } else {
-        print('something went wrong');
+        print('Something went wrong');
       }
     }
   }
@@ -216,6 +242,8 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     if (user.coverImage != "" && user.coverImage != null)
       userInformation['coverImage'] = user.coverImage;
 
+    if (user.bio != "" && user.bio != null) userInformation['bio'] = user.bio;
+
     userCollection.doc(user.uid).update(userInformation);
   }
 
@@ -253,8 +281,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       postType: post.postType,
       content: post.content,
       images: post.images,
-      likes: const [],
-      comments: const [],
+      likes: post.likes ?? [],
+      likedUsers: post.likedUsers ?? [],
+      comments: post.comments ?? [],
       totalLikes: 0,
       totalComments: 0,
       shares: 0,
@@ -320,15 +349,15 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   @override
   Future<void> likePost(PostEntity post) async {
     final postCollection = firebaseFirestore.collection(FirebaseConst.posts);
-    final userCollection = firebaseFirestore
-        .collection(FirebaseConst.users); // Access the user collection
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
 
     final currentUid = await getCurrentUid();
     final postRef = await postCollection.doc(post.postid).get();
 
     if (postRef.exists) {
       List likes = postRef.get('likes');
-      final totalLikes = postRef.get("totalLikes");
+      final totalLikes = postRef.get('totalLikes');
+      List likedUsers = postRef.get('likedUsers') ?? [];
 
       // Fetch the current user's username
       final currentUserDoc = await userCollection.doc(currentUid).get();
@@ -338,27 +367,33 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       }
 
       if (likes.contains(currentUid)) {
+        // If the user has already liked the post, unlike it
         await postCollection.doc(post.postid).update({
           "likes": FieldValue.arrayRemove([currentUid]),
           "totalLikes": totalLikes - 1
         });
       } else {
+        // If the user has not liked the post, like it
         await postCollection.doc(post.postid).update({
           "likes": FieldValue.arrayUnion([currentUid]),
           "totalLikes": totalLikes + 1
         });
 
-        // Add notification
-        await userCollection
-            .doc(post
-                .uid) // Assuming the creator's UID is stored in post.creatorId
-            .collection('notifications')
-            .add({
-          "message": "$currentUsername liked your post",
-          "createdAt": FieldValue.serverTimestamp(),
-          "postId": post.postid,
-          "type": "like"
-        });
+        // Only send a notification if the current user is not already in likedUsers
+        if (!likedUsers.contains(currentUid)) {
+          // Add the current UID to likedUsers
+          await postCollection.doc(post.postid).update({
+            "likedUsers": FieldValue.arrayUnion([currentUid])
+          });
+
+          // Send notification
+          await userCollection.doc(post.uid).collection('notifications').add({
+            "message": "$currentUsername liked your post",
+            "createdAt": FieldValue.serverTimestamp(),
+            "postId": post.postid,
+            "type": "like"
+          });
+        }
       }
     }
   }
@@ -669,7 +704,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           await targetUserRef.collection('notifications').add({
             'type': 'friend_request',
             'message': 'You have a new friend request.',
-            'userId': currentUid, // Assuming this is the image URL
+            'userId': user.imageUrl, // Assuming this is the image URL
             'createdAt': FieldValue.serverTimestamp(),
           });
         } else {
@@ -773,7 +808,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Future<void> createMessageWithId(ChatEntity message) async {
-    final uid = await getCurrentUid();
+    final uid = await getCurrentUid(); // Sender's UID
+    final receiverId =
+        message.members!.firstWhere((id) => id != uid); // Receiver's UID
 
     final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
     final userCollection = firebaseFirestore.collection(FirebaseConst.users);
@@ -788,32 +825,35 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     try {
       final messageExists = await isMessageIdExists(message.messageId!);
 
+      // Add the message to the chat collection
       if (!messageExists) {
         await chatCollection.doc(message.messageId).set(newMessage);
-
-        final userRef = await userCollection.doc(uid).get();
-        if (!userRef.exists) {
-          await userCollection.doc(uid).set({
-            "messages": FieldValue.arrayUnion([message.messageId]),
-          });
-        } else {
-          await userCollection.doc(uid).update({
-            "messages": FieldValue.arrayUnion([message.messageId]),
-          });
-        }
       } else {
         await chatCollection.doc(message.messageId).update(newMessage);
+      }
 
-        final userRef = await userCollection.doc(uid).get();
-        if (!userRef.exists) {
-          await userCollection.doc(uid).set({
-            "messages": FieldValue.arrayUnion([message.messageId]),
-          });
-        } else {
-          await userCollection.doc(uid).update({
-            "messages": FieldValue.arrayUnion([message.messageId]),
-          });
-        }
+      // Update the sender's document with the message ID
+      final senderRef = await userCollection.doc(uid).get();
+      if (!senderRef.exists) {
+        await userCollection.doc(uid).set({
+          "messages": FieldValue.arrayUnion([message.messageId]),
+        });
+      } else {
+        await userCollection.doc(uid).update({
+          "messages": FieldValue.arrayUnion([message.messageId]),
+        });
+      }
+
+      // Update the receiver's document with the message ID
+      final receiverRef = await userCollection.doc(receiverId).get();
+      if (!receiverRef.exists) {
+        await userCollection.doc(receiverId).set({
+          "messages": FieldValue.arrayUnion([message.messageId]),
+        });
+      } else {
+        await userCollection.doc(receiverId).update({
+          "messages": FieldValue.arrayUnion([message.messageId]),
+        });
       }
     } catch (error) {
       debugPrint(error.toString());
@@ -826,7 +866,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         .collection(FirebaseConst.messages)
         .doc(messageId)
         .collection(FirebaseConst.messages)
-        .orderBy("createAt", descending: false); // Check field name
+        .orderBy("createAt", descending: false); // Ensure field name is correct
 
     return chatCollection.snapshots().map((querySnapshot) {
       print(
@@ -852,23 +892,23 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     final messageData = MessageModel(
       message: message,
       senderId: uid,
-      createAt: Timestamp.now(),
+      createAt: Timestamp
+          .now(), // Local timestamp, will be updated with server timestamp
     ).toJson();
 
-    final mid = const Uuid().v4();
+    final mid = const Uuid().v4(); // Generate a unique message ID
 
     try {
-      final chatRef = await userDoc.doc(messageId).get();
+      // Attempt to add the new message document
+      await userDoc.doc(mid).set(messageData);
 
-      if (!chatRef.exists) {
-        userDoc.doc(mid).set(messageData);
-        msgDoc.doc(messageId).update({
-          "lastMessage": message,
-          "isRead": false,
-        });
-      } else {
-        userDoc.doc(mid).update(messageData);
-      }
+      // Update the last message in the parent messageId document
+      await msgDoc.doc(messageId).update({
+        "lastMessage": message,
+        "isRead": false,
+        "lastMessageTimestamp":
+            FieldValue.serverTimestamp(), // Set to server timestamp
+      });
     } catch (e) {
       print('Error sending message: $e');
       // Handle error, maybe rethrow or handle it within the UI

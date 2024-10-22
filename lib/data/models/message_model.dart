@@ -1,11 +1,13 @@
-// ignore_for_file: overridden_fields, annotate_overrides
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:socialseed/domain/entities/message_entity.dart';
+
+import '../../domain/entities/message_entity.dart';
 
 class MessageModel extends MessageEntity {
+  @override
   final String? message;
+  @override
   final String? senderId;
+  @override
   final Timestamp? createAt;
 
   const MessageModel({
@@ -24,7 +26,7 @@ class MessageModel extends MessageEntity {
     return MessageModel(
       message: ss['message'],
       senderId: ss['senderId'],
-      createAt: ss['createAt'],
+      createAt: ss['createAt'], // Ensure this is fetched correctly
     );
   }
 

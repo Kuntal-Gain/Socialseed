@@ -59,4 +59,7 @@ abstract class RemoteDataSource {
   Future<void> addStory(StoryEntity story);
   Stream<List<StoryEntity>> fetchStories(String uid);
   Future<void> viewStory(StoryEntity story);
+
+  //external
+  Future<void> updateUserStatus(String uid, bool isOnline);
 }

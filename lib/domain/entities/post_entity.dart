@@ -11,6 +11,7 @@ class PostEntity extends Equatable {
   final String? content;
   final List? images;
   final List? likes;
+  final List? likedUsers;
   final List? comments;
   final num? totalLikes;
   final num? totalComments;
@@ -45,6 +46,7 @@ class PostEntity extends Equatable {
     this.school,
     this.work,
     this.home,
+    this.likedUsers,
   });
 
   @override
@@ -69,5 +71,6 @@ class PostEntity extends Equatable {
         school,
         college,
         work,
+        likedUsers,
       ];
 }

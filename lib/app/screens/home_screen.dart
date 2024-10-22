@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
+import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/chat/chat_screen.dart';
 import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
 import 'package:socialseed/app/screens/notification/notification_screen.dart';
@@ -8,6 +10,7 @@ import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/dependency_injection.dart' as di;
 
 class HomeScreen extends StatefulWidget {
   final String uid;
@@ -29,6 +32,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _controller = PageController(initialPage: 0);
     BlocProvider.of<GetSingleUserCubit>(context)
         .getSingleUsers(uid: widget.uid);
+
+    di.sl<UserCubit>().updateStatus(uid: widget.uid, isOnline: true);
+
+    SystemChannels.lifecycle.setMessageHandler((message) async {
+      print(message);
+
+      if (message == AppLifecycleState.paused.toString()) {
+        di.sl<UserCubit>().updateStatus(uid: widget.uid, isOnline: false);
+      } else if (message == AppLifecycleState.resumed.toString()) {
+        di.sl<UserCubit>().updateStatus(uid: widget.uid, isOnline: true);
+      }
+
+      return Future.value(message);
+    });
   }
 
   @override
@@ -57,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _controller.jumpToPage(selectedIdx);
       },
       child: Container(
-        height: 60,
-        width: 60,
+        height: 50,
+        width: 50,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(45),
@@ -79,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -124,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        height: 80,
+        height: 70,
         width: double.infinity,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.all(10),

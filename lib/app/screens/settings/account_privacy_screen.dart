@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 
+import '../../../utils/constants/color_const.dart';
+
 class PrivacySettingsScreen extends StatefulWidget {
   final String userId;
   const PrivacySettingsScreen({Key? key, required this.userId})
@@ -63,8 +65,10 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
         title: const Text('Privacy Settings'),
+        backgroundColor: AppColor.whiteColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cool_dropdown/cool_dropdown.dart';
 import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:socialseed/app/screens/post/tags_screen.dart';
+import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +33,7 @@ class _PostScreenState extends State<PostScreen> {
   // Varibles
   final TextEditingController _captionController = TextEditingController();
   List<File?> images = [];
-  List<String> tags = ['a', 'b'];
+  List<UserEntity> tags = [];
   String location = "";
   String type = 'public';
   String user = 'Devika';
@@ -62,25 +64,28 @@ class _PostScreenState extends State<PostScreen> {
     // ignore: use_build_context_synchronously
     BlocProvider.of<PostCubit>(context)
         .createPost(
-            post: PostEntity(
-                postid: post.postid,
-                profileId: widget.currentUser.imageUrl,
-                uid: widget.currentUser.uid,
-                username: widget.currentUser.username,
-                postType: type,
-                content: _captionController.text,
-                images: imageFiles,
-                likes: const [],
-                comments: const [],
-                shares: 0,
-                location: location,
-                tags: const [],
-                creationDate: Timestamp.now(),
-                isVerified: widget.currentUser.isVerified,
-                work: widget.currentUser.work,
-                school: widget.currentUser.school,
-                college: widget.currentUser.college,
-                home: widget.currentUser.location))
+      post: PostEntity(
+        postid: post.postid,
+        profileId: widget.currentUser.imageUrl,
+        uid: widget.currentUser.uid,
+        username: widget.currentUser.username,
+        postType: type,
+        content: _captionController.text,
+        images: imageFiles,
+        likes: const [],
+        likedUsers: const [],
+        comments: const [],
+        shares: 0,
+        location: location,
+        tags: const [],
+        creationDate: Timestamp.now(),
+        isVerified: widget.currentUser.isVerified,
+        work: widget.currentUser.work,
+        school: widget.currentUser.school,
+        college: widget.currentUser.college,
+        home: widget.currentUser.location,
+      ),
+    )
         .then((value) {
       setState(() {
         _captionController.clear();
@@ -116,11 +121,18 @@ class _PostScreenState extends State<PostScreen> {
     super.dispose();
   }
 
+  void addTag(UserEntity user) {
+    setState(() {
+      tags.add(user);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: AppColor.whiteColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pop(),
@@ -214,9 +226,12 @@ class _PostScreenState extends State<PostScreen> {
                             ),
                             SizedBox(
                               width: 100,
+                              height: 40,
                               child: CoolDropdown(
-                                defaultItem:
-                                    CoolDropdownItem(label: 'Public', value: 1),
+                                defaultItem: CoolDropdownItem(
+                                  label: 'Public',
+                                  value: 1,
+                                ),
                                 dropdownList: [
                                   CoolDropdownItem(label: 'Public', value: 1),
                                   CoolDropdownItem(label: 'Private', value: 2),
@@ -532,7 +547,20 @@ class _PostScreenState extends State<PostScreen> {
                 ),
                 Center(
                   child: TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final res = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TagPeopleScreen(
+                            currentUid: widget.currentUser.uid!,
+                            onUserSelected: (addTag),
+                          ),
+                        ),
+                      );
+
+                      setState(() {
+                        tags.add(res);
+                      });
+                    },
                     icon: const Icon(
                       Icons.person_2,
                       color: Color.fromRGBO(255, 49, 49, 1),

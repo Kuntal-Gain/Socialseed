@@ -36,8 +36,10 @@ class AboutScreen extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
         title: const Text('About Socialseed'),
+        backgroundColor: AppColor.whiteColor,
       ),
       body: Column(
         children: [
