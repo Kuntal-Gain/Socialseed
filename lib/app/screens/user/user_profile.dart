@@ -53,6 +53,7 @@ class _UserProfileState extends State<UserProfile>
   String currentUid = FirebaseAuth.instance.currentUser!.uid;
   late UserEntity? currentUser;
   var selectedCoverImage = "";
+  bool isPrivate = false;
 
   Future<String?> getExistingMessageId(
       String currentUid, String friendUid) async {
@@ -144,6 +145,39 @@ class _UserProfileState extends State<UserProfile>
     }
   }
 
+  Future<bool> getPrivateStatus(String userId) async {
+    try {
+      // Reference to the user's document in the 'users' collection
+      DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore
+          .instance
+          .collection(FirebaseConst.users)
+          .doc(userId)
+          .get();
+
+      // Check if the document exists
+      if (userDoc.exists && userDoc.data() != null) {
+        // Retrieve the 'isPrivate' field from the document
+        bool isPrivate =
+            userDoc.data()!['isPrivate'] ?? false; // default to false if null
+        return isPrivate;
+      } else {
+        // If the document doesn't exist, return false (or handle as needed)
+        return false;
+      }
+    } catch (e) {
+      print("Error fetching isPrivate status: $e");
+      return false; // Handle error cases by returning false
+    }
+  }
+
+  Future<void> fetchStatus(String uid) async {
+    var status = await getPrivateStatus(uid);
+
+    setState(() {
+      isPrivate = status;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +194,9 @@ class _UserProfileState extends State<UserProfile>
 
     fetchPosts(widget.otherUid);
     fetchUser(currentUid);
+    fetchStatus(widget.otherUid);
+
+    print(isPrivate);
   }
 
   @override
@@ -505,7 +542,6 @@ class _UserProfileState extends State<UserProfile>
                           ),
                         ],
                       ),
-
                       if (currentUid != user.uid)
                         Container(
                           height: 100,
@@ -722,7 +758,6 @@ class _UserProfileState extends State<UserProfile>
                             ],
                           ),
                         ),
-
                       Container(
                         margin: const EdgeInsets.all(16),
                         height: 100,
@@ -774,136 +809,163 @@ class _UserProfileState extends State<UserProfile>
                           ],
                         ),
                       ),
-                      TabBar(
-                        onTap: (val) {
-                          setState(() {
-                            currentIdx = val;
-                          });
-                        },
-                        controller: _controller,
-                        dividerHeight: 0,
-                        indicatorColor: AppColor.redColor,
-                        labelColor: AppColor.redColor,
-                        overlayColor:
-                            const WidgetStatePropertyAll(AppColor.whiteColor),
-                        tabs: const [
-                          Text('Post'),
-                          Text('Media'),
-                          Text('About'),
-                        ],
-                      ),
-                      sizeVar(20),
-                      // posts
 
-                      BlocBuilder<PostCubit, PostState>(
-                        builder: (context, state) {
-                          if (state is PostLoading) {
-                            // ignore: avoid_print
-                            print("POST LOADING....");
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColor.redColor,
-                              ),
-                            );
-                          }
+                      // First condition: If the account is not private
+                      if (!isPrivate || user.friends!.contains(currentUid)) ...[
+                        TabBar(
+                          onTap: (val) {
+                            setState(() {
+                              currentIdx = val;
+                            });
+                          },
+                          controller: _controller,
+                          dividerHeight: 0,
+                          indicatorColor: AppColor.redColor,
+                          labelColor: AppColor.redColor,
+                          overlayColor:
+                              const WidgetStatePropertyAll(AppColor.whiteColor),
+                          tabs: const [
+                            Text('Post'),
+                            Text('Media'),
+                            Text('About'),
+                          ],
+                        ),
+                        sizeVar(20),
 
-                          if (state is PostLoaded) {
-                            // ignore: avoid_print
-                            print("POST LOADED IS TRIGGERED");
-                            final posts = state.posts
-                                .where((post) => post.uid == user.uid)
-                                .toList();
-
-                            if (currentIdx == 0) {
-                              return SizedBox(
-                                height: 450,
-                                child: Scrollbar(
-                                    child: PostCardWidget(
-                                        posts: posts,
-                                        user: user,
-                                        uid: user.uid.toString())),
+                        // BlocBuilder to show posts/media/about
+                        BlocBuilder<PostCubit, PostState>(
+                          builder: (context, state) {
+                            if (state is PostLoading) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColor.redColor,
+                                ),
                               );
-                            } else if (currentIdx == 1) {
-                              return posts.isEmpty
-                                  ? const Center(child: Text("No Posts"))
-                                  : SizedBox(
-                                      height: 450,
-                                      child: GridView.builder(
-                                        itemCount: images.length,
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 0,
-                                          crossAxisSpacing: 0,
-                                          childAspectRatio: 1,
-                                        ),
-                                        itemBuilder: (ctx, idx) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              showDialog(
-                                                context: ctx,
-                                                builder: (_) => Dialog(
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(16),
-                                                        child: Image.network(
-                                                          images[idx],
-                                                          fit: BoxFit.cover,
+                            }
+
+                            if (state is PostLoaded) {
+                              final posts = state.posts
+                                  .where((post) => post.uid == user.uid)
+                                  .toList();
+
+                              if (currentIdx == 0) {
+                                return SizedBox(
+                                  height: 450,
+                                  child: Scrollbar(
+                                      child: PostCardWidget(
+                                          posts: posts,
+                                          user: user,
+                                          uid: user.uid.toString())),
+                                );
+                              } else if (currentIdx == 1) {
+                                return posts.isEmpty
+                                    ? const Center(child: Text("No Posts"))
+                                    : SizedBox(
+                                        height: 450,
+                                        child: GridView.builder(
+                                          itemCount: images.length,
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            mainAxisSpacing: 0,
+                                            crossAxisSpacing: 0,
+                                            childAspectRatio: 1,
+                                          ),
+                                          itemBuilder: (ctx, idx) {
+                                            return GestureDetector(
+                                              onTap: () {
+                                                showDialog(
+                                                  context: ctx,
+                                                  builder: (_) => Dialog(
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(16),
+                                                          child: Image.network(
+                                                            images[idx],
+                                                            fit: BoxFit.cover,
+                                                          ),
                                                         ),
-                                                      ),
-                                                      const SizedBox(
-                                                          height: 10),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(ctx)
-                                                              .pop();
-                                                        },
-                                                        child: const Text(
-                                                          "Close",
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(ctx)
+                                                                .pop();
+                                                          },
+                                                          child: const Text(
+                                                            "Close",
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .white),
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
+                                                margin:
+                                                    const EdgeInsets.all(10),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: images[idx],
+                                                    fit: BoxFit.cover,
                                                   ),
                                                 ),
-                                              );
-                                            },
-                                            child: Container(
-                                              margin: const EdgeInsets.all(10),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: images[idx],
-                                                  fit: BoxFit.cover,
-                                                ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                            } else {
-                              return getInformtion(user, context, currentUid);
+                                            );
+                                          },
+                                        ),
+                                      );
+                              } else {
+                                return getInformtion(user, context, currentUid);
+                              }
                             }
-                          }
 
-                          if (state is PostFailure) {
-                            failureBar(context, "Something Went wrong");
-                          }
+                            if (state is PostFailure) {
+                              failureBar(context, "Something Went wrong");
+                            }
 
-                          return const SizedBox();
-                        },
-                      )
+                            return const SizedBox();
+                          },
+                        ),
+                      ]
+
+// Second condition: If the account is private and the current user is not a friend
+                      else ...[
+                        sizeVar(size.height * 0.1),
+                        Container(
+                          height: 60,
+                          width: 60,
+                          child: Image.network(
+                            'https://cdn-icons-png.flaticon.com/512/1828/1828471.png',
+                            color: AppColor.redColor,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Center(
+                            child: Text(
+                              'It\'s a Private Account, \nConsider being a friend first',
+                              style: TextConst.headingStyle(
+                                22,
+                                AppColor.redColor,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ]
                     ],
                   ),
                 ),
