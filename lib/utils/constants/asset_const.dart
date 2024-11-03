@@ -12,4 +12,6 @@ class IconConst {
   static const String commentIcon = 'assets/icons/comment.png';
   static const String shareIcon = 'assets/icons/share.png';
   static const String moreIcon = 'assets/icons/more.png';
+  static const String saveIcon = 'assets/icons/bookmark.png';
+  static const String pressedSaveIcon = 'assets/icons/pressed-bookmark.png';
 }

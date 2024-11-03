@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
+import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
@@ -11,6 +12,7 @@ import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart
 import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
+import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
@@ -37,11 +39,15 @@ import 'package:socialseed/domain/usecases/post/update_post_usecase.dart';
 import 'package:socialseed/domain/usecases/story/add_story_usecase.dart';
 import 'package:socialseed/domain/usecases/story/fetch_story_usecase.dart';
 import 'package:socialseed/domain/usecases/story/view_story_usecase.dart';
+import 'package:socialseed/domain/usecases/user/archieve_post_usecase.dart';
 import 'package:socialseed/domain/usecases/user/create_user_usecase.dart';
+import 'package:socialseed/domain/usecases/user/fetch_archieved_posts.dart';
+import 'package:socialseed/domain/usecases/user/fetch_saved_content_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_single_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user/is_signin_usecase.dart';
+import 'package:socialseed/domain/usecases/user/save_post_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_in_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_out_usecase.dart';
 import 'package:socialseed/domain/usecases/user/sign_up_usecase.dart';
@@ -152,6 +158,22 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => SavedcontentCubit(
+      savePostUsecase: sl.call(),
+      fetchSavedContentUsecase: sl.call(),
+      getCurrentUidUsecase: sl.call(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ArchivepostCubit(
+      getCurrentUidUsecase: sl.call(),
+      archievePostUsecase: sl.call(),
+      fetchArchievedPosts: sl.call(),
+    ),
+  );
+
   // usecase
 
   // user usecases
@@ -171,6 +193,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AcceptRequestUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => RejectRequestUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => SendRequestUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => SavePostUsecase(repository: sl.call()));
+  sl.registerLazySingleton(
+      () => FetchSavedContentUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => ArchievePostUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => FetchArchievedPosts(repository: sl.call()));
 
   // post usecases
   sl.registerLazySingleton(() => CreatePostUsecase(repository: sl.call()));

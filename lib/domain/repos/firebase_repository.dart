@@ -35,6 +35,10 @@ abstract class FirebaseRepository {
   Future<void> updatePost(PostEntity post);
   Future<void> deletePost(PostEntity post);
   Future<void> likePost(PostEntity post);
+  Future<void> savePost(PostEntity post);
+  Stream<List<PostEntity>> fetchSavedPosts(String uid);
+  Future<void> archievePost(PostEntity post);
+  Stream<List<PostEntity>> fetchArchievePosts(String uid);
 
   // Comments
   Future<void> createComment(CommentEntity comment);

@@ -23,6 +23,8 @@ import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
+import '../../cubits/savedcontent/savedcontent_cubit.dart';
+
 class PostViewScreen extends StatefulWidget {
   final PostEntity post;
   final UserEntity user;
@@ -41,7 +43,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
   bool isLiked = false;
   num? totalLikes = 0;
 
-  double size = 380;
+  double size = 150;
 
   String caption = '';
   int totalLines = 0;
@@ -54,7 +56,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
     caption = widget.post.content.toString();
 
     totalLines = (caption.length / 25).ceil();
-    size = size + totalLines * 25;
+    size = size + totalLines * 25 + (widget.post.images!.isNotEmpty ? 230 : 0);
 
     isLiked = widget.post.likes?.contains(widget.user.uid) ?? false;
     totalLikes = widget.post.totalLikes ?? 0;
@@ -124,7 +126,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
       postId: widget.post.postid,
       creatorUid: widget.user.uid,
       content: _commentController.text,
-      username: widget.post.username,
+      username: widget.user.username,
       profileUrl: widget.user.imageUrl,
       createAt: Timestamp.now(),
       likes: const [],
@@ -264,22 +266,24 @@ class _PostViewScreenState extends State<PostViewScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    height: 250,
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: CachedNetworkImage(
-                        imageUrl: widget.post.images!.first,
-                        placeholder: (ctx, url) => Container(
-                          color: Colors.grey,
+                  if (widget.post.images!.isNotEmpty)
+                    Container(
+                      height: 250,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.post.images!.first,
+                          placeholder: (ctx, url) => Container(
+                            color: Colors.grey,
+                          ),
+                          errorWidget: (ctx, url, err) =>
+                              const Icon(Icons.error),
+                          fit: BoxFit.cover,
                         ),
-                        errorWidget: (ctx, url, err) => const Icon(Icons.error),
-                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
                   Row(
                     children: [
                       sizeHor(10),
@@ -297,16 +301,80 @@ class _PostViewScreenState extends State<PostViewScreen> {
                           });
                         },
                         child: postItem(
-                            !isLiked
+                            iconId: !isLiked
                                 ? IconConst.likeIcon
                                 : IconConst.likePressedIcon,
-                            totalLikes),
+                            value: totalLikes),
                       ),
                       sizeHor(10),
                       postItem(
-                          IconConst.commentIcon, widget.post.totalComments),
+                          iconId: IconConst.commentIcon,
+                          value: widget.post.totalComments),
                       sizeHor(10),
-                      postItem(IconConst.shareIcon, widget.post.shares),
+                      if (widget.post.images!.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            // Check if the post is already saved
+                            final bool isAlreadySaved = widget.user.savedContent
+                                    ?.contains(widget.post.postid) ??
+                                false;
+
+                            // Optimistically update the UI
+                            setState(() {
+                              // Toggle the saved state in the UI
+                              if (isAlreadySaved) {
+                                widget.user.savedContent?.remove(
+                                    widget.post.postid); // Remove if it's saved
+                              } else {
+                                widget.user.savedContent?.add(widget
+                                    .post.postid); // Add if it's not saved
+                              }
+                            });
+
+                            // Save or unsave the post asynchronously
+                            BlocProvider.of<SavedcontentCubit>(context)
+                                .savePost(widget
+                                    .post) // Assumes this handles both save and unsave operations
+                                .then((_) {
+                              successBar(
+                                  context,
+                                  isAlreadySaved
+                                      ? "Post Unsaved"
+                                      : "Post Saved");
+                            }).catchError((error) {
+                              // Revert the UI state if the operation fails
+                              setState(() {
+                                if (isAlreadySaved) {
+                                  widget.user.savedContent?.add(
+                                      widget.post.postid); // Revert to saved
+                                } else {
+                                  widget.user.savedContent?.remove(
+                                      widget.post.postid); // Revert to unsaved
+                                }
+                              });
+                              failureBar(context, "Something went wrong");
+                            });
+                          },
+                          child: Container(
+                            height: 25,
+                            width: 25,
+                            margin: const EdgeInsets.all(12),
+                            child: Image.asset(
+                              widget.user.savedContent
+                                          ?.contains(widget.post.postid) ??
+                                      false
+                                  ? IconConst
+                                      .pressedSaveIcon // Show pressed icon if saved
+                                  : IconConst
+                                      .saveIcon, // Show regular icon if not saved
+                              color: widget.user.savedContent
+                                          ?.contains(widget.post.postid) ??
+                                      false
+                                  ? AppColor.redColor
+                                  : AppColor.blackColor,
+                            ),
+                          ),
+                        )
                     ],
                   )
                 ],

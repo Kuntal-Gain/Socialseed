@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:socialseed/app/widgets/notification_widget.dart';
-import 'package:socialseed/utils/constants/firebase_const.dart';
+
+import '../../../utils/constants/color_const.dart';
+import '../../../utils/constants/firebase_const.dart';
+import '../../../utils/constants/text_const.dart';
+import '../../widgets/notification_widget.dart';
 
 class NotificationScreen extends StatefulWidget {
   final String uid;
@@ -22,14 +25,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       if (notification['type'] == 'follow' ||
           notification['type'] == 'friend_request') {
-        final userId = notification[
-            'userId']; // Assuming `userId` is part of the notification data
-
+        final userId = notification['userId'];
         return userId;
       } else if (notification['type'] == 'like' ||
           notification['type'] == 'comment') {
-        final postId = notification[
-            'postId']; // Assuming `postId` is part of the notification data
+        final postId = notification['postId'];
         final postDoc = await FirebaseFirestore.instance
             .collection(FirebaseConst.posts)
             .doc(postId)
@@ -54,8 +54,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
+        backgroundColor: AppColor.whiteColor,
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text('My Notifications'),
@@ -75,7 +76,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
             return const Center(child: Text('Error fetching notifications'));
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No notifications'));
+            return Column(
+              children: [
+                Image.network(
+                    'https://cdn.dribbble.com/users/1319343/screenshots/6238304/_01-no-notifications.gif'),
+                Text(
+                  'No Notifications',
+                  style: TextConst.headingStyle(20, AppColor.redColor),
+                )
+              ],
+            );
           }
 
           final notifications = snapshot.data!.docs;
@@ -89,6 +99,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
               return FutureBuilder<String?>(
                 future: fetchImageFromNotification(notification),
                 builder: (context, imageSnapshot) {
+                  if (!imageSnapshot.hasData || imageSnapshot.data == null) {
+                    // Skip this notification if postId doesn't exist
+                    return const SizedBox.shrink();
+                  }
+
                   final imageUrl = imageSnapshot.data;
                   final type = notification['type'] ?? '';
                   final message = notification['message'] ?? 'No message';

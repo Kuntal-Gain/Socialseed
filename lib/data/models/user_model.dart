@@ -32,6 +32,8 @@ class UserModel extends UserEntity {
   final bool? activeStatus;
   final List? messages;
   final Timestamp? lastSeen;
+  final List? savedContent;
+  final List? archivedContent;
 
   const UserModel({
     this.uid,
@@ -62,6 +64,8 @@ class UserModel extends UserEntity {
     this.activeStatus,
     this.messages,
     this.lastSeen,
+    this.savedContent,
+    this.archivedContent,
   }) : super(
           uid: uid,
           username: username,
@@ -91,40 +95,45 @@ class UserModel extends UserEntity {
           activeStatus: activeStatus,
           messages: messages,
           lastSeen: lastSeen,
+          savedContent: savedContent,
+          archivedContent: archivedContent,
         );
 
   factory UserModel.fromSnapShot(DocumentSnapshot snap) {
     var ss = snap.data() as Map<String, dynamic>;
 
     return UserModel(
-        uid: ss['uid'],
-        username: ss['username'],
-        fullname: ss['fullname'],
-        email: ss['email'],
-        bio: ss['bio'],
-        imageUrl: ss['imageUrl'],
-        friends: ss['friends'],
-        milestones: ss['milestones'],
-        likedPages: ss['likedPages'],
-        posts: ss['posts'],
-        joinedDate: ss['joinedDate'],
-        isVerified: ss['isVerified'],
-        badges: ss['badges'],
-        followerCount: ss['followerCount'],
-        followingCount: ss['followingCount'],
-        stories: ss['stories'],
-        work: ss["work"],
-        college: ss["college"],
-        school: ss["school"],
-        location: ss["location"],
-        coverImage: ss["coverImage"],
-        dob: ss["dob"],
-        followers: ss['followers'],
-        following: ss['following'],
-        requests: ss['requests'],
-        activeStatus: ss['active_status'],
-        messages: ss['messages'],
-        lastSeen: ss['last_seen']);
+      uid: ss['uid'],
+      username: ss['username'],
+      fullname: ss['fullname'],
+      email: ss['email'],
+      bio: ss['bio'],
+      imageUrl: ss['imageUrl'],
+      friends: ss['friends'],
+      milestones: ss['milestones'],
+      likedPages: ss['likedPages'],
+      posts: ss['posts'],
+      joinedDate: ss['joinedDate'],
+      isVerified: ss['isVerified'],
+      badges: ss['badges'],
+      followerCount: ss['followerCount'],
+      followingCount: ss['followingCount'],
+      stories: ss['stories'],
+      work: ss["work"],
+      college: ss["college"],
+      school: ss["school"],
+      location: ss["location"],
+      coverImage: ss["coverImage"],
+      dob: ss["dob"],
+      followers: ss['followers'],
+      following: ss['following'],
+      requests: ss['requests'],
+      activeStatus: ss['active_status'],
+      messages: ss['messages'],
+      lastSeen: ss['last_seen'],
+      archivedContent: ss['archivedContent'],
+      savedContent: ss['savedContent'],
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -156,5 +165,7 @@ class UserModel extends UserEntity {
         "active_status": activeStatus,
         "messages": messages,
         "last_seen": lastSeen,
+        "archivedContent": archivedContent,
+        "savedContent": savedContent,
       };
 }

@@ -20,6 +20,8 @@ import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
+import '../../../features/api/generate_caption.dart';
+
 class PostScreen extends StatefulWidget {
   final UserEntity currentUser;
 
@@ -38,6 +40,17 @@ class _PostScreenState extends State<PostScreen> {
   String type = 'public';
   String user = 'Devika';
   List<String?> imageFiles = [];
+  List<String> topics = [];
+  bool isAI = false;
+
+  List<String> splitTopics(String data) {
+    // Split the string by commas and trim whitespace from each topic
+    List<String> splitData =
+        data.split(',').map((topic) => topic.trim()).toList();
+
+    // Filter out any empty strings
+    return splitData.where((topic) => topic.isNotEmpty).toList();
+  }
 
   // Cloud Storage
   FirebaseStorage storage = FirebaseStorage.instance;
@@ -125,6 +138,37 @@ class _PostScreenState extends State<PostScreen> {
     setState(() {
       tags.add(user);
     });
+  }
+
+  @override
+  void initState() {
+    getCaption('');
+    super.initState();
+  }
+
+  void getCaption(String data) async {
+    if (data.isNotEmpty && data != "Loading...") {
+      try {
+        final caption = await PostService().generateCaption(splitTopics(data));
+        if (mounted) {
+          setState(() {
+            if (_captionController.text == "Loading..." ||
+                _captionController.text.isEmpty) {
+              _captionController.text = caption;
+            }
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _captionController.text = ''; // Clear text if there's an error
+          });
+        }
+        if (kDebugMode) {
+          print('Error generating caption: $e');
+        }
+      }
+    }
   }
 
   @override
@@ -249,14 +293,54 @@ class _PostScreenState extends State<PostScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: TextField(
-                        controller: _captionController,
-                        maxLines: null,
-                        decoration: const InputDecoration(
-                          hintText: "What's on your mind?",
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(fontSize: 16),
-                        ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _captionController,
+                              maxLines: null,
+                              decoration: InputDecoration(
+                                hintText: !isAI
+                                    ? "What's on your mind?"
+                                    : "Write few topic names eg. Nature , Environment , Urban",
+                                border: InputBorder.none,
+                                hintStyle: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              if (!isAI) {
+                                setState(() {
+                                  isAI = true;
+                                  _captionController.clear();
+                                });
+                              } else {
+                                final currentText = _captionController.text;
+                                if (currentText.isNotEmpty &&
+                                    currentText != "Loading...") {
+                                  _captionController.text = "Loading...";
+                                  getCaption(currentText);
+                                  setState(() {
+                                    isAI = false;
+                                  });
+                                }
+                              }
+                            },
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Image.network(
+                                'https://cdn-icons-png.flaticon.com/512/17653/17653338.png',
+                                fit: BoxFit.contain,
+                                color: isAI
+                                    ? AppColor.redColor
+                                    : AppColor.blackColor,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     if (images.length == 1)

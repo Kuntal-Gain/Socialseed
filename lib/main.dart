@@ -1,6 +1,9 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
@@ -16,6 +19,7 @@ import 'package:socialseed/firebase_options.dart';
 import 'package:socialseed/features/services/internet_service.dart'; // Added
 import 'package:socialseed/utils/constants/color_const.dart';
 
+import 'app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'app/screens/no_internet.dart';
 import 'app/widgets/opacity_leaf_animation.dart';
 import 'dependency_injection.dart' as di;
@@ -55,13 +59,23 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<ChatCubit>()),
         BlocProvider(create: (_) => di.sl<MessageCubit>()),
         BlocProvider(create: (_) => di.sl<StoryCubit>()),
+        BlocProvider(create: (_) => di.sl<SavedcontentCubit>()),
+        BlocProvider(create: (_) => di.sl<ArchivepostCubit>()),
       ],
       child: MaterialApp(
         theme: ThemeData(
           primaryColor: Colors.white,
+          textTheme: ThemeData.light().textTheme.apply(
+                bodyColor: AppColor.blackColor,
+                displayColor: AppColor.blackColor,
+              ),
         ),
-        title: "Socialseed",
-        darkTheme: ThemeData.dark(),
+        darkTheme: ThemeData.dark().copyWith(
+          textTheme: ThemeData.dark().textTheme.apply(
+                bodyColor: AppColor.blackColor,
+                displayColor: AppColor.blackColor,
+              ),
+        ),
         debugShowCheckedModeBanner: false,
         home: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {

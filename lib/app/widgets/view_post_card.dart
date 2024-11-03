@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-Widget postItem(String iconId, num? value) {
+Widget postItem({required String iconId, required num? value}) {
   return Row(
     children: [
       Container(
         height: 25,
         width: 25,
         margin: const EdgeInsets.all(12),
-        child: Image.asset(iconId),
+        child: Image.asset(
+          iconId,
+        ),
       ),
       Text(
         value.toString(),

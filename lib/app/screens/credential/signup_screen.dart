@@ -13,6 +13,7 @@ import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
+import 'package:socialseed/app/widgets/profile_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -186,7 +187,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       builder: (BuildContext context) {
         // ignore: sized_box_for_whitespace
         return Container(
-          height: 250, // Fixed height to avoid intrinsic dimensions error
+          height: 250,
+          color: AppColor
+              .whiteColor, // Fixed height to avoid intrinsic dimensions error
           child: Column(
             children: [
               Expanded(
@@ -199,12 +202,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the bottom sheet
-                },
-                child: const Text('SET'),
-              ),
+              getButton("SET", () => Navigator.pop(context), false),
             ],
           ),
         );

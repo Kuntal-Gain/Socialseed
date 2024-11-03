@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/screens/settings/about_screen.dart';
 import 'package:socialseed/app/screens/settings/account_privacy_screen.dart';
+import 'package:socialseed/app/screens/settings/archived_content.dart';
 import 'package:socialseed/app/screens/settings/edit_profile_screen.dart';
+import 'package:socialseed/app/screens/settings/saved_posts_screen.dart';
 import 'package:socialseed/app/screens/settings/verification_screen.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
@@ -30,6 +32,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.person,
           option: "Edit Profile",
           page: EditProfileScreen(user: widget.user)),
+      Settings(
+        icon: Icons.bookmark,
+        option: "Saved Content",
+        page: SavedPostsScreen(
+          user: widget.user,
+        ),
+      ),
+      Settings(
+        icon: Icons.archive,
+        option: "Archived Content",
+        page: ArchivedContentScreen(
+          user: widget.user,
+        ),
+      ),
       Settings(
           icon: Icons.lock,
           option: "Account Privacy",

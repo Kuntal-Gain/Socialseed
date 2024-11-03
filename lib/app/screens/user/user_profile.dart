@@ -636,10 +636,18 @@ class _UserProfileState extends State<UserProfile>
                                   onTap: () {
                                     if (user.followers!.contains(currentUid)) {
                                       BlocProvider.of<UserCubit>(context)
-                                          .unFollowUser(user: user);
+                                          .unFollowUser(user: user)
+                                          .then((_) {
+                                        BlocProvider.of<UserCubit>(context)
+                                            .getUsers(user: user);
+                                      });
                                     } else {
                                       BlocProvider.of<UserCubit>(context)
-                                          .followUser(user: user);
+                                          .followUser(user: user)
+                                          .then((_) {
+                                        BlocProvider.of<UserCubit>(context)
+                                            .getUsers(user: user);
+                                      });
                                     }
                                   },
                                   child: Container(
@@ -811,7 +819,9 @@ class _UserProfileState extends State<UserProfile>
                       ),
 
                       // First condition: If the account is not private
-                      if (!isPrivate || user.friends!.contains(currentUid)) ...[
+                      if (!isPrivate ||
+                          user.friends!.contains(currentUid) ||
+                          currentUid == widget.otherUid) ...[
                         TabBar(
                           onTap: (val) {
                             setState(() {

@@ -1,8 +1,12 @@
+import 'package:animated_menu/animated_menu.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
+import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
+import 'package:socialseed/app/cubits/users/user_cubit.dart';
 
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
@@ -20,6 +24,7 @@ import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
 import '../../utils/constants/tags_const.dart';
 import '../../utils/constants/text_const.dart';
+import '../../utils/custom/shimmer_effect.dart';
 import '../cubits/post/post_cubit.dart';
 import '../screens/post/edit_post_screen.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
@@ -36,8 +41,12 @@ class PostCardWidget extends StatefulWidget {
 }
 
 class _PostCardWidgetState extends State<PostCardWidget> {
+  bool pressed = false;
+
   @override
   Widget build(BuildContext context) {
+    var mq = MediaQuery.of(context).size;
+
     return ListView.builder(
       physics: const ScrollPhysics(),
       shrinkWrap: true,
@@ -45,12 +54,14 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       itemBuilder: (ctx, idx) {
         PostEntity post = widget.posts[idx];
 
-        double size = (post.images!.isEmpty) ? 150 : 380;
+        double size =
+            (post.images!.isEmpty) ? mq.height * 0.08 : mq.height * 0.35;
 
         String caption = widget.posts[idx].content.toString();
 
-        int totalLines = (caption.length / 25).ceil();
-        size = size + totalLines * 25;
+        double lineHeight = MediaQuery.of(context).size.height * 0.03;
+        int totalLines = (caption.length / 40).ceil();
+        size = size + (totalLines * lineHeight);
 
         num totalLikes = post.totalLikes ?? 0; // Local variable
 
@@ -93,8 +104,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           ];
         }
 
-        return Container(
-            height: size,
+        return SingleChildScrollView(
+          child: Container(
+            height: size + mq.height * 0.05,
             width: double.infinity,
             margin: const EdgeInsets.all(15),
             decoration: BoxDecoration(
@@ -219,9 +231,81 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         ],
                       ),
                       if (FirebaseAuth.instance.currentUser!.uid == post.uid)
-                        PopupMenuButton(
-                          itemBuilder: (ctx) => getPopupMenuItems(),
-                          surfaceTintColor: Colors.white,
+                        GestureDetector(
+                          onTapDown: (details) {
+                            showAnimatedMenu(
+                              context: context,
+                              preferredAnchorPoint: Offset(
+                                details.globalPosition.dx,
+                                details.globalPosition.dy,
+                              ),
+                              isDismissable: true,
+                              useRootNavigator: true,
+                              menu: AnimatedMenu(
+                                items: [
+                                  FadeIn(
+                                    child: Material(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        height: mq.height * 0.20,
+                                        width: mq.width * 0.3,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceAround,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () {
+                                                BlocProvider.of<PostCubit>(
+                                                        context)
+                                                    .deletePost(post: post);
+                                                Navigator.pop(context);
+                                              },
+                                              child: getMenuItem(
+                                                  Icons.delete_forever,
+                                                  "Delete"),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        EditPostScreen(
+                                                      currentUser: widget.user,
+                                                      post: post,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: getMenuItem(
+                                                  Icons.edit, "Edit"),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                BlocProvider.of<
+                                                            ArchivepostCubit>(
+                                                        context)
+                                                    .archivePost(post);
+
+                                                Navigator.pop(context);
+                                              },
+                                              child: getMenuItem(
+                                                  Icons.archive_rounded,
+                                                  "Archive"),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                           child: Image.asset(
                             IconConst.moreIcon,
                             height: 25,
@@ -239,15 +323,18 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     child: Container(
                       padding: const EdgeInsets.only(
                         left: 12,
-                        top: 5,
+                        top: 2,
+                        right: 12,
+                        bottom: 2,
                       ),
                       width: double.infinity,
                       child: Text(
                         widget.posts[idx].content.toString(),
-                        maxLines: null,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.1,
+                          fontSize: 14,
+                          height: 1.2,
                         ),
                       ),
                     ),
@@ -268,7 +355,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                 borderRadius: BorderRadius.circular(16),
                                 child: Image.network(
                                   post.images![0],
-                                  fit: BoxFit.cover,
+                                  width: mq.width * 0.8,
+                                  height: mq.height * 0.6,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -287,7 +376,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       );
                     },
                     child: Container(
-                      height: 250,
+                      height: mq.height * 0.3,
                       width: double.infinity,
                       padding: const EdgeInsets.all(12.0),
                       child: ClipRRect(
@@ -321,7 +410,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                       borderRadius: BorderRadius.circular(16),
                                       child: Image.network(
                                         post.images![0],
-                                        fit: BoxFit.cover,
+                                        width: mq.width * 0.8,
+                                        height: mq.height * 0.6,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
                                     const SizedBox(height: 10),
@@ -340,7 +431,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             );
                           },
                           child: Container(
-                            height: 250,
+                            height: mq.height * 0.3,
                             width: double.infinity,
                             padding: const EdgeInsets.all(12.0),
                             child: ClipRRect(
@@ -372,7 +463,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                       borderRadius: BorderRadius.circular(16),
                                       child: Image.network(
                                         post.images![1],
-                                        fit: BoxFit.cover,
+                                        width: mq.width * 0.8,
+                                        height: mq.height * 0.6,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
                                     const SizedBox(height: 10),
@@ -391,7 +484,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             );
                           },
                           child: Container(
-                            height: 250,
+                            height: mq.height * 0.3,
                             width: double.infinity,
                             padding: const EdgeInsets.all(12.0),
                             child: ClipRRect(
@@ -758,10 +851,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         }
                       },
                       child: postItem(
-                          post.likes?.contains(widget.user.uid) ?? false
+                          iconId: post.likes?.contains(widget.user.uid) ?? false
                               ? IconConst.likePressedIcon
                               : IconConst.likeIcon,
-                          totalLikes),
+                          value: totalLikes),
                     ),
 
                     sizeHor(10),
@@ -771,13 +864,76 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                 builder: (ctx) => PostViewScreen(
                                     post: post, user: widget.user))),
                         child: postItem(
-                            IconConst.commentIcon, post.totalComments)),
+                            iconId: IconConst.commentIcon,
+                            value: post.totalComments)),
                     sizeHor(10),
-                    postItem(IconConst.shareIcon, post.shares),
+
+                    if (post.images!.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          // Check if the post is already saved
+                          final bool isAlreadySaved =
+                              widget.user.savedContent?.contains(post.postid) ??
+                                  false;
+
+                          // Optimistically update the UI
+                          setState(() {
+                            // Toggle the saved state in the UI
+                            if (isAlreadySaved) {
+                              widget.user.savedContent
+                                  ?.remove(post.postid); // Remove if it's saved
+                            } else {
+                              widget.user.savedContent
+                                  ?.add(post.postid); // Add if it's not saved
+                            }
+                          });
+
+                          // Save or unsave the post asynchronously
+                          BlocProvider.of<SavedcontentCubit>(context)
+                              .savePost(
+                                  post) // Assumes this handles both save and unsave operations
+                              .then((_) {
+                            successBar(context,
+                                isAlreadySaved ? "Post Unsaved" : "Post Saved");
+                          }).catchError((error) {
+                            // Revert the UI state if the operation fails
+                            setState(() {
+                              if (isAlreadySaved) {
+                                widget.user.savedContent
+                                    ?.add(post.postid); // Revert to saved
+                              } else {
+                                widget.user.savedContent
+                                    ?.remove(post.postid); // Revert to unsaved
+                              }
+                            });
+                            failureBar(context, "Something went wrong");
+                          });
+                        },
+                        child: Container(
+                          height: 25,
+                          width: 25,
+                          margin: const EdgeInsets.all(12),
+                          child: Image.asset(
+                            widget.user.savedContent?.contains(post.postid) ??
+                                    false
+                                ? IconConst
+                                    .pressedSaveIcon // Show pressed icon if saved
+                                : IconConst
+                                    .saveIcon, // Show regular icon if not saved
+                            color: widget.user.savedContent
+                                        ?.contains(post.postid) ??
+                                    false
+                                ? AppColor.redColor
+                                : AppColor.blackColor,
+                          ),
+                        ),
+                      )
                   ],
                 )
               ],
-            ));
+            ),
+          ),
+        );
       },
     );
   }
@@ -795,4 +951,24 @@ String getTime(Timestamp? time) {
   } else {
     return '${totalTime ~/ 86400}d ago';
   }
+}
+
+Widget getMenuItem(IconData icon, String label) {
+  return Container(
+    height: 50,
+    child: Row(
+      children: [
+        sizeHor(10),
+        Icon(
+          icon,
+          color: AppColor.redColor,
+        ),
+        sizeHor(10),
+        Text(
+          label,
+          style: TextConst.headingStyle(16, AppColor.redColor),
+        ),
+      ],
+    ),
+  );
 }

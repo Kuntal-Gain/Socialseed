@@ -5,4 +5,8 @@ class FirebaseConst {
   static const String messages = "messages";
   static const String notification = 'notification';
   static const String story = "stories";
+
+  static const String profilePath = "profiles";
+  static const String postPath = "posts";
+  static const String storyPath = "stories";
 }

@@ -309,11 +309,14 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
           ? Container(
               child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Lottie.asset('assets/animations/friends.json'),
-                Text(
-                  'No Friend Suggestions currently now',
-                  style: TextConst.headingStyle(20, AppColor.blackColor),
+                Center(
+                  child: Text(
+                    'No Friend Suggestions \ncurrently now',
+                    style: TextConst.headingStyle(20, AppColor.blackColor),
+                  ),
                 ),
               ],
             ))

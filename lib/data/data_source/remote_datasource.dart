@@ -22,6 +22,10 @@ abstract class RemoteDataSource {
   Future<String> getCurrentUid();
   Future<void> createUser(UserEntity user);
   Future<void> updateUser(UserEntity user);
+  Future<void> savePost(PostEntity post);
+  Stream<List<PostEntity>> fetchSavedPosts(String uid);
+  Future<void> archievePost(PostEntity post);
+  Stream<List<PostEntity>> fetchArchievePosts(String uid);
 
   Future<String?> uploadImageToStorage(File? file, bool isPost, String child);
 

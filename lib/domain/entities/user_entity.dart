@@ -28,6 +28,8 @@ class UserEntity extends Equatable {
   final bool? activeStatus;
   final List? messages;
   final Timestamp? lastSeen;
+  final List? savedContent;
+  final List? archivedContent;
 
   // user info
   final String? work;
@@ -72,6 +74,8 @@ class UserEntity extends Equatable {
     this.activeStatus,
     this.messages,
     this.lastSeen,
+    this.savedContent,
+    this.archivedContent,
   });
 
   @override
@@ -107,5 +111,7 @@ class UserEntity extends Equatable {
         activeStatus,
         messages,
         lastSeen,
+        savedContent,
+        archivedContent,
       ];
 }

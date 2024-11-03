@@ -29,16 +29,21 @@ class PostCubit extends Cubit<PostState> {
     required this.fetchPostByUid,
   }) : super(PostInitial());
 
-  Future<void> getPosts({required PostEntity post}) async {
-    emit(PostLoading());
+  Future<void> getPosts({required PostEntity post, bool delay = false}) async {
     try {
+      emit(PostLoading());
+      if (delay) {
+        await Future.delayed(const Duration(seconds: 2));
+      }
       final streamResponse = fetchPostUsecase.call(post);
       streamResponse.listen((posts) {
-        emit(PostLoaded(posts: posts));
+        if (posts.isEmpty) {
+          emit(const PostLoaded(posts: []));
+        } else {
+          emit(PostLoaded(posts: posts));
+        }
       });
-    } on SocketException catch (_) {
-      emit(PostFailure());
-    } catch (_) {
+    } catch (e) {
       emit(PostFailure());
     }
   }

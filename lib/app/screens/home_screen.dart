@@ -12,6 +12,8 @@ import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
+import '../../features/api/generate_caption.dart';
+
 class HomeScreen extends StatefulWidget {
   final String uid;
 

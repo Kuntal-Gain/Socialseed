@@ -143,9 +143,13 @@ class _StoryScreenState extends State<StoryScreen> {
                 ],
               ),
             ),
-            Image.network(
-              widget.story.storyData,
-              fit: BoxFit.cover,
+            Container(
+              height: 500,
+              width: double.infinity,
+              child: Image.network(
+                widget.story.storyData[0],
+                fit: BoxFit.cover,
+              ),
             ),
             if (widget.story.userId == widget.curruser.uid)
               Column(
@@ -171,7 +175,7 @@ class _StoryScreenState extends State<StoryScreen> {
                               height: stories.isEmpty
                                   ? size.height * 0.1
                                   : size.height *
-                                      0.2 *
+                                      0.15 *
                                       stories
                                           .length, // Height of the bottom sheet (40% of screen)
                               decoration: BoxDecoration(
@@ -239,9 +243,9 @@ class _StoryScreenState extends State<StoryScreen> {
                                                   child: Image.network(
                                                     viewer!.imageUrl!,
                                                     height: size.height *
-                                                        0.08, // Set equal height and width
+                                                        0.05, // Set equal height and width
                                                     width: size.height *
-                                                        0.08, // Same value as height for a circle
+                                                        0.05, // Same value as height for a circle
                                                     fit: BoxFit
                                                         .cover, // Ensures the image covers the container without distortion
                                                   ),
@@ -252,7 +256,7 @@ class _StoryScreenState extends State<StoryScreen> {
                                                 Text(
                                                   viewer.username.toString(),
                                                   style: TextConst.headingStyle(
-                                                    22,
+                                                    18,
                                                     AppColor.redColor,
                                                   ),
                                                 ),
@@ -275,7 +279,7 @@ class _StoryScreenState extends State<StoryScreen> {
                         const Icon(
                           Icons.remove_red_eye,
                           color: AppColor.whiteColor,
-                          size: 35,
+                          size: 25,
                         ),
                         sizeHor(10),
                         Text(

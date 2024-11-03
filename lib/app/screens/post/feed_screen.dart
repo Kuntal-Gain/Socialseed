@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -16,9 +17,11 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
+import '../../../utils/custom/shimmer_effect.dart';
 import '../friend/search_screen.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -61,13 +64,15 @@ class _FeedScreenState extends State<FeedScreen> {
       backgroundColor: Colors.white,
       body: BlocProvider<PostCubit>(
         create: (context) =>
-            di.sl<PostCubit>()..getPosts(post: const PostEntity()),
+            di.sl<PostCubit>()..getPosts(post: const PostEntity(), delay: true),
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {
-              // Fetch posts and stories when the user pulls to refresh
+              await Future.delayed(const Duration(milliseconds: 200));
               await Future.wait([
-                di.sl<PostCubit>().getPosts(post: const PostEntity()),
+                di
+                    .sl<PostCubit>()
+                    .getPosts(post: const PostEntity(), delay: true),
                 di
                     .sl<StoryCubit>()
                     .fetchStory(uid: widget.user.uid!, context: context),
@@ -171,8 +176,25 @@ class _FeedScreenState extends State<FeedScreen> {
             return Stack(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (ctx) => PostStory(user: user))),
+                  onTap: () {
+                    final story =
+                        stories.contains(FirebaseAuth.instance.currentUser!.uid)
+                            ? stories
+                                .where((item) =>
+                                    item.id ==
+                                    FirebaseAuth.instance.currentUser!.uid)
+                                .toList()[0]
+                                .id
+                            : const Uuid().v4();
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) => PostStory(
+                          user: user,
+                        ),
+                      ),
+                    );
+                  },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
                     width: screenWidth * 0.24, // Responsive width
@@ -320,7 +342,17 @@ class _FeedScreenState extends State<FeedScreen> {
     return BlocBuilder<PostCubit, PostState>(
       builder: (context, state) {
         if (state is PostLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return SizedBox(
+            // Add a fixed height for the loading state
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: ListView.builder(
+              shrinkWrap: true, // Add this
+              physics:
+                  const NeverScrollableScrollPhysics(), // Add this to prevent nested scrolling
+              itemCount: 5,
+              itemBuilder: (ctx, idx) => shimmerEffect(),
+            ),
+          );
         }
 
         if (state is PostFailure) {

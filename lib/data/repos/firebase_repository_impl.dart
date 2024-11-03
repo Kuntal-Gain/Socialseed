@@ -159,4 +159,20 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Future<void> updateUserStatus(String uid, bool isOnline) async =>
       remoteDataSource.updateUserStatus(uid, isOnline);
+
+  @override
+  Future<void> archievePost(PostEntity post) async =>
+      remoteDataSource.archievePost(post);
+
+  @override
+  Stream<List<PostEntity>> fetchArchievePosts(String uid) =>
+      remoteDataSource.fetchArchievePosts(uid);
+
+  @override
+  Stream<List<PostEntity>> fetchSavedPosts(String uid) =>
+      remoteDataSource.fetchSavedPosts(uid);
+
+  @override
+  Future<void> savePost(PostEntity post) async =>
+      remoteDataSource.savePost(post);
 }

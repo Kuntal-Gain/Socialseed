@@ -71,6 +71,8 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         following: user.following,
         requests: user.requests,
         activeStatus: user.activeStatus,
+        archivedContent: const [],
+        savedContent: const [],
       ).toJson();
 
       if (!newDoc.exists) {
@@ -1021,6 +1023,172 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           "viewers": FieldValue.arrayUnion([uid]),
         });
       }
+    }
+  }
+
+  @override
+  Future<void> archievePost(PostEntity post) async {
+    final uid = await getCurrentUid();
+
+    final archieveCollection = firebaseFirestore
+        .collection(FirebaseConst.users)
+        .doc(uid)
+        .collection('archieved');
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final postCollection =
+        firebaseFirestore.collection('posts'); // Reference to posts collection
+
+    final data = PostModel(
+      postid: post.postid,
+      uid: post.uid,
+      username: post.username,
+      postType: post.postType,
+      content: post.content,
+      images: post.images,
+      likes: post.likes,
+      comments: post.comments,
+      totalLikes: post.totalLikes,
+      totalComments: post.totalComments,
+      location: post.location,
+      tags: post.tags,
+      creationDate: post.creationDate,
+      profileId: post.profileId,
+      isVerified: post.isVerified,
+      home: post.home,
+      school: post.school,
+      shares: post.shares,
+      work: post.work,
+      college: post.college,
+      likedUsers: post.likedUsers,
+    ).toJson();
+
+    try {
+      final archievePostRef = await archieveCollection.doc(post.postid).get();
+      final userRef = await userCollection.doc(uid).get();
+
+      // Archive post in 'archived' collection
+      if (!archievePostRef.exists) {
+        await archieveCollection.doc(post.postid).set(data);
+      } else {
+        await archieveCollection.doc(post.postid).update(data);
+      }
+
+      // Check if 'archivedContent' exists, and initialize if it doesn't
+      if (userRef.exists) {
+        List posts = [];
+
+        if (userRef.data()!.containsKey('archivedContent')) {
+          posts = userRef.get('archivedContent');
+        } else {
+          // Initialize 'archivedContent' as an empty list if it doesn't exist
+          await userCollection.doc(uid).set(
+              {'archivedContent': []},
+              SetOptions(
+                  merge: true)); // Merge to avoid overwriting other fields
+        }
+
+        if (!posts.contains(post.postid)) {
+          await userCollection.doc(uid).update({
+            "archivedContent": FieldValue.arrayUnion([post.postid]),
+          });
+        }
+      }
+
+      // Check if post exists before deleting
+      final postDoc = await postCollection.doc(post.postid).get();
+      if (postDoc.exists) {
+        await postCollection.doc(post.postid).delete();
+        print('Post deleted successfully');
+      } else {
+        print('Post does not exist, so it cannot be deleted');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  @override
+  Stream<List<PostEntity>> fetchArchievePosts(String uid) {
+    final archieveCollection = firebaseFirestore
+        .collection(FirebaseConst.users)
+        .doc(uid)
+        .collection('archieved');
+
+    return archieveCollection.snapshots().map((querySnapshot) {
+      return querySnapshot.docs.map((e) => PostModel.fromSnapShot(e)).toList();
+    });
+  }
+
+  @override
+  Stream<List<PostEntity>> fetchSavedPosts(String uid) {
+    final savedCollection = firebaseFirestore
+        .collection(FirebaseConst.users)
+        .doc(uid)
+        .collection('saved-posts');
+
+    return savedCollection.snapshots().map((querySnapshot) {
+      return querySnapshot.docs.map((e) => PostModel.fromSnapShot(e)).toList();
+    });
+  }
+
+  @override
+  Future<void> savePost(PostEntity post) async {
+    final uid = await getCurrentUid();
+
+    final savedPostColection = firebaseFirestore
+        .collection(FirebaseConst.users)
+        .doc(uid)
+        .collection('saved-posts');
+    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+
+    final data = PostModel(
+      postid: post.postid,
+      uid: post.uid,
+      username: post.username,
+      postType: post.postType,
+      content: post.content,
+      images: post.images,
+      likes: post.likes,
+      comments: post.comments,
+      totalLikes: post.totalLikes,
+      totalComments: post.totalComments,
+      location: post.location,
+      tags: post.tags,
+      creationDate: post.creationDate,
+      profileId: post.profileId,
+      isVerified: post.isVerified,
+      home: post.home,
+      school: post.school,
+      shares: post.shares,
+      work: post.work,
+      college: post.college,
+      likedUsers: post.likedUsers,
+    ).toJson();
+
+    try {
+      final savedPostRef = await savedPostColection.doc(post.postid).get();
+      final userRef = await userCollection.doc(uid).get();
+
+      if (!savedPostRef.exists) {
+        savedPostColection.doc(post.postid).set(data);
+      } else {
+        savedPostColection.doc(post.postid).update(data);
+      }
+
+      if (userRef.exists) {
+        List posts = userRef.get('savedContent');
+        if (!posts.contains(post.postid)) {
+          await userCollection.doc(uid).update({
+            "savedContent": FieldValue.arrayUnion([post.postid]),
+          });
+        } else {
+          await userCollection.doc(uid).update({
+            "savedContent": FieldValue.arrayRemove([post.postid]),
+          });
+        }
+      }
+    } catch (_) {
+      print('error has occurs');
     }
   }
 }
