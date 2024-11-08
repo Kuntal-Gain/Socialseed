@@ -34,6 +34,7 @@ class MessageCubit extends Cubit<MessageState> {
       {required String messageId, required String msg}) async {
     try {
       await sendMessageUsecase.call(messageId, msg);
+      // getMessage(messageId: messageId);
     } on SocketException catch (_) {
       emit(MessageFailure(err: _.toString()));
     } catch (_) {

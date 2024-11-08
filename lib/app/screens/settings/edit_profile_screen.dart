@@ -8,7 +8,6 @@ import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
 import '../../../utils/constants/color_const.dart';
-import '../../../utils/constants/page_const.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key, required this.user});
@@ -89,7 +88,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: AppColor.whiteColor,
+      appBar: AppBar(
+        title: Text("Edit Profile"),
+        backgroundColor: AppColor.whiteColor,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

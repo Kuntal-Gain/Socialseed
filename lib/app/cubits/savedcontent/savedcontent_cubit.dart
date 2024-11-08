@@ -44,11 +44,12 @@ class SavedcontentCubit extends Cubit<SavedcontentState> {
               savedPosts: savedPosts)); // Emit loaded state with posts
         },
         onError: (_) {
-          emit(SavedcontentFailure(message: 'Failed to fetch saved posts'));
+          emit(const SavedcontentFailure(
+              message: 'Failed to fetch saved posts'));
         },
       );
     } catch (e) {
-      emit(SavedcontentFailure(message: 'Failed to fetch saved posts'));
+      emit(const SavedcontentFailure(message: 'Failed to fetch saved posts'));
     }
   }
 }

@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cool_dropdown/cool_dropdown.dart';
 import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_editor_plus/image_editor_plus.dart';
+import 'package:image_editor_plus/options.dart';
 import 'package:socialseed/app/screens/post/tags_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:uuid/uuid.dart';
@@ -111,15 +113,36 @@ class _PostScreenState extends State<PostScreen> {
       final pickedFile =
           await ImagePicker().pickImage(source: ImageSource.gallery);
 
-      setState(() {
-        if (pickedFile != null) {
-          images.add(File(pickedFile.path));
-        } else {
-          if (kDebugMode) {
-            print('No Image Selected');
-          }
+      if (pickedFile != null) {
+        // Convert picked file to Uint8List for cropping
+        final imageBytes = await File(pickedFile.path).readAsBytes();
+
+        // Show image cropper
+        final Uint8List? editedImage = await Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImageEditor(
+              image: imageBytes,
+            ),
+          ),
+        );
+
+        if (editedImage != null) {
+          // Create a temporary file to store the edited image
+          final tempDir = await Directory.systemTemp.createTemp();
+          final tempFile = File('${tempDir.path}/edited_image.jpg');
+          await tempFile.writeAsBytes(editedImage);
+
+          setState(() {
+            images.add(tempFile);
+          });
         }
-      });
+      } else {
+        if (kDebugMode) {
+          print('No Image Selected');
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Something Went wrong: $e');
@@ -305,7 +328,7 @@ class _PostScreenState extends State<PostScreen> {
                                     ? "What's on your mind?"
                                     : "Write few topic names eg. Nature , Environment , Urban",
                                 border: InputBorder.none,
-                                hintStyle: TextStyle(fontSize: 16),
+                                hintStyle: const TextStyle(fontSize: 16),
                               ),
                             ),
                           ),

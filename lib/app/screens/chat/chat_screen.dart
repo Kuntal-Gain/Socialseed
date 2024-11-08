@@ -12,10 +12,13 @@ import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
+
+import '../../../utils/custom/shimmer_effect.dart';
 
 class ChatScreen extends StatefulWidget {
   final UserEntity user;
@@ -28,6 +31,22 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   List<UserEntity> friendList = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch both simultaneously
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    // Start both operations concurrently
+    await Future.wait([
+      fetchFriends(widget.user.uid!),
+      context.read<ChatCubit>().fetchConversation(widget.user.uid!),
+    ]);
+  }
 
   Future<void> fetchFriends(String currentUid) async {
     try {
@@ -48,11 +67,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
       setState(() {
         friendList = fetchedFriends;
+        _isLoading = false;
       });
     } catch (e) {
       if (kDebugMode) {
         print('Error fetching friends: $e');
       }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -89,13 +112,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    fetchFriends(widget.user.uid!);
-    context.read<ChatCubit>().fetchConversation(widget.user.uid!);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -104,7 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Display Friends section only if user has friends
-            if (friendList.isNotEmpty) ...[
+            if (friendList.isNotEmpty || _isLoading) ...[
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
@@ -117,90 +133,106 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               Expanded(
                 flex: 1,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: friendList.length,
-                  itemBuilder: (ctx, idx) {
-                    final friend = friendList[idx];
+                child: _isLoading
+                    ? ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 5,
+                        itemBuilder: (ctx, idx) {
+                          return shimmerEffectFriends();
+                        },
+                      )
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: friendList.length,
+                        itemBuilder: (ctx, idx) {
+                          final friend = friendList[idx];
 
-                    return GestureDetector(
-                      onTap: () async {
-                        final existingMessageId = await getExistingMessageId(
-                          widget.user.uid!,
-                          friend.uid!,
-                        );
-
-                        if (existingMessageId == null) {
-                          // Create a new chat
-                          final newMessageId = const Uuid().v4();
-                          // ignore: use_build_context_synchronously
-                          context.read<ChatCubit>().createMessageId(
-                                chat: ChatEntity(
-                                  messageId: newMessageId,
-                                  members: [friend.uid!, widget.user.uid!],
-                                  lastMessage: "",
-                                  isRead: false,
-                                ),
+                          return GestureDetector(
+                            onTap: () async {
+                              final existingMessageId =
+                                  await getExistingMessageId(
+                                widget.user.uid!,
+                                friend.uid!,
                               );
 
-                          // Navigate to MessageScreen with newMessageId
-                          // ignore: use_build_context_synchronously
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (ctx) => BlocProvider<MessageCubit>(
-                                create: (context) => di.sl<MessageCubit>(),
-                                child: MessageScreen(
-                                  sender: widget.user,
-                                  receiver: friend,
-                                  messageId: newMessageId,
+                              if (existingMessageId == null) {
+                                // Create a new chat
+                                final newMessageId = const Uuid().v4();
+                                // ignore: use_build_context_synchronously
+                                context.read<ChatCubit>().createMessageId(
+                                      chat: ChatEntity(
+                                        messageId: newMessageId,
+                                        members: [
+                                          friend.uid!,
+                                          widget.user.uid!
+                                        ],
+                                        lastMessage: "",
+                                        isRead: false,
+                                      ),
+                                    );
+
+                                // Navigate to MessageScreen with newMessageId
+                                // ignore: use_build_context_synchronously
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (ctx) =>
+                                        BlocProvider<MessageCubit>(
+                                      create: (context) =>
+                                          di.sl<MessageCubit>(),
+                                      child: MessageScreen(
+                                        sender: widget.user,
+                                        receiver: friend,
+                                        messageId: newMessageId,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                // Navigate to MessageScreen with existingMessageId
+                                // ignore: use_build_context_synchronously
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (ctx) =>
+                                        BlocProvider<MessageCubit>(
+                                      create: (context) =>
+                                          di.sl<MessageCubit>(),
+                                      child: MessageScreen(
+                                        sender: widget.user,
+                                        receiver: friend,
+                                        messageId: existingMessageId,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: (friend.activeStatus ?? false)
+                                      ? AppColor.redColor
+                                      : AppColor.greyShadowColor,
+                                  width: 5,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 35,
+                                backgroundImage: NetworkImage(friend.imageUrl!),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    friend.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    width: 70,
+                                    height: 70,
+                                  ),
                                 ),
                               ),
                             ),
                           );
-                        } else {
-                          // Navigate to MessageScreen with existingMessageId
-                          // ignore: use_build_context_synchronously
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (ctx) => BlocProvider<MessageCubit>(
-                                create: (context) => di.sl<MessageCubit>(),
-                                child: MessageScreen(
-                                  sender: widget.user,
-                                  receiver: friend,
-                                  messageId: existingMessageId,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: (friend.activeStatus ?? false)
-                                ? AppColor.redColor
-                                : AppColor.greyShadowColor,
-                            width: 5,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 35,
-                          backgroundImage: NetworkImage(friend.imageUrl!),
-                          child: ClipOval(
-                            child: Image.network(
-                              friend.imageUrl!,
-                              fit: BoxFit.cover,
-                              width: 70,
-                              height: 70,
-                            ),
-                          ),
-                        ),
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
             Padding(
@@ -217,16 +249,27 @@ class _ChatScreenState extends State<ChatScreen> {
               flex: 4,
               child: BlocBuilder<ChatCubit, ChatState>(
                 builder: (context, state) {
-                  if (state is ChatLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColor.redColor,
-                      ),
+                  // Show shimmer loading initially or when explicitly loading
+                  if (state is ChatInitial || state is ChatLoading) {
+                    return ListView.builder(
+                      itemCount: 5,
+                      itemBuilder: (ctx, idx) {
+                        return shimmerEffectChat();
+                      },
                     );
                   }
 
                   if (state is ChatLoaded) {
                     final conversations = state.conversations;
+
+                    if (conversations.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No conversations yet',
+                          style: TextConst.RegularStyle(16, AppColor.greyColor),
+                        ),
+                      );
+                    }
 
                     return ListView.builder(
                       itemCount: conversations.length,
@@ -235,52 +278,45 @@ class _ChatScreenState extends State<ChatScreen> {
                             .members!
                             .where((uid) => uid != widget.user.uid)
                             .toList();
-                        final friendFuture = getUserByUid(members[0]);
 
-                        return FutureBuilder<UserEntity?>(
-                          future: friendFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const SizedBox(); // Don't show anything for now
-                            } else if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            } else if (!snapshot.hasData ||
-                                snapshot.data == null) {
-                              return const Text('User not found');
-                            } else {
-                              final friend = snapshot.data!;
-                              return GestureDetector(
-                                onTap: () async {
-                                  final existingMessageId =
-                                      await getExistingMessageId(
-                                    widget.user.uid!,
-                                    friend.uid!,
-                                  );
-                                  final messageId =
-                                      existingMessageId ?? const Uuid().v4();
+                        // Try to find friend in friendList
+                        final friendOptional = friendList
+                            .where((friend) => friend.uid == members[0])
+                            .toList();
 
-                                  // ignore: use_build_context_synchronously
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (ctx) =>
-                                          BlocProvider<MessageCubit>(
-                                        create: (context) =>
-                                            di.sl<MessageCubit>(),
-                                        child: MessageScreen(
-                                          sender: widget.user,
-                                          receiver: friend,
-                                          messageId: messageId,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: messageTileWidget(friend, widget.user,
-                                    conversations[idx].lastMessage!),
-                              );
-                            }
+                        // Skip if friend not found
+                        if (friendOptional.isEmpty) {
+                          return shimmerEffectChat();
+                        }
+
+                        final friend = friendOptional.first;
+
+                        return GestureDetector(
+                          onTap: () async {
+                            final existingMessageId =
+                                await getExistingMessageId(
+                              widget.user.uid!,
+                              friend.uid!,
+                            );
+                            final messageId =
+                                existingMessageId ?? const Uuid().v4();
+
+                            // ignore: use_build_context_synchronously
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (ctx) => BlocProvider<MessageCubit>(
+                                  create: (context) => di.sl<MessageCubit>(),
+                                  child: MessageScreen(
+                                    sender: widget.user,
+                                    receiver: friend,
+                                    messageId: messageId,
+                                  ),
+                                ),
+                              ),
+                            );
                           },
+                          child: messageTileWidget(friend, widget.user,
+                              conversations[idx].lastMessage!),
                         );
                       },
                     );
@@ -290,7 +326,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     failureBar(context, "Message Not Found");
                   }
 
-                  return const SizedBox(); // Display nothing if no relevant state
+                  // Keep showing shimmer instead of empty screen for other states
+                  return ListView.builder(
+                    itemCount: 5,
+                    itemBuilder: (ctx, idx) {
+                      return shimmerEffectChat();
+                    },
+                  );
                 },
               ),
             ),

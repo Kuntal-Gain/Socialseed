@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -17,7 +16,6 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
@@ -75,6 +73,7 @@ class _FeedScreenState extends State<FeedScreen> {
                     .getPosts(post: const PostEntity(), delay: true),
                 di
                     .sl<StoryCubit>()
+                    // ignore: use_build_context_synchronously
                     .fetchStory(uid: widget.user.uid!, context: context),
               ]);
             },
@@ -177,16 +176,6 @@ class _FeedScreenState extends State<FeedScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    final story =
-                        stories.contains(FirebaseAuth.instance.currentUser!.uid)
-                            ? stories
-                                .where((item) =>
-                                    item.id ==
-                                    FirebaseAuth.instance.currentUser!.uid)
-                                .toList()[0]
-                                .id
-                            : const Uuid().v4();
-
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (ctx) => PostStory(
@@ -350,7 +339,7 @@ class _FeedScreenState extends State<FeedScreen> {
               physics:
                   const NeverScrollableScrollPhysics(), // Add this to prevent nested scrolling
               itemCount: 5,
-              itemBuilder: (ctx, idx) => shimmerEffect(),
+              itemBuilder: (ctx, idx) => shimmerEffectPost(),
             ),
           );
         }

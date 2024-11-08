@@ -42,7 +42,7 @@ class _ArchivedContentScreenState extends State<ArchivedContentScreen> {
         centerTitle: true,
         leading: IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back_ios,
               color: AppColor.blackColor,
             )),
@@ -50,7 +50,7 @@ class _ArchivedContentScreenState extends State<ArchivedContentScreen> {
       body: BlocBuilder<ArchivepostCubit, ArchivepostState>(
         builder: (ctx, state) {
           if (state is ArchivepostLoading) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(
                 color: AppColor.redColor,
               ),
@@ -63,7 +63,7 @@ class _ArchivedContentScreenState extends State<ArchivedContentScreen> {
                 .toList();
 
             return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: 0,
                 crossAxisSpacing: 0,
@@ -94,7 +94,7 @@ class _ArchivedContentScreenState extends State<ArchivedContentScreen> {
             );
           }
 
-          return SizedBox();
+          return const SizedBox();
         },
       ),
     );

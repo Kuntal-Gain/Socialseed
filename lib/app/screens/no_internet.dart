@@ -7,10 +7,10 @@ class NoInternetScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("No Internet")),
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.signal_wifi_off, size: 80),
             SizedBox(height: 20),
             Text(

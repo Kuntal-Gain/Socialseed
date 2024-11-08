@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';

@@ -7,7 +7,6 @@ import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
-import 'package:socialseed/dependency_injection.dart' as di;
 
 class SavedPostsScreen extends StatefulWidget {
   const SavedPostsScreen({super.key, required this.user});
@@ -42,7 +41,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
         centerTitle: true,
         leading: IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back_ios,
               color: AppColor.blackColor,
             )),
@@ -50,7 +49,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
       body: BlocBuilder<SavedcontentCubit, SavedcontentState>(
         builder: (ctx, state) {
           if (state is SavedcontentLoading) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(
                 color: AppColor.redColor,
               ),
@@ -63,7 +62,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
                 .toList();
 
             return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: 0,
                 crossAxisSpacing: 0,
@@ -94,7 +93,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
             );
           }
 
-          return SizedBox();
+          return const SizedBox();
         },
       ),
     );

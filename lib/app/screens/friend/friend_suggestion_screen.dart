@@ -306,8 +306,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: (suggestion.isEmpty && requests.isEmpty)
-          ? Container(
-              child: Column(
+          ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -319,7 +318,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                   ),
                 ),
               ],
-            ))
+            )
           : SingleChildScrollView(
               // Allow scrolling for overflow
               child: Column(

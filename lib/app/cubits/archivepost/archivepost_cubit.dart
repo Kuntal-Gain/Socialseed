@@ -29,7 +29,7 @@ class ArchivepostCubit extends Cubit<ArchivepostState> {
 
       fetchPosts(uid: uid);
     } catch (_) {
-      emit(ArchivepostFailure(error: 'Something Went Wrong'));
+      emit(const ArchivepostFailure(error: 'Something Went Wrong'));
     }
   }
 
@@ -40,10 +40,10 @@ class ArchivepostCubit extends Cubit<ArchivepostState> {
       fetchArchievedPosts.call(uid).listen((posts) {
         emit(ArchivepostLoaded(archivePosts: posts));
       }).onError((_) {
-        emit(ArchivepostFailure(error: 'Something Went Wrong'));
+        emit(const ArchivepostFailure(error: 'Something Went Wrong'));
       });
     } catch (_) {
-      emit(ArchivepostFailure(error: 'Something Went Wrong'));
+      emit(const ArchivepostFailure(error: 'Something Went Wrong'));
     }
   }
 }

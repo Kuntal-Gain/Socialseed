@@ -77,7 +77,7 @@ class FollowerListScreenState extends State<FollowerListScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_ios,
             color: AppColor.blackColor,
           ),
@@ -88,7 +88,7 @@ class FollowerListScreenState extends State<FollowerListScreen> {
       ),
       body: followerList.isEmpty
           ? Center(
-              child: Container(
+              child: SizedBox(
                 height: 200,
                 width: double.infinity,
                 child: Column(

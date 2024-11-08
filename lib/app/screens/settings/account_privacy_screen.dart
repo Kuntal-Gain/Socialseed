@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 
 import '../../../utils/constants/color_const.dart';
+import 'package:animated_toggle_switch/animated_toggle_switch.dart';
+
+import '../../../utils/constants/text_const.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
   final String userId;
@@ -70,38 +73,84 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
         title: const Text('Privacy Settings'),
         backgroundColor: AppColor.whiteColor,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            ListTile(
-              title: const Text('Private Account'),
-              subtitle:
-                  const Text('Only people you approve can see your posts'),
-              trailing: Switch(
-                value: isPrivateAccount,
-                onChanged: (value) {
-                  setState(() {
-                    isPrivateAccount = value;
-                  });
-                  updatePrivacySetting(value);
-                },
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text(
+              'Private Account',
+              style: TextConst.headingStyle(
+                16,
+                AppColor.blackColor,
               ),
             ),
-            const Divider(),
-            const ListTile(
-              title: Text('Two-Factor Authentication'),
-              subtitle: Text('Implemented Later'),
-              trailing: Icon(Icons.lock_outline),
+            subtitle: Text(
+              'Only people you approve can see your posts',
+              style: TextConst.MediumStyle(
+                14,
+                AppColor.greyShadowColor,
+              ),
             ),
-            const Divider(),
-            const ListTile(
-              title: Text('Blocked Accounts'),
-              subtitle: Text('Implemented Later'),
-              trailing: Icon(Icons.person_add_disabled),
+            trailing: CustomAnimatedToggleSwitch<bool>(
+              current: isPrivateAccount,
+              values: const [false, true],
+              iconBuilder: (context, value, size) => Icon(
+                isPrivateAccount ? Icons.lock_outline : Icons.lock_open,
+                size: 20,
+                color: !isPrivateAccount ? Colors.green : Colors.red,
+              ),
+              wrapperBuilder: (context, size, child) => Container(
+                width: 80,
+                height: 20,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  color: !isPrivateAccount
+                      ? Colors.green.withOpacity(0.2)
+                      : Colors.red.withOpacity(0.2),
+                ),
+                child: child,
+              ),
+              foregroundIndicatorBuilder: (context, size) => Padding(
+                padding: const EdgeInsets.all(4),
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColor.whiteColor,
+                    border: Border.all(
+                      color: !isPrivateAccount ? Colors.green : Colors.red,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  isPrivateAccount = value;
+                });
+                updatePrivacySetting(value);
+              },
             ),
-          ],
-        ),
+          ),
+          ListTile(
+            title: const Text('Two-Factor Authentication'),
+            subtitle: const Text('Implemented Later'),
+            trailing: const Icon(Icons.lock_outline),
+            onTap: () {},
+          ),
+          const ListTile(
+            title: Text('Blocked Accounts'),
+            subtitle: Text('Implemented Later'),
+            trailing: Icon(Icons.person_add_disabled),
+          ),
+        ],
       ),
     );
   }

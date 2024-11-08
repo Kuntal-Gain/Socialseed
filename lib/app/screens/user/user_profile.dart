@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, duplicate_ignore
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -165,7 +167,9 @@ class _UserProfileState extends State<UserProfile>
         return false;
       }
     } catch (e) {
-      print("Error fetching isPrivate status: $e");
+      if (kDebugMode) {
+        print("Error fetching isPrivate status: $e");
+      }
       return false; // Handle error cases by returning false
     }
   }
@@ -196,7 +200,9 @@ class _UserProfileState extends State<UserProfile>
     fetchUser(currentUid);
     fetchStatus(widget.otherUid);
 
-    print(isPrivate);
+    if (kDebugMode) {
+      print(isPrivate);
+    }
   }
 
   @override
@@ -233,45 +239,96 @@ class _UserProfileState extends State<UserProfile>
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                child: Scrollbar(
-                  child: Column(
-                    children: [
-                      Stack(
-                        children: [
-                          SizedBox(
-                            height: 325,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                if (state.otherUser.coverImage != "")
-                                  GestureDetector(
-                                    onTap: () {
-                                      showDialog(
-                                        context: ctx,
-                                        builder: (_) => Dialog(
-                                          backgroundColor: Colors.transparent,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                child: Image.network(
-                                                  state.otherUser.coverImage!,
-                                                  fit: BoxFit.cover,
-                                                ),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        SizedBox(
+                          height: 325,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              if (state.otherUser.coverImage != "")
+                                GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: ctx,
+                                      builder: (_) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              child: Image.network(
+                                                state.otherUser.coverImage!,
+                                                fit: BoxFit.cover,
                                               ),
-                                              const SizedBox(height: 10),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(ctx).pop();
-                                                },
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Expanded(
+                                            ),
+                                            const SizedBox(height: 10),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(ctx).pop();
+                                              },
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Container(
+                                                      height:
+                                                          size.height * 0.05,
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            AppColor.redColor,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          "Close",
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize:
+                                                                size.height *
+                                                                    0.015,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                      width:
+                                                          10), // Add spacing between buttons
+                                                  Expanded(
+                                                    child: GestureDetector(
+                                                      onTap: () async {
+                                                        // Allow current user to select a new cover image
+                                                        final XFile? image =
+                                                            await ImagePicker()
+                                                                .pickImage(
+                                                          source: ImageSource
+                                                              .gallery,
+                                                          imageQuality: 80,
+                                                        );
+
+                                                        Navigator.of(ctx).pop();
+
+                                                        if (image != null) {
+                                                          setState(() {
+                                                            selectedCoverImage =
+                                                                image.path;
+                                                          });
+
+                                                          // Generate a unique ID
+                                                          await uploadCoverImage(
+                                                              image.path,
+                                                              widget.otherUid);
+                                                        }
+                                                      },
                                                       child: Container(
                                                         height:
                                                             size.height * 0.05,
@@ -285,7 +342,7 @@ class _UserProfileState extends State<UserProfile>
                                                         ),
                                                         child: Center(
                                                           child: Text(
-                                                            "Close",
+                                                            "Update",
                                                             style: TextStyle(
                                                               color:
                                                                   Colors.white,
@@ -297,687 +354,617 @@ class _UserProfileState extends State<UserProfile>
                                                         ),
                                                       ),
                                                     ),
-                                                    SizedBox(
-                                                        width:
-                                                            10), // Add spacing between buttons
-                                                    Expanded(
-                                                      child: GestureDetector(
-                                                        onTap: () async {
-                                                          // Allow current user to select a new cover image
-                                                          final XFile? image =
-                                                              await ImagePicker()
-                                                                  .pickImage(
-                                                            source: ImageSource
-                                                                .gallery,
-                                                            imageQuality: 80,
-                                                          );
+                                                  ),
+                                                  const SizedBox(
+                                                      width:
+                                                          10), // Add spacing between buttons
+                                                  Expanded(
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                FirebaseConst
+                                                                    .users)
+                                                            .doc(currentUid)
+                                                            .update({
+                                                          "coverImage": "",
+                                                        });
 
-                                                          Navigator.of(ctx)
-                                                              .pop();
-
-                                                          if (image != null) {
-                                                            setState(() {
-                                                              selectedCoverImage =
-                                                                  image.path;
-                                                            });
-
-                                                            // Generate a unique ID
-                                                            await uploadCoverImage(
-                                                                image.path,
-                                                                widget
-                                                                    .otherUid);
-                                                          }
-                                                        },
-                                                        child: Container(
-                                                          height: size.height *
-                                                              0.05,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: AppColor
-                                                                .redColor,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                          child: Center(
-                                                            child: Text(
-                                                              "Update",
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize:
-                                                                    size.height *
-                                                                        0.015,
-                                                              ),
+                                                        Navigator.of(ctx).pop();
+                                                      },
+                                                      child: Container(
+                                                        height:
+                                                            size.height * 0.05,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              AppColor.redColor,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(12),
+                                                        ),
+                                                        child: const Center(
+                                                          child: Text(
+                                                            "Delete",
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
                                                             ),
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                    SizedBox(
-                                                        width:
-                                                            10), // Add spacing between buttons
-                                                    Expanded(
-                                                      child: GestureDetector(
-                                                        onTap: () {
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  FirebaseConst
-                                                                      .users)
-                                                              .doc(currentUid)
-                                                              .update({
-                                                            "coverImage": "",
-                                                          });
-
-                                                          Navigator.of(ctx)
-                                                              .pop();
-                                                        },
-                                                        child: Container(
-                                                          height: size.height *
-                                                              0.05,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: AppColor
-                                                                .redColor,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                          child: Center(
-                                                            child: Text(
-                                                              "Delete",
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    height: 140,
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.all(12),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: CachedNetworkImage(
+                                        imageUrl: state.otherUser.coverImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                              if (state.otherUser.coverImage == "")
+                                GestureDetector(
+                                  onTap: () async {
+                                    if (widget.otherUid == currentUid) {
+                                      // Allow current user to select a new cover image
+                                      final XFile? image =
+                                          await ImagePicker().pickImage(
+                                        source: ImageSource.gallery,
+                                        imageQuality:
+                                            80, // Adjust image quality if needed
                                       );
-                                    },
-                                    child: Container(
-                                      height: 140,
-                                      width: double.infinity,
-                                      margin: const EdgeInsets.all(12),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: CachedNetworkImage(
-                                          imageUrl: state.otherUser.coverImage!,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
 
-                                if (state.otherUser.coverImage == "")
-                                  GestureDetector(
-                                    onTap: () async {
-                                      if (widget.otherUid == currentUid) {
-                                        // Allow current user to select a new cover image
-                                        final XFile? image =
-                                            await ImagePicker().pickImage(
-                                          source: ImageSource.gallery,
-                                          imageQuality:
-                                              80, // Adjust image quality if needed
-                                        );
+                                      if (image != null) {
+                                        setState(() {
+                                          selectedCoverImage = image.path;
+                                        });
 
-                                        if (image != null) {
-                                          setState(() {
-                                            selectedCoverImage = image.path;
-                                          });
-
-                                          // Generate a unique ID
-                                          await uploadCoverImage(
-                                              image.path, widget.otherUid);
-                                        }
+                                        // Generate a unique ID
+                                        await uploadCoverImage(
+                                            image.path, widget.otherUid);
                                       }
-                                    },
-                                    child: Container(
-                                      height: 140,
-                                      width: double.infinity,
-                                      margin: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColor.greyColor,
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          "No Cover Image",
-                                          style: TextConst.headingStyle(
-                                              16, AppColor.blackColor),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                // cover image
-
-                                // profile data
-                                Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          user.fullname ??
-                                              '', // Use empty string as default if fullname is null
-                                          style: TextConst.headingStyle(
-                                            18,
-                                            AppColor.blackColor,
-                                          ),
-                                        ),
-                                        sizeHor(10),
-                                        if (user.isVerified!)
-                                          Image.asset(
-                                              'assets/3963-verified-developer-badge-red 1.png')
-                                      ],
-                                    ),
-                                    Text(
-                                      '@${user.username}',
-                                      style: TextConst.headingStyle(
-                                          16, AppColor.redColor),
-                                    ),
-                                    Container(
-                                      height: 30,
-                                      width: 100,
-                                      margin: EdgeInsets.only(top: 5),
-                                      decoration: BoxDecoration(
-                                        color: (user.activeStatus ?? false)
-                                            ? AppColor.redColor
-                                            : AppColor.greyShadowColor,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          (user.activeStatus ?? false)
-                                              ? 'Online'
-                                              : 'Offline',
-                                          style: TextConst.headingStyle(
-                                              14, AppColor.whiteColor),
-                                        ),
-                                      ),
-                                    ),
-                                    sizeVar(10),
-                                    Text(
-                                      user.bio.toString(),
-                                      style: TextConst.RegularStyle(
-                                          15, AppColor.blackColor),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
-                            top: 90,
-                            left: 135,
-                            right: 135,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: (user.activeStatus ?? false)
-                                      ? AppColor.redColor
-                                      : AppColor.greyShadowColor,
-                                  width: 5,
-                                ),
-                              ),
-                              child: CircleAvatar(
-                                radius: 55,
-                                backgroundImage:
-                                    NetworkImage(user.imageUrl.toString()),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (currentUid != user.uid)
-                        Container(
-                          height: 100,
-                          width: double.infinity,
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 15),
-                          child: Row(
-                            children: [
-                              if (!user.friends!.contains(currentUid))
-                                Expanded(
-                                  flex: 3,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      BlocProvider.of<UserCubit>(context)
-                                          .sendRequestUsecase(user);
-                                    },
-                                    child: Container(
-                                      height: 60,
-                                      margin: const EdgeInsets.all(3),
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColor.redColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          (!user.requests!.contains(currentUid))
-                                              ? Image.asset(
-                                                  'assets/icons/add-user.png',
-                                                  height: 20,
-                                                  width: 20,
-                                                  color: AppColor.whiteColor,
-                                                )
-                                              : const Icon(
-                                                  Icons.cancel,
-                                                  color: Colors.white,
-                                                ),
-                                          Text(
-                                            (!user.requests!
-                                                    .contains(currentUid))
-                                                ? 'Send Request'
-                                                : 'Cancel Request',
-                                            style: TextConst.headingStyle(
-                                                12, AppColor.whiteColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (user.friends!.contains(currentUid))
-                                Expanded(
-                                  flex: 3,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // toggle to remove friend
-                                    },
-                                    child: Container(
-                                      height: 60,
-                                      margin: const EdgeInsets.all(3),
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColor.redColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Image.asset(
-                                            'assets/icons/check-mark.png',
-                                            height: 20,
-                                            width: 20,
-                                            color: AppColor.whiteColor,
-                                          ),
-                                          sizeHor(10),
-                                          Text(
-                                            'Friend',
-                                            style: TextConst.headingStyle(
-                                                12, AppColor.whiteColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              Expanded(
-                                flex: 2,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (user.followers!.contains(currentUid)) {
-                                      BlocProvider.of<UserCubit>(context)
-                                          .unFollowUser(user: user)
-                                          .then((_) {
-                                        BlocProvider.of<UserCubit>(context)
-                                            .getUsers(user: user);
-                                      });
-                                    } else {
-                                      BlocProvider.of<UserCubit>(context)
-                                          .followUser(user: user)
-                                          .then((_) {
-                                        BlocProvider.of<UserCubit>(context)
-                                            .getUsers(user: user);
-                                      });
                                     }
                                   },
                                   child: Container(
-                                    height: 60,
-                                    padding: const EdgeInsets.all(12),
-                                    margin: const EdgeInsets.all(3),
+                                    height: 140,
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: AppColor.whiteColor,
-                                      border:
-                                          Border.all(color: AppColor.redColor),
+                                      color: AppColor.greyColor,
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "No Cover Image",
+                                        style: TextConst.headingStyle(
+                                            16, AppColor.blackColor),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              // cover image
+
+                              // profile data
+                              Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        user.fullname ??
+                                            '', // Use empty string as default if fullname is null
+                                        style: TextConst.headingStyle(
+                                          18,
+                                          AppColor.blackColor,
+                                        ),
+                                      ),
+                                      sizeHor(10),
+                                      if (user.isVerified!)
+                                        Image.asset(
+                                            'assets/3963-verified-developer-badge-red 1.png')
+                                    ],
+                                  ),
+                                  Text(
+                                    '@${user.username}',
+                                    style: TextConst.headingStyle(
+                                        16, AppColor.redColor),
+                                  ),
+                                  Container(
+                                    height: 30,
+                                    width: 100,
+                                    margin: const EdgeInsets.only(top: 5),
+                                    decoration: BoxDecoration(
+                                      color: (user.activeStatus ?? false)
+                                          ? AppColor.redColor
+                                          : AppColor.greyShadowColor,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        (user.activeStatus ?? false)
+                                            ? 'Online'
+                                            : 'Offline',
+                                        style: TextConst.headingStyle(
+                                            14, AppColor.whiteColor),
+                                      ),
+                                    ),
+                                  ),
+                                  sizeVar(10),
+                                  Text(
+                                    user.bio.toString(),
+                                    style: TextConst.RegularStyle(
+                                        15, AppColor.blackColor),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 90,
+                          left: 135,
+                          right: 135,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: (user.activeStatus ?? false)
+                                    ? AppColor.redColor
+                                    : AppColor.greyShadowColor,
+                                width: 5,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 55,
+                              backgroundImage:
+                                  NetworkImage(user.imageUrl.toString()),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (currentUid != user.uid)
+                      Container(
+                        height: 100,
+                        width: double.infinity,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 5, horizontal: 15),
+                        child: Row(
+                          children: [
+                            if (!user.friends!.contains(currentUid))
+                              Expanded(
+                                flex: 3,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    BlocProvider.of<UserCubit>(context)
+                                        .sendRequestUsecase(user);
+                                  },
+                                  child: Container(
+                                    height: 60,
+                                    margin: const EdgeInsets.all(3),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.redColor,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        Image.asset(
-                                          'assets/icons/followers.png',
-                                          height: 20,
-                                          width: 20,
-                                          color: AppColor.redColor,
-                                        ),
+                                        (!user.requests!.contains(currentUid))
+                                            ? Image.asset(
+                                                'assets/icons/add-user.png',
+                                                height: 20,
+                                                width: 20,
+                                                color: AppColor.whiteColor,
+                                              )
+                                            : const Icon(
+                                                Icons.cancel,
+                                                color: Colors.white,
+                                              ),
                                         Text(
-                                          (user.followers!.contains(currentUid))
-                                              ? 'UnFollow'
-                                              : 'Follow',
+                                          (!user.requests!.contains(currentUid))
+                                              ? 'Send Request'
+                                              : 'Cancel Request',
                                           style: TextConst.headingStyle(
-                                              12, AppColor.redColor),
+                                              12, AppColor.whiteColor),
                                         ),
                                       ],
                                     ),
                                   ),
                                 ),
                               ),
+                            if (user.friends!.contains(currentUid))
                               Expanded(
-                                flex: 1,
-                                child: AspectRatio(
-                                  aspectRatio: 1 / 1,
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      final existingMessageId =
-                                          await getExistingMessageId(
-                                              currentUid, widget.otherUid);
-
-                                      if (existingMessageId == null) {
-                                        // Create a new chat
-                                        final newMessageId = const Uuid().v4();
-                                        // ignore: use_build_context_synchronously
-                                        context
-                                            .read<ChatCubit>()
-                                            .createMessageId(
-                                              chat: ChatEntity(
-                                                messageId: newMessageId,
-                                                members: [
-                                                  widget.otherUid,
-                                                  currentUid
-                                                ],
-                                                lastMessage: "",
-                                                isRead: false,
-                                              ),
-                                            );
-
-                                        // Navigate to MessageScreen with newMessageId
-                                        // ignore: use_build_context_synchronously
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (ctx) =>
-                                                BlocProvider<MessageCubit>(
-                                              create: (context) =>
-                                                  di.sl<MessageCubit>(),
-                                              child: MessageScreen(
-                                                sender: currentUser!,
-                                                receiver: state.otherUser,
-                                                messageId: newMessageId,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      } else {
-                                        // Navigate to MessageScreen with existingMessageId
-                                        // ignore: use_build_context_synchronously
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (ctx) =>
-                                                BlocProvider<MessageCubit>(
-                                              create: (context) =>
-                                                  di.sl<MessageCubit>(),
-                                              child: MessageScreen(
-                                                sender: currentUser!,
-                                                receiver: state.otherUser,
-                                                messageId: existingMessageId,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      margin: const EdgeInsets.all(3),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color: AppColor.redColor),
-                                      ),
-                                      child: Image.asset(
-                                        'assets/icons/messenger.png',
-                                        height: 35,
-                                        width: 35,
-                                        color: AppColor.redColor,
-                                      ),
+                                flex: 3,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // toggle to remove friend
+                                  },
+                                  child: Container(
+                                    height: 60,
+                                    margin: const EdgeInsets.all(3),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppColor.redColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/icons/check-mark.png',
+                                          height: 20,
+                                          width: 20,
+                                          color: AppColor.whiteColor,
+                                        ),
+                                        sizeHor(10),
+                                        Text(
+                                          'Friend',
+                                          style: TextConst.headingStyle(
+                                              12, AppColor.whiteColor),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      Container(
-                        margin: const EdgeInsets.all(16),
-                        height: 100,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: AppColor.greyShadowColor),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          FriendListScreen(user: user))),
-                              child: Center(
-                                child: Text(
-                                  '${user.friends!.length}\nFriends',
-                                  textAlign: TextAlign.center,
-                                  style: TextConst.MediumStyle(
-                                      16, AppColor.blackColor),
+                            Expanded(
+                              flex: 2,
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (user.followers!.contains(currentUid)) {
+                                    BlocProvider.of<UserCubit>(context)
+                                        .unFollowUser(user: user)
+                                        .then((_) {
+                                      BlocProvider.of<UserCubit>(context)
+                                          .getUsers(user: user);
+                                    });
+                                  } else {
+                                    BlocProvider.of<UserCubit>(context)
+                                        .followUser(user: user)
+                                        .then((_) {
+                                      BlocProvider.of<UserCubit>(context)
+                                          .getUsers(user: user);
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  height: 60,
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.whiteColor,
+                                    border:
+                                        Border.all(color: AppColor.redColor),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Image.asset(
+                                        'assets/icons/followers.png',
+                                        height: 20,
+                                        width: 20,
+                                        color: AppColor.redColor,
+                                      ),
+                                      Text(
+                                        (user.followers!.contains(currentUid))
+                                            ? 'UnFollow'
+                                            : 'Follow',
+                                        style: TextConst.headingStyle(
+                                            12, AppColor.redColor),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          FollowerListScreen(user: user))),
-                              child: Center(
-                                child: Text(
-                                  '${user.followerCount!}\nFollowers',
-                                  textAlign: TextAlign.center,
-                                  style: TextConst.MediumStyle(
-                                      16, AppColor.blackColor),
+                            Expanded(
+                              flex: 1,
+                              child: AspectRatio(
+                                aspectRatio: 1 / 1,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    final existingMessageId =
+                                        await getExistingMessageId(
+                                            currentUid, widget.otherUid);
+
+                                    if (existingMessageId == null) {
+                                      // Create a new chat
+                                      final newMessageId = const Uuid().v4();
+                                      // ignore: use_build_context_synchronously
+                                      context.read<ChatCubit>().createMessageId(
+                                            chat: ChatEntity(
+                                              messageId: newMessageId,
+                                              members: [
+                                                widget.otherUid,
+                                                currentUid
+                                              ],
+                                              lastMessage: "",
+                                              isRead: false,
+                                            ),
+                                          );
+
+                                      // Navigate to MessageScreen with newMessageId
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (ctx) =>
+                                              BlocProvider<MessageCubit>(
+                                            create: (context) =>
+                                                di.sl<MessageCubit>(),
+                                            child: MessageScreen(
+                                              sender: currentUser!,
+                                              receiver: state.otherUser,
+                                              messageId: newMessageId,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      // Navigate to MessageScreen with existingMessageId
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (ctx) =>
+                                              BlocProvider<MessageCubit>(
+                                            create: (context) =>
+                                                di.sl<MessageCubit>(),
+                                            child: MessageScreen(
+                                              sender: currentUser!,
+                                              receiver: state.otherUser,
+                                              messageId: existingMessageId,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    margin: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border:
+                                          Border.all(color: AppColor.redColor),
+                                    ),
+                                    child: Image.asset(
+                                      'assets/icons/messenger.png',
+                                      height: 35,
+                                      width: 35,
+                                      color: AppColor.redColor,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            Center(
-                              child: Text(
-                                '${user.posts!.length}\nPosts',
-                                textAlign: TextAlign.center,
-                                style: TextConst.MediumStyle(
-                                    16, AppColor.blackColor),
                               ),
                             ),
                           ],
                         ),
                       ),
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColor.greyShadowColor),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        FriendListScreen(user: user))),
+                            child: Center(
+                              child: Text(
+                                '${user.friends!.length}\nFriends',
+                                textAlign: TextAlign.center,
+                                style: TextConst.MediumStyle(
+                                    16, AppColor.blackColor),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        FollowerListScreen(user: user))),
+                            child: Center(
+                              child: Text(
+                                '${user.followerCount!}\nFollowers',
+                                textAlign: TextAlign.center,
+                                style: TextConst.MediumStyle(
+                                    16, AppColor.blackColor),
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '${user.posts!.length}\nPosts',
+                              textAlign: TextAlign.center,
+                              style: TextConst.MediumStyle(
+                                  16, AppColor.blackColor),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                      // First condition: If the account is not private
-                      if (!isPrivate ||
-                          user.friends!.contains(currentUid) ||
-                          currentUid == widget.otherUid) ...[
-                        TabBar(
-                          onTap: (val) {
-                            setState(() {
-                              currentIdx = val;
-                            });
-                          },
-                          controller: _controller,
-                          dividerHeight: 0,
-                          indicatorColor: AppColor.redColor,
-                          labelColor: AppColor.redColor,
-                          overlayColor:
-                              const WidgetStatePropertyAll(AppColor.whiteColor),
-                          tabs: const [
-                            Text('Post'),
-                            Text('Media'),
-                            Text('About'),
-                          ],
-                        ),
-                        sizeVar(20),
+                    // First condition: If the account is not private
+                    if (!isPrivate ||
+                        user.friends!.contains(currentUid) ||
+                        currentUid == widget.otherUid) ...[
+                      TabBar(
+                        onTap: (val) {
+                          setState(() {
+                            currentIdx = val;
+                          });
+                        },
+                        controller: _controller,
+                        dividerHeight: 0,
+                        indicatorColor: AppColor.redColor,
+                        labelColor: AppColor.redColor,
+                        overlayColor:
+                            const WidgetStatePropertyAll(AppColor.whiteColor),
+                        tabs: const [
+                          Text('Post'),
+                          Text('Media'),
+                          Text('About'),
+                        ],
+                      ),
+                      sizeVar(20),
 
-                        // BlocBuilder to show posts/media/about
-                        BlocBuilder<PostCubit, PostState>(
-                          builder: (context, state) {
-                            if (state is PostLoading) {
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColor.redColor,
-                                ),
+                      // Modify this BlocBuilder section
+                      BlocBuilder<PostCubit, PostState>(
+                        builder: (context, state) {
+                          if (state is PostLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColor.redColor,
+                              ),
+                            );
+                          }
+
+                          if (state is PostLoaded) {
+                            final posts = state.posts
+                                .where((post) => post.uid == user.uid)
+                                .toList();
+
+                            if (currentIdx == 0) {
+                              return PostCardWidget(
+                                posts: posts,
+                                user: user,
+                                uid: user.uid.toString(),
                               );
-                            }
-
-                            if (state is PostLoaded) {
-                              final posts = state.posts
-                                  .where((post) => post.uid == user.uid)
-                                  .toList();
-
-                              if (currentIdx == 0) {
-                                return SizedBox(
-                                  height: 450,
-                                  child: Scrollbar(
-                                      child: PostCardWidget(
-                                          posts: posts,
-                                          user: user,
-                                          uid: user.uid.toString())),
-                                );
-                              } else if (currentIdx == 1) {
-                                return posts.isEmpty
-                                    ? const Center(child: Text("No Posts"))
-                                    : SizedBox(
-                                        height: 450,
-                                        child: GridView.builder(
-                                          itemCount: images.length,
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            mainAxisSpacing: 0,
-                                            crossAxisSpacing: 0,
-                                            childAspectRatio: 1,
-                                          ),
-                                          itemBuilder: (ctx, idx) {
-                                            return GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                  context: ctx,
-                                                  builder: (_) => Dialog(
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(16),
-                                                          child: Image.network(
-                                                            images[idx],
-                                                            fit: BoxFit.cover,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 10),
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            Navigator.of(ctx)
-                                                                .pop();
-                                                          },
-                                                          child: const Text(
-                                                            "Close",
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .white),
-                                                          ),
-                                                        ),
-                                                      ],
+                            } else if (currentIdx == 1) {
+                              return posts.isEmpty
+                                  ? const Center(child: Text("No Posts"))
+                                  : GridView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: images.length,
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 0,
+                                        crossAxisSpacing: 0,
+                                        childAspectRatio: 1,
+                                      ),
+                                      itemBuilder: (ctx, idx) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            showDialog(
+                                              context: ctx,
+                                              builder: (_) => Dialog(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                      child: Image.network(
+                                                        images[idx],
+                                                        fit: BoxFit.cover,
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                margin:
-                                                    const EdgeInsets.all(10),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                  child: CachedNetworkImage(
-                                                    imageUrl: images[idx],
-                                                    fit: BoxFit.cover,
-                                                  ),
+                                                    const SizedBox(height: 10),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(ctx).pop();
+                                                      },
+                                                      child: const Text(
+                                                        "Close",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             );
                                           },
-                                        ),
-                                      );
-                              } else {
-                                return getInformtion(user, context, currentUid);
-                              }
+                                          child: Container(
+                                            margin: const EdgeInsets.all(10),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              child: CachedNetworkImage(
+                                                imageUrl: images[idx],
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                            } else {
+                              return getInformtion(user, context, currentUid);
                             }
+                          }
 
-                            if (state is PostFailure) {
-                              failureBar(context, "Something Went wrong");
-                            }
+                          if (state is PostFailure) {
+                            failureBar(context, "Something Went wrong");
+                          }
 
-                            return const SizedBox();
-                          },
-                        ),
-                      ]
+                          return const SizedBox();
+                        },
+                      ),
+                    ]
 
 // Second condition: If the account is private and the current user is not a friend
-                      else ...[
-                        sizeVar(size.height * 0.1),
-                        Container(
-                          height: 60,
-                          width: 60,
-                          child: Image.network(
-                            'https://cdn-icons-png.flaticon.com/512/1828/1828471.png',
-                            color: AppColor.redColor,
-                          ),
+                    else ...[
+                      sizeVar(size.height * 0.1),
+                      SizedBox(
+                        height: 60,
+                        width: 60,
+                        child: Image.network(
+                          'https://cdn-icons-png.flaticon.com/512/1828/1828471.png',
+                          color: AppColor.redColor,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Center(
-                            child: Text(
-                              'It\'s a Private Account, \nConsider being a friend first',
-                              style: TextConst.headingStyle(
-                                22,
-                                AppColor.redColor,
-                              ),
-                              textAlign: TextAlign.center,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Center(
+                          child: Text(
+                            'It\'s a Private Account, \nConsider being a friend first',
+                            style: TextConst.headingStyle(
+                              22,
+                              AppColor.redColor,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ]
-                    ],
-                  ),
+                      ),
+                    ]
+                  ],
                 ),
               ),
             ),

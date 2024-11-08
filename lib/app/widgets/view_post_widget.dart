@@ -6,13 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
-import 'package:socialseed/app/cubits/users/user_cubit.dart';
 
-import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/screens/user/single_profile_screen.dart';
 import 'package:socialseed/app/widgets/image_tile_widget.dart';
-import 'package:socialseed/app/widgets/more_menu_items.dart';
 import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/app/widgets/view_post_card.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
@@ -24,10 +21,8 @@ import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
 import '../../utils/constants/tags_const.dart';
 import '../../utils/constants/text_const.dart';
-import '../../utils/custom/shimmer_effect.dart';
 import '../cubits/post/post_cubit.dart';
 import '../screens/post/edit_post_screen.dart';
-import 'package:socialseed/dependency_injection.dart' as di;
 
 class PostCardWidget extends StatefulWidget {
   final List<PostEntity> posts;
@@ -55,54 +50,15 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         PostEntity post = widget.posts[idx];
 
         double size =
-            (post.images!.isEmpty) ? mq.height * 0.08 : mq.height * 0.35;
+            (post.images!.isEmpty) ? mq.height * 0.1 : mq.height * 0.35;
 
         String caption = widget.posts[idx].content.toString();
 
-        double lineHeight = MediaQuery.of(context).size.height * 0.03;
+        double lineHeight = mq.height * 0.015;
         int totalLines = (caption.length / 40).ceil();
         size = size + (totalLines * lineHeight);
 
         num totalLikes = post.totalLikes ?? 0; // Local variable
-
-        List<PopupMenuEntry<MenuOptions>> getPopupMenuItems() {
-          return [
-            PopupMenuItem<MenuOptions>(
-              value: MenuOptions.Edit,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Icon(Icons.edit),
-                  sizeHor(10),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) => EditPostScreen(
-                            currentUser: widget.user, post: post))),
-                    child: const Text('Edit'),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuItem<MenuOptions>(
-              value: MenuOptions.Delete,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Icon(Icons.delete),
-                  sizeHor(10),
-                  GestureDetector(
-                    onTap: () => di.sl<PostCubit>().deletePost(post: post).then(
-                        // ignore: use_build_context_synchronously
-                        (value) => Navigator.of(context).push(MaterialPageRoute(
-                            builder: (ctx) =>
-                                HomeScreen(uid: widget.user.uid.toString())))),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            ),
-          ];
-        }
 
         return SingleChildScrollView(
           child: Container(
@@ -110,7 +66,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             width: double.infinity,
             margin: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: AppColor.greyShadowColor,
                   spreadRadius: 1,
@@ -376,8 +332,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       );
                     },
                     child: Container(
-                      height: mq.height * 0.3,
-                      width: double.infinity,
+                      height: mq.height * 0.25,
+                      width: mq.width * 1,
                       padding: const EdgeInsets.all(12.0),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
@@ -893,6 +849,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                               .savePost(
                                   post) // Assumes this handles both save and unsave operations
                               .then((_) {
+                            // ignore: use_build_context_synchronously
                             successBar(context,
                                 isAlreadySaved ? "Post Unsaved" : "Post Saved");
                           }).catchError((error) {
@@ -906,6 +863,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                     ?.remove(post.postid); // Revert to unsaved
                               }
                             });
+                            // ignore: use_build_context_synchronously
                             failureBar(context, "Something went wrong");
                           });
                         },
@@ -954,7 +912,7 @@ String getTime(Timestamp? time) {
 }
 
 Widget getMenuItem(IconData icon, String label) {
-  return Container(
+  return SizedBox(
     height: 50,
     child: Row(
       children: [

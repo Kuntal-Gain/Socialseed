@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,8 +12,6 @@ import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
-
-import '../../features/api/generate_caption.dart';
 
 class HomeScreen extends StatefulWidget {
   final String uid;
@@ -38,7 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
     di.sl<UserCubit>().updateStatus(uid: widget.uid, isOnline: true);
 
     SystemChannels.lifecycle.setMessageHandler((message) async {
-      print(message);
+      if (kDebugMode) {
+        print(message);
+      }
 
       if (message == AppLifecycleState.paused.toString()) {
         di.sl<UserCubit>().updateStatus(uid: widget.uid, isOnline: false);

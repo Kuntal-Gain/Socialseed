@@ -10,6 +10,7 @@ class ConnectivityService {
 
   Future<bool> isConnected() async {
     var result = await _connectivity.checkConnectivity();
+    // ignore: unrelated_type_equality_checks
     return result != ConnectivityResult.none;
   }
 }

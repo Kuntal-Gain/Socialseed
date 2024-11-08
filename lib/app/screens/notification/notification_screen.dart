@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:socialseed/utils/custom/shimmer_effect.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/firebase_const.dart';
@@ -23,6 +24,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Future<String?> fetchImageFromNotification(
       Map<String, dynamic> notification) async {
     try {
+      await Future.delayed(const Duration(milliseconds: 200)); // Added delay
+
       if (notification['type'] == 'follow' ||
           notification['type'] == 'friend_request') {
         final userId = notification['userId'];
@@ -59,7 +62,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: AppColor.whiteColor,
         automaticallyImplyLeading: false,
         centerTitle: true,
-        title: Text('My Notifications'),
+        title: const Text('My Notifications'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -67,10 +70,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
             .doc(widget.uid)
             .collection('notifications')
             .orderBy('createdAt', descending: true)
-            .snapshots(),
+            .snapshots()
+            .asyncMap((event) async {
+          await Future.delayed(const Duration(seconds: 2));
+          return event;
+        }),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(
+              itemCount: 10,
+              itemBuilder: (context, index) => shimmerEffectNotification(),
+            );
           }
           if (snapshot.hasError) {
             return const Center(child: Text('Error fetching notifications'));

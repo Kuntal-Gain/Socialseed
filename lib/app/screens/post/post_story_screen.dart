@@ -4,8 +4,10 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_editor_plus/image_editor_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
@@ -79,13 +81,43 @@ class _PostStoryState extends State<PostStory> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    try {
+      final pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+      if (pickedFile != null) {
+        // Convert picked file to Uint8List for cropping
+        final imageBytes = await File(pickedFile.path).readAsBytes();
+
+        // Show image cropper
+        final Uint8List? editedImage = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImageEditor(
+              image: imageBytes,
+            ),
+          ),
+        );
+
+        if (editedImage != null) {
+          // Create a temporary file to store the edited image
+          final tempDir = await Directory.systemTemp.createTemp();
+          final tempFile = File('${tempDir.path}/edited_image.jpg');
+          await tempFile.writeAsBytes(editedImage);
+
+          setState(() {
+            _imageFile = tempFile;
+          });
+        }
+      } else {
+        if (kDebugMode) {
+          print('No Image Selected');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Something Went wrong: $e');
+      }
     }
 
     // ignore: use_build_context_synchronously

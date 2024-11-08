@@ -51,6 +51,8 @@ class _PostViewScreenState extends State<PostViewScreen> {
 
   final _commentController = TextEditingController();
 
+  int commentLines = 1;
+
   @override
   void initState() {
     caption = widget.post.content.toString();
@@ -60,10 +62,26 @@ class _PostViewScreenState extends State<PostViewScreen> {
 
     isLiked = widget.post.likes?.contains(widget.user.uid) ?? false;
     totalLikes = widget.post.totalLikes ?? 0;
+
     super.initState();
 
     BlocProvider.of<CommentCubit>(context)
         .getComments(postId: widget.post.postid.toString());
+
+    _commentController.addListener(() {
+      final newLines = _commentController.text.split('\n').length;
+      if (newLines != commentLines) {
+        setState(() {
+          commentLines = newLines;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   List<PopupMenuEntry<MenuOptions>> getPopupMenuItems() {
@@ -142,6 +160,17 @@ class _PostViewScreenState extends State<PostViewScreen> {
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size;
 
+    double size =
+        (widget.post.images!.isEmpty) ? mq.height * 0.1 : mq.height * 0.35;
+
+    String caption = widget.post.content.toString();
+
+    double lineHeight = mq.height * 0.015;
+    int totalLines = (caption.length / 40).ceil();
+    size = size + (totalLines * lineHeight);
+
+// Local variable
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -159,7 +188,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
         child: Column(
           children: [
             Container(
-              height: size,
+              height: size + mq.height * 0.035,
               width: double.infinity,
               margin: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -337,6 +366,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                     .post) // Assumes this handles both save and unsave operations
                                 .then((_) {
                               successBar(
+                                  // ignore: use_build_context_synchronously
                                   context,
                                   isAlreadySaved
                                       ? "Post Unsaved"
@@ -352,6 +382,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                       widget.post.postid); // Revert to unsaved
                                 }
                               });
+                              // ignore: use_build_context_synchronously
                               failureBar(context, "Something went wrong");
                             });
                           },
@@ -434,14 +465,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
             Expanded(
               child: Container(
                   margin: const EdgeInsets.all(14),
-                  height: mq.height * 0.07,
+                  height: commentLines * (mq.height * 0.07),
                   width: 200,
                   decoration: BoxDecoration(
                     color: AppColor.whiteColor,
                     border: Border.all(
                       color: AppColor.greyShadowColor,
                     ),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: AppColor.greyShadowColor,
                         blurRadius: 1,
@@ -468,7 +499,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: AppColor.greyShadowColor,
                     spreadRadius: 1,
