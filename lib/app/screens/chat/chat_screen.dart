@@ -12,7 +12,6 @@ import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../utils/constants/color_const.dart';

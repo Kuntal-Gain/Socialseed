@@ -5,7 +5,6 @@ import 'package:cool_dropdown/cool_dropdown.dart';
 import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_editor_plus/image_editor_plus.dart';
-import 'package:image_editor_plus/options.dart';
 import 'package:socialseed/app/screens/post/tags_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:uuid/uuid.dart';

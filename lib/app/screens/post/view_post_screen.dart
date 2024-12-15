@@ -161,7 +161,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
     var mq = MediaQuery.of(context).size;
 
     double size =
-        (widget.post.images!.isEmpty) ? mq.height * 0.1 : mq.height * 0.35;
+        (widget.post.images!.isEmpty) ? mq.height * 0.1 : mq.height * 0.4;
 
     String caption = widget.post.content.toString();
 
@@ -188,7 +188,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
         child: Column(
           children: [
             Container(
-              height: size + mq.height * 0.035,
+              height: size + mq.height * 0.05,
               width: double.infinity,
               margin: const EdgeInsets.all(15),
               decoration: BoxDecoration(

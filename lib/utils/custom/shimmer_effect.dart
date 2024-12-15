@@ -172,7 +172,7 @@ Widget shimmerEffectChat() {
               Shimmer.fromColors(
                 baseColor: Colors.grey[300]!,
                 highlightColor: Colors.grey[100]!,
-                child: CircleAvatar(),
+                child: const CircleAvatar(),
               ),
               sizeHor(10),
               // name

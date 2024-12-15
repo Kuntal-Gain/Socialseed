@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +19,6 @@ import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
-import 'package:socialseed/features/services/internet_service.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
 
@@ -29,12 +27,10 @@ import '../models/message_model.dart';
 class RemoteDataSourceImpl implements RemoteDataSource {
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firebaseFirestore;
-  final ConnectivityService connectivityService;
 
   RemoteDataSourceImpl({
     required this.firebaseAuth,
     required this.firebaseFirestore,
-    required this.connectivityService,
   });
 
   @override
@@ -120,11 +116,6 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
         final uid = await getCurrentUid();
         await updateUserStatus(uid, true); // Set online status
-
-        // Listen for connectivity changes
-        connectivityService.connectivityStream.listen((result) {
-          updateUserStatus(uid, result != ConnectivityResult.none);
-        });
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -1189,6 +1180,24 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       }
     } catch (_) {
       print('error has occurs');
+    }
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      print('Password reset email sent to $email');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        print('The email address is invalid.');
+      } else if (e.code == 'user-not-found') {
+        print('No user found with this email.');
+      } else {
+        print('Something went wrong: ${e.message}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
     }
   }
 }

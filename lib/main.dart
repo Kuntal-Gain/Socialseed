@@ -19,7 +19,6 @@ import 'package:socialseed/firebase_options.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 
 import 'app/cubits/savedcontent/savedcontent_cubit.dart';
-import 'app/screens/no_internet.dart';
 import 'app/widgets/opacity_leaf_animation.dart';
 import 'dependency_injection.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -80,8 +79,7 @@ class _MyAppState extends State<MyApp> {
           builder: (context, state) {
             if (state is Authenticated) {
               return HomeScreen(uid: state.uid);
-            } else if (state is NoInternet) {
-              return const NoInternetScreen(); // Show the No Internet screen
+              // Show the No Internet screen
             } else if (state is NotAuthenticated) {
               return const SplashScreen();
             } else {

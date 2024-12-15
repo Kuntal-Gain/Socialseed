@@ -175,4 +175,8 @@ class FirebaseRepositoryImpl implements FirebaseRepository {
   @override
   Future<void> savePost(PostEntity post) async =>
       remoteDataSource.savePost(post);
+
+  @override
+  Future<void> forgotPassword(String email) async =>
+      remoteDataSource.forgotPassword(email);
 }

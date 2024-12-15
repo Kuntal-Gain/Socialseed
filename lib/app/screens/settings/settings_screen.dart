@@ -8,6 +8,7 @@ import 'package:socialseed/app/screens/settings/edit_profile_screen.dart';
 import 'package:socialseed/app/screens/settings/saved_posts_screen.dart';
 import 'package:socialseed/app/screens/settings/verification_screen.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/main.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -107,6 +108,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           GestureDetector(
             onTap: () {
               BlocProvider.of<AuthCubit>(context).logout();
+              Navigator.pop(context);
+              Navigator.pop(context);
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => const MyApp()));
             },
             child: Container(
               margin: const EdgeInsets.all(12),

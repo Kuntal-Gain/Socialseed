@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:scroll_date_picker/scroll_date_picker.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
+import 'package:socialseed/app/screens/credential/forgot_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
@@ -152,7 +153,31 @@ class _SignInScreenState extends State<SignInScreen> {
 
             getTextField(_emailController, 'Email', TextInputType.emailAddress),
             getTextFieldWithPassword(_passwordController, 'Password'),
-
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ForgotScreen(),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextConst.headingStyle(
+                        16,
+                        AppColor.redColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             // dob
 
             // Submit Button

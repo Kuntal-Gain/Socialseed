@@ -29,6 +29,7 @@ import 'package:socialseed/domain/usecases/comment/delete_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/fetch_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/like_comment_usecase.dart';
 import 'package:socialseed/domain/usecases/comment/update_comment_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/forget_password_usecase.dart';
 import 'package:socialseed/domain/usecases/post/create_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/delete_post_usecase.dart';
 import 'package:socialseed/domain/usecases/post/fetch_post_usecase.dart';
@@ -46,18 +47,17 @@ import 'package:socialseed/domain/usecases/user/fetch_saved_content_usecase.dart
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_single_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user/get_user_usecase.dart';
-import 'package:socialseed/domain/usecases/user/is_signin_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/is_signin_usecase.dart';
 import 'package:socialseed/domain/usecases/user/save_post_usecase.dart';
-import 'package:socialseed/domain/usecases/user/sign_in_usecase.dart';
-import 'package:socialseed/domain/usecases/user/sign_out_usecase.dart';
-import 'package:socialseed/domain/usecases/user/sign_up_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/sign_in_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/sign_out_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/sign_up_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_status_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/accept_request_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/follow_user_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/reject_request_usecase.dart';
 import 'package:socialseed/domain/usecases/user_controllers/send_request_usecase.dart';
-import 'package:socialseed/features/services/internet_service.dart';
 
 import 'domain/usecases/user/get_single_other_user_usecase.dart';
 import 'domain/usecases/user_controllers/unfollow_user_usecase.dart';
@@ -73,7 +73,6 @@ Future<void> init() async {
       isSignInUsecase: sl.call(),
       getCurrentUidUsecase: sl.call(),
       updateUserStatusUsecase: sl.call(),
-      service: sl.call(),
     ),
   );
 
@@ -186,6 +185,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetUserUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => CreateUserUsecase(repository: sl.call()));
   sl.registerLazySingleton(() => GetSingleUserUsecase(repository: sl.call()));
+  sl.registerLazySingleton(() => ForgetPasswordUsecase(repository: sl.call()));
+
   sl.registerLazySingleton(
       () => GetSingleOtherUserUseCase(repository: sl.call()));
   sl.registerLazySingleton(() => FollowUserUsecase(repository: sl.call()));
@@ -241,7 +242,6 @@ Future<void> init() async {
     () => RemoteDataSourceImpl(
       firebaseFirestore: sl.call(),
       firebaseAuth: sl.call(),
-      connectivityService: sl.call(),
     ),
   );
 
@@ -249,9 +249,7 @@ Future<void> init() async {
 
   final firebaseFirestore = FirebaseFirestore.instance;
   final firebaseAuth = FirebaseAuth.instance;
-  final internetService = ConnectivityService();
 
   sl.registerLazySingleton(() => firebaseFirestore);
   sl.registerLazySingleton(() => firebaseAuth);
-  sl.registerLazySingleton(() => internetService);
 }

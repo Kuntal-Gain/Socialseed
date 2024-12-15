@@ -14,6 +14,7 @@ abstract class RemoteDataSource {
   Future<void> signUpUser(UserEntity user);
   Future<bool> isSignIn();
   Future<void> signOut();
+  Future<void> forgotPassword(String email);
 
   // User Features
   Stream<List<UserEntity>> getUsers(UserEntity user);

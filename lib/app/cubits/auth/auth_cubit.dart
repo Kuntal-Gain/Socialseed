@@ -2,10 +2,9 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/domain/usecases/user/get_current_uid_usecase.dart';
-import 'package:socialseed/domain/usecases/user/is_signin_usecase.dart';
-import 'package:socialseed/domain/usecases/user/sign_out_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/is_signin_usecase.dart';
+import 'package:socialseed/domain/usecases/creds/sign_out_usecase.dart';
 import 'package:socialseed/domain/usecases/user/update_user_status_usecase.dart';
-import 'package:socialseed/features/services/internet_service.dart';
 
 part 'auth_state.dart';
 
@@ -13,14 +12,13 @@ class AuthCubit extends Cubit<AuthState> {
   final SignOutUsecase signOutUsecase;
   final GetCurrentUidUsecase getCurrentUidUsecase;
   final IsSignInUsecase isSignInUsecase;
-  final ConnectivityService service;
+
   final UpdateUserStatusUsecase updateUserStatusUsecase;
 
   AuthCubit({
     required this.signOutUsecase,
     required this.getCurrentUidUsecase,
     required this.isSignInUsecase,
-    required this.service,
     required this.updateUserStatusUsecase,
   }) : super(AuthInitial());
 

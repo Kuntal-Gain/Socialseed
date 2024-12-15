@@ -57,6 +57,7 @@ class _StoryScreenState extends State<StoryScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // Navigate to HomeScreen instead of allowing system back
