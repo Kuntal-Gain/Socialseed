@@ -107,11 +107,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           GestureDetector(
             onTap: () {
-              BlocProvider.of<AuthCubit>(context).logout();
-              Navigator.pop(context);
-              Navigator.pop(context);
-              Navigator.push(
+              BlocProvider.of<AuthCubit>(context).logout().then((_) {
+                Navigator.push(
                   context, MaterialPageRoute(builder: (_) => const MyApp()));
+              });
+              
             },
             child: Container(
               margin: const EdgeInsets.all(12),
