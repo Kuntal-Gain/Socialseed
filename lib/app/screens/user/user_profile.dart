@@ -300,102 +300,111 @@ class _UserProfileState extends State<UserProfile>
                                                       ),
                                                     ),
                                                   ),
+                                                  const SizedBox(width: 10),
+
+                                                  if (widget.otherUid ==
+                                                      currentUid) // Add spacing between buttons
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () async {
+                                                          // Allow current user to select a new cover image
+                                                          final XFile? image =
+                                                              await ImagePicker()
+                                                                  .pickImage(
+                                                            source: ImageSource
+                                                                .gallery,
+                                                            imageQuality: 80,
+                                                          );
+
+                                                          Navigator.of(ctx)
+                                                              .pop();
+
+                                                          if (image != null) {
+                                                            setState(() {
+                                                              selectedCoverImage =
+                                                                  image.path;
+                                                            });
+
+                                                            // Generate a unique ID
+                                                            await uploadCoverImage(
+                                                                image.path,
+                                                                widget
+                                                                    .otherUid);
+                                                          }
+                                                        },
+                                                        child: Container(
+                                                          height: size.height *
+                                                              0.05,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: AppColor
+                                                                .redColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child: Center(
+                                                            child: Text(
+                                                              "Update",
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    size.height *
+                                                                        0.015,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
                                                   const SizedBox(
                                                       width:
                                                           10), // Add spacing between buttons
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () async {
-                                                        // Allow current user to select a new cover image
-                                                        final XFile? image =
-                                                            await ImagePicker()
-                                                                .pickImage(
-                                                          source: ImageSource
-                                                              .gallery,
-                                                          imageQuality: 80,
-                                                        );
 
-                                                        Navigator.of(ctx).pop();
-
-                                                        if (image != null) {
-                                                          setState(() {
-                                                            selectedCoverImage =
-                                                                image.path;
+                                                  if (widget.otherUid ==
+                                                      currentUid)
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                  FirebaseConst
+                                                                      .users)
+                                                              .doc(currentUid)
+                                                              .update({
+                                                            "coverImage": "",
                                                           });
 
-                                                          // Generate a unique ID
-                                                          await uploadCoverImage(
-                                                              image.path,
-                                                              widget.otherUid);
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height:
-                                                            size.height * 0.05,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              AppColor.redColor,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(12),
-                                                        ),
-                                                        child: Center(
-                                                          child: Text(
-                                                            "Update",
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize:
-                                                                  size.height *
-                                                                      0.015,
+                                                          Navigator.of(ctx)
+                                                              .pop();
+                                                        },
+                                                        child: Container(
+                                                          height: size.height *
+                                                              0.05,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: AppColor
+                                                                .redColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child: const Center(
+                                                            child: Text(
+                                                              "Delete",
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                      width:
-                                                          10), // Add spacing between buttons
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                FirebaseConst
-                                                                    .users)
-                                                            .doc(currentUid)
-                                                            .update({
-                                                          "coverImage": "",
-                                                        });
-
-                                                        Navigator.of(ctx).pop();
-                                                      },
-                                                      child: Container(
-                                                        height:
-                                                            size.height * 0.05,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color:
-                                                              AppColor.redColor,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(12),
-                                                        ),
-                                                        child: const Center(
-                                                          child: Text(
-                                                            "Delete",
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -629,21 +638,23 @@ class _UserProfileState extends State<UserProfile>
                             Expanded(
                               flex: 2,
                               child: GestureDetector(
-                                onTap: () {
+                                onTap: () async {
                                   if (user.followers!.contains(currentUid)) {
-                                    BlocProvider.of<UserCubit>(context)
-                                        .unFollowUser(user: user)
-                                        .then((_) {
-                                      BlocProvider.of<UserCubit>(context)
-                                          .getUsers(user: user);
-                                    });
+                                    await BlocProvider.of<UserCubit>(context)
+                                        .unFollowUser(user: user);
+                                    // Refresh only the current profile
+                                    BlocProvider.of<GetSingleOtherUserCubit>(
+                                            context)
+                                        .getSingleOtherUser(
+                                            otherUid: widget.otherUid);
                                   } else {
-                                    BlocProvider.of<UserCubit>(context)
-                                        .followUser(user: user)
-                                        .then((_) {
-                                      BlocProvider.of<UserCubit>(context)
-                                          .getUsers(user: user);
-                                    });
+                                    await BlocProvider.of<UserCubit>(context)
+                                        .followUser(user: user);
+                                    // Refresh only the current profile
+                                    BlocProvider.of<GetSingleOtherUserCubit>(
+                                            context)
+                                        .getSingleOtherUser(
+                                            otherUid: widget.otherUid);
                                   }
                                 },
                                 child: Container(

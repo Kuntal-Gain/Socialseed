@@ -112,7 +112,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: TextFormField(
               controller: controller,
               keyboardType: key,
-              validator: _validateNotEmpty,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: label,
@@ -220,79 +219,80 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
-      if (_image == null) {
-        failureBar(context, "No Image is Selected");
-        setState(() {
-          _isSigningUp = false; // Reset if image is not selected
-        });
-        return;
-      } else {
-        try {
+      try {
+        String imageUrl =
+            "https://img.freepik.com/free-vector/flat-style-woman-avatar_90220-2876.jpg?t=st=1738591624~exp=1738595224~hmac=52da34b292612a1adee327b033aead6f06df21e591cb425cb1ed0acfd2fdfcfa&w=740"; // Replace with your actual default image URL
+
+        if (_image != null) {
           Reference ref = FirebaseStorage.instance
               .ref()
               .child('profiles')
               .child("${_nameController.text}.jpg");
 
           final uploadTask = ref.putFile(_image!);
-          final imageUrl = await (await uploadTask).ref.getDownloadURL();
+          imageUrl = await (await uploadTask).ref.getDownloadURL();
+        }
 
-          // ignore: use_build_context_synchronously
-          BlocProvider.of<CredentialCubit>(context)
-              .signUpUser(
-            user: UserEntity(
-              username: _usernameController.text,
-              fullname: _nameController.text,
-              email: _emailController.text,
-              password: _passwordController.text,
-              bio: "",
-              imageUrl: imageUrl,
-              friends: const [],
-              milestones: const [],
-              likedPages: const [],
-              posts: const [],
-              joinedDate: Timestamp.now(),
-              isVerified: false,
-              badges: const [],
-              followerCount: 0,
-              followingCount: 0,
-              stories: const [],
-              imageFile: _image,
-              work: _workController.text,
-              college: _collegeController.text,
-              school: _schoolController.text,
-              location: _homeController.text,
-              coverImage: "",
-              dob: Timestamp.fromDate(_selectedDate),
-              followers: const [],
-              following: const [],
-              requests: const [],
-              activeStatus: true,
-            ),
-          )
-              .then((val) {
-            // If sign up is successful, clear the text fields and reset the signing up flag
-            setState(() {
-              _nameController.clear();
-              _emailController.clear();
-              _passwordController.clear();
-              _confirmPasswordController.clear();
-              _isSigningUp = false;
-            });
-          }).catchError((error) {
-            // Handle error and reset signing up flag
-            setState(() {
-              _isSigningUp = false;
-            });
-            // ignore: use_build_context_synchronously
-            failureBar(context, error.toString());
+        // ignore: use_build_context_synchronously
+        BlocProvider.of<CredentialCubit>(context)
+            .signUpUser(
+          user: UserEntity(
+            username: _usernameController.text,
+            fullname: _nameController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+            bio: "",
+            imageUrl: imageUrl, // Uses uploaded image or default one
+            friends: const [],
+            milestones: const [],
+            likedPages: const [],
+            posts: const [],
+            joinedDate: Timestamp.now(),
+            isVerified: false,
+            badges: const [],
+            followerCount: 0,
+            followingCount: 0,
+            stories: const [],
+            imageFile: _image,
+            work: _workController.text.isEmpty ? "None" : _workController.text,
+            college: _collegeController.text.isEmpty
+                ? "None"
+                : _collegeController.text,
+            school: _schoolController.text.isEmpty
+                ? "None"
+                : _schoolController.text,
+            location:
+                _homeController.text.isEmpty ? "None" : _homeController.text,
+            coverImage: "",
+            dob: Timestamp.fromDate(_selectedDate),
+            followers: const [],
+            following: const [],
+            requests: const [],
+            activeStatus: true,
+          ),
+        )
+            .then((val) {
+          // Clear fields after successful signup
+          setState(() {
+            _nameController.clear();
+            _emailController.clear();
+            _passwordController.clear();
+            _confirmPasswordController.clear();
+            _isSigningUp = false;
           });
-        } catch (e) {
+        }).catchError((error) {
           setState(() {
             _isSigningUp = false;
           });
           // ignore: use_build_context_synchronously
-          failureBar(context, e.toString());
-        }
+          failureBar(context, error.toString());
+        });
+      } catch (e) {
+        setState(() {
+          _isSigningUp = false;
+        });
+        // ignore: use_build_context_synchronously
+        failureBar(context, e.toString());
       }
     }
   }
@@ -334,7 +334,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     backgroundColor: Colors.white,
                     backgroundImage: _image != null ? FileImage(_image!) : null,
                     child: _image == null
-                        ? Image.asset('assets/icons/user.png')
+                        ? Image.asset(
+                            'assets/icons/user.png',
+                            color: Color(0xffc2c2c2),
+                          )
                         : null,
                   ),
                 ),
