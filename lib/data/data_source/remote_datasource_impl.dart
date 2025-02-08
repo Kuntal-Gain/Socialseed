@@ -964,7 +964,6 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     try {
       // Set or update the story document in the user's subcollection
       final userStoryRef = await storySubcollection.doc(story.id).get();
-
       if (!userStoryRef.exists) {
         await storySubcollection.doc(story.id).set(storyData);
       } else {
@@ -973,14 +972,20 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
       // Set or update the story document in the global collection
       final globalStoryRef = await globalStoryCollection.doc(story.id).get();
-
       if (!globalStoryRef.exists) {
         await globalStoryCollection.doc(story.id).set(storyData);
       } else {
         await globalStoryCollection.doc(story.id).update(storyData);
       }
 
-      print('Story added successfully to both collections');
+      // Add the story ID to the "stories" field in the user's document
+      await userDoc.update({
+        "stories":
+            FieldValue.arrayUnion([story.id]) // Append storyId to the array
+      });
+
+      print(
+          'Story added successfully to both collections and user document updated');
     } catch (e) {
       print('Error adding story: $e');
     }
@@ -990,7 +995,10 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   Stream<List<StoryEntity>> fetchStories(String uid) {
     final userCollection = firebaseFirestore.collection(FirebaseConst.story);
 
-    return userCollection.snapshots().map((querySnapshot) {
+    return userCollection
+        .where('userId', isEqualTo: uid) // Add this line to filter by uid
+        .snapshots()
+        .map((querySnapshot) {
       final currentTime = DateTime.now();
 
       return querySnapshot.docs

@@ -17,6 +17,7 @@ import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
+import '../../../data/models/story_model.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
 import '../../../utils/custom/shimmer_effect.dart';
@@ -32,6 +33,8 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  List<String> storyUsers = [];
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,18 @@ class _FeedScreenState extends State<FeedScreen> {
     } catch (e) {
       return null;
     }
+  }
+
+  List<String> getUniqueUsers(List<StoryEntity> stories) {
+    Set<String> creators = {};
+
+    for (var story in stories) {
+      if (story.userId != null) {
+        creators.add(story.userId);
+      }
+    }
+
+    return creators.toList();
   }
 
   // ignore: annotate_overrides
@@ -164,12 +179,15 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Widget _buildStorySection(
       List<StoryEntity> stories, UserEntity user, double screenWidth) {
+    // users who have stories
+    final creators = getUniqueUsers(stories);
+
     return Container(
       height: 135,
       margin: const EdgeInsets.only(bottom: 10.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: stories.length + 1,
+        itemCount: creators.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
             return Stack(
@@ -229,11 +247,13 @@ class _FeedScreenState extends State<FeedScreen> {
               ],
             );
           } else {
-            final story = stories[index - 1];
+            final uid = creators[index - 1];
+
+            // fetch stories
 
             // Use a FutureBuilder to load the creator asynchronously
             return FutureBuilder<UserEntity?>(
-              future: getUserByUid(story.userId), // Fetch the creator by userId
+              future: getUserByUid(uid), // Fetch the creator by userId
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Container(
@@ -262,18 +282,16 @@ class _FeedScreenState extends State<FeedScreen> {
 
                 return GestureDetector(
                   onTap: () {
-                    BlocProvider.of<StoryCubit>(context)
-                        .viewStory(story: story, context: context);
+                    // BlocProvider.of<StoryCubit>(context)
+                    //     .viewStory(story: story, context: context);
 
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (ctx) => StoryScreen(
-                              story: story,
-                              storyUser: creator,
+                              userId: creator.uid!,
                               curruser: user,
                             )));
                   },
-                  child: storyCard(
-                      story, creator!.fullname!.split(' ')[0], creator),
+                  child: storyCard(creator!.fullname!.split(' ')[0], creator),
                 );
               },
             );
