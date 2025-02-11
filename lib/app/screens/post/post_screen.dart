@@ -6,6 +6,8 @@ import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_editor_plus/image_editor_plus.dart';
 import 'package:socialseed/app/screens/post/tags_screen.dart';
+import 'package:socialseed/app/widgets/image_card.dart';
+import 'package:socialseed/app/widgets/video_card.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/foundation.dart';
@@ -20,8 +22,10 @@ import 'package:socialseed/app/screens/post/location_screen.dart';
 import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../features/api/generate_caption.dart';
+import '../../../utils/custom/custom_snackbar.dart';
 
 class PostScreen extends StatefulWidget {
   final UserEntity currentUser;
@@ -36,13 +40,16 @@ class _PostScreenState extends State<PostScreen> {
   // Varibles
   final TextEditingController _captionController = TextEditingController();
   List<File?> images = [];
+  List<File?> videos = [];
   List<UserEntity> tags = [];
   String location = "";
   String type = 'public';
   String user = 'Devika';
   List<String?> imageFiles = [];
+  List<String?> videoFiles = [];
   List<String> topics = [];
   bool isAI = false;
+  List<VideoPlayerController> _controllers = [];
 
   List<String> splitTopics(String data) {
     // Split the string by commas and trim whitespace from each topic
@@ -65,13 +72,30 @@ class _PostScreenState extends State<PostScreen> {
         Reference ref = storage
             .ref()
             .child('Posts')
-            .child('${post.username}/${post.postid}$i.jpg');
+            .child('${post.username}/${post.postid}-$i.jpg');
 
         final uploadTask = ref.putFile(image);
 
         final imageUrl = await (await uploadTask).ref.getDownloadURL();
 
         imageFiles.add(imageUrl);
+      }
+    }
+
+    for (int i = 0; i < videos.length; i++) {
+      File? video = videos[i];
+
+      if (video != null) {
+        Reference ref = storage
+            .ref()
+            .child('Posts')
+            .child('${post.username}/${post.postid}-video$i.mp4');
+
+        final uploadTask = ref.putFile(video);
+
+        final videoUrl = await (await uploadTask).ref.getDownloadURL();
+
+        videoFiles.add(videoUrl);
       }
     }
 
@@ -85,7 +109,7 @@ class _PostScreenState extends State<PostScreen> {
         username: widget.currentUser.username,
         postType: type,
         content: _captionController.text,
-        images: imageFiles,
+        images: [...imageFiles, ...videoFiles],
         likes: const [],
         likedUsers: const [],
         comments: const [],
@@ -149,9 +173,29 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    final pickedFile =
+        await ImagePicker().pickVideo(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      File videoFile = File(pickedFile.path);
+      VideoPlayerController controller = VideoPlayerController.file(videoFile)
+        ..initialize().then((_) {
+          setState(() {}); // Refresh UI when the video is ready
+        });
+
+      setState(() {
+        videos.add(videoFile);
+        _controllers.add(controller);
+      });
+    }
+  }
+
   // Controller Disposal
   @override
   void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose(); // Dispose of all controllers
+    }
     _captionController.dispose();
     super.dispose();
   }
@@ -365,260 +409,27 @@ class _PostScreenState extends State<PostScreen> {
                         ],
                       ),
                     ),
-                    if (images.length == 1)
+                    if (videos.isNotEmpty && images.isEmpty) ...[
+                      if (videos.length == 1) videoCard1(_controllers[0]),
+                      if (videos.length == 2) videoCard2(_controllers),
+                      if (videos.length == 3) videoCard3(_controllers),
+                    ],
+                    if (images.isNotEmpty && videos.isEmpty) ...[
+                      if (images.length == 1) imageCard1(images[0]!),
+                      if (images.length == 2) imageCard2(images),
+                      if (images.length == 3) imageCard3(images),
+                      if (images.length == 4) imageCard4(images),
+                      if (images.length >= 5) imageCardN(images),
+                    ],
+                    if (videos.isEmpty && images.isEmpty)
                       Container(
-                        margin: const EdgeInsets.all(12),
-                        height: 250,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(
-                            images[0]!,
-                            fit: BoxFit.cover,
-                          ),
+                        height: 150,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "No media available",
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                      ),
-                    if (images.length == 2)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.all(12),
-                              height: 250,
-                              decoration: const BoxDecoration(),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(
-                                  images[0]!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.all(12),
-                              height: 250,
-                              decoration: const BoxDecoration(),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(
-                                  images[1]!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (images.length == 3)
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[0]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[1]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            margin: const EdgeInsets.all(12),
-                            height: 125,
-                            width: double.infinity,
-                            decoration: const BoxDecoration(),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                images[2]!,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (images.length == 4)
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[0]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[1]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[2]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[3]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    if (images.length >= 5)
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[0]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[1]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(12),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Image.file(
-                                      images[2]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.all(6),
-                                  height: 125,
-                                  decoration: const BoxDecoration(),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Image.file(
-                                          images[3]!,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      Container(
-                                        color: Colors.black.withOpacity(
-                                            0.5), // Adjust opacity as needed
-                                        child: Center(
-                                          child: Text(
-                                            "${images.length - 3}+",
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                      )
                   ],
                 ),
               ),
@@ -633,7 +444,75 @@ class _PostScreenState extends State<PostScreen> {
                 ),
                 Center(
                   child: TextButton.icon(
-                    onPressed: addImage,
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Container(
+                            height: 150,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(14),
+                                topRight: Radius.circular(14),
+                              ),
+                              color: Colors.white,
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.camera_alt,
+                                    color: Color.fromRGBO(255, 49, 49, 1),
+                                  ),
+                                  title: const Text(
+                                    'Photo',
+                                    style: TextStyle(
+                                      color: Color.fromRGBO(255, 49, 49, 1),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    if (videos.isEmpty)
+                                      addImage();
+                                    else if (videos.isNotEmpty)
+                                      failureBar(
+                                        context,
+                                        "Images cannot be Added Here.",
+                                      );
+                                  },
+                                ),
+                                const Divider(height: 1),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.videocam,
+                                    color: Color.fromRGBO(255, 49, 49, 1),
+                                  ),
+                                  title: const Text(
+                                    'Video',
+                                    style: TextStyle(
+                                      color: Color.fromRGBO(255, 49, 49, 1),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(context);
+
+                                    if (images.isEmpty)
+                                      _pickVideo();
+                                    else if (images.isNotEmpty)
+                                      failureBar(context,
+                                          "Videos cannot be Added Here.");
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                     icon: const Icon(
                       Icons.image_outlined,
                       color: Color.fromRGBO(255, 49, 49, 1),
@@ -641,9 +520,10 @@ class _PostScreenState extends State<PostScreen> {
                     label: const Text(
                       "Photo/Video",
                       style: TextStyle(
-                          color: Color.fromRGBO(255, 49, 49, 1),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700),
+                        color: Color.fromRGBO(255, 49, 49, 1),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),

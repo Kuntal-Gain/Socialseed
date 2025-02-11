@@ -11,11 +11,13 @@ import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/screens/user/single_profile_screen.dart';
 import 'package:socialseed/app/widgets/image_tile_widget.dart';
 import 'package:socialseed/app/widgets/post_widget.dart';
+import 'package:socialseed/app/widgets/vid_player_widget.dart';
 import 'package:socialseed/app/widgets/view_post_card.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
@@ -38,6 +40,10 @@ class PostCardWidget extends StatefulWidget {
 class _PostCardWidgetState extends State<PostCardWidget> {
   bool pressed = false;
 
+  bool isVideo(String url) {
+    return url.toLowerCase().contains(".mp4");
+  }
+
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size;
@@ -59,6 +65,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         size = size + (totalLines * lineHeight);
 
         num totalLikes = post.totalLikes ?? 0; // Local variable
+
+        bool isVideoFile = isVideo(post.images![0]);
 
         return SingleChildScrollView(
           child: Container(
@@ -296,472 +304,481 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     ),
                   ),
                 ),
-                if (post.images!.isEmpty) const SizedBox(),
-                if (post.images!.length == 1)
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: ctx,
-                        builder: (_) => Dialog(
-                          backgroundColor: Colors.transparent,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.network(
-                                  post.images![0],
-                                  width: mq.width * 0.8,
-                                  height: mq.height * 0.6,
-                                  fit: BoxFit.contain,
+                if (!isVideoFile) ...[
+                  if (post.images!.isEmpty) const SizedBox(),
+                  if (post.images!.length == 1)
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: ctx,
+                          builder: (_) => Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    post.images![0],
+                                    width: mq.width * 0.8,
+                                    height: mq.height * 0.6,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 10),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(ctx).pop();
-                                },
-                                child: const Text(
-                                  "Close",
-                                  style: TextStyle(color: Colors.white),
+                                const SizedBox(height: 10),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                  },
+                                  child: const Text(
+                                    "Close",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      height: mq.height * 0.25,
-                      width: mq.width * 1,
-                      padding: const EdgeInsets.all(12.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: CachedNetworkImage(
-                          imageUrl: post.images![0],
-                          placeholder: (ctx, url) => Container(
-                            color: Colors.grey,
+                        );
+                      },
+                      child: Container(
+                        height: mq.height * 0.25,
+                        width: mq.width * 1,
+                        padding: const EdgeInsets.all(12.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: CachedNetworkImage(
+                            imageUrl: post.images![0],
+                            placeholder: (ctx, url) => Container(
+                              color: Colors.grey,
+                            ),
+                            errorWidget: (ctx, url, err) =>
+                                const Icon(Icons.error),
+                            fit: BoxFit.cover,
                           ),
-                          errorWidget: (ctx, url, err) =>
-                              const Icon(Icons.error),
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
-                  ),
-                if (post.images!.length == 2)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: ctx,
-                              builder: (_) => Dialog(
-                                backgroundColor: Colors.transparent,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        post.images![0],
-                                        width: mq.width * 0.8,
-                                        height: mq.height * 0.6,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(ctx).pop();
-                                      },
-                                      child: const Text(
-                                        "Close",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            height: mq.height * 0.3,
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: CachedNetworkImage(
-                                imageUrl: post.images![0],
-                                placeholder: (ctx, url) => Container(
-                                  color: Colors.grey,
-                                ),
-                                errorWidget: (ctx, url, err) =>
-                                    const Icon(Icons.error),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: ctx,
-                              builder: (_) => Dialog(
-                                backgroundColor: Colors.transparent,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        post.images![1],
-                                        width: mq.width * 0.8,
-                                        height: mq.height * 0.6,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(ctx).pop();
-                                      },
-                                      child: const Text(
-                                        "Close",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            height: mq.height * 0.3,
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: CachedNetworkImage(
-                                imageUrl: post.images![1],
-                                placeholder: (ctx, url) => Container(
-                                  color: Colors.grey,
-                                ),
-                                errorWidget: (ctx, url, err) =>
-                                    const Icon(Icons.error),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                if (post.images!.length == 3)
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: ctx,
-                                      builder: (_) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                post.images![0],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(ctx).pop();
-                                              },
-                                              child: const Text(
-                                                "Close",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ],
+                  if (post.images!.length == 2)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: ctx,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          post.images![0],
+                                          width: mq.width * 0.8,
+                                          height: mq.height * 0.6,
+                                          fit: BoxFit.contain,
                                         ),
                                       ),
-                                    );
-                                  },
-                                  child: imageTile(imageId: post.images![0]))),
-                          Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: ctx,
-                                      builder: (_) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                post.images![1],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(ctx).pop();
-                                              },
-                                              child: const Text(
-                                                "Close",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ],
+                                      const SizedBox(height: 10),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                        },
+                                        child: const Text(
+                                          "Close",
+                                          style: TextStyle(color: Colors.white),
                                         ),
                                       ),
-                                    );
-                                  },
-                                  child: imageTile(imageId: post.images![1]))),
-                        ],
-                      ),
-                      GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: ctx,
-                              builder: (_) => Dialog(
-                                backgroundColor: Colors.transparent,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        post.images![2],
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(ctx).pop();
-                                      },
-                                      child: const Text(
-                                        "Close",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                          child: imageTile(imageId: post.images![2])),
-                    ],
-                  ),
-                if (post.images!.length >= 4)
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: ctx,
-                                      builder: (_) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                post.images![0],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(ctx).pop();
-                                              },
-                                              child: const Text(
-                                                "Close",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: imageTile(imageId: post.images![0]))),
-                          Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: ctx,
-                                      builder: (_) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                post.images![1],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(ctx).pop();
-                                              },
-                                              child: const Text(
-                                                "Close",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: imageTile(imageId: post.images![1]))),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: ctx,
-                                      builder: (_) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              child: Image.network(
-                                                post.images![2],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(ctx).pop();
-                                              },
-                                              child: const Text(
-                                                "Close",
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: imageTile(imageId: post.images![2]))),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: ctx,
-                                  builder: (_) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          child: Image.network(
-                                            post.images![3],
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(ctx).pop();
-                                          },
-                                          child: const Text(
-                                            "Close",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                );
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.all(12),
-                                height: 125,
-                                width: double.infinity,
-                                decoration: const BoxDecoration(),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: CachedNetworkImage(
-                                        imageUrl: post.images![3],
-                                        placeholder: (ctx, url) => Container(
-                                          color: Colors.grey,
-                                        ),
-                                        errorWidget: (ctx, url, err) =>
-                                            const Icon(Icons.error),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    Container(
-                                      color: Colors.black.withOpacity(
-                                          0.5), // Adjust opacity as needed
-                                      child: Center(
-                                        child: Text(
-                                          "${post.images!.length - 3}+",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: mq.height * 0.3,
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: CachedNetworkImage(
+                                  imageUrl: post.images![0],
+                                  placeholder: (ctx, url) => Container(
+                                    color: Colors.grey,
+                                  ),
+                                  errorWidget: (ctx, url, err) =>
+                                      const Icon(Icons.error),
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      )
-                    ],
-                  ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: ctx,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          post.images![1],
+                                          width: mq.width * 0.8,
+                                          height: mq.height * 0.6,
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                        },
+                                        child: const Text(
+                                          "Close",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: mq.height * 0.3,
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: CachedNetworkImage(
+                                  imageUrl: post.images![1],
+                                  placeholder: (ctx, url) => Container(
+                                    color: Colors.grey,
+                                  ),
+                                  errorWidget: (ctx, url, err) =>
+                                      const Icon(Icons.error),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (post.images!.length == 3)
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  post.images![0],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: const Text(
+                                                  "Close",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child:
+                                        imageTile(imageId: post.images![0]))),
+                            Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  post.images![1],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: const Text(
+                                                  "Close",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child:
+                                        imageTile(imageId: post.images![1]))),
+                          ],
+                        ),
+                        GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: ctx,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          post.images![2],
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                        },
+                                        child: const Text(
+                                          "Close",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: imageTile(imageId: post.images![2])),
+                      ],
+                    ),
+                  if (post.images!.length >= 4)
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  post.images![0],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: const Text(
+                                                  "Close",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child:
+                                        imageTile(imageId: post.images![0]))),
+                            Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  post.images![1],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: const Text(
+                                                  "Close",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child:
+                                        imageTile(imageId: post.images![1]))),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: ctx,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: Image.network(
+                                                  post.images![2],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(ctx).pop();
+                                                },
+                                                child: const Text(
+                                                  "Close",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child:
+                                        imageTile(imageId: post.images![2]))),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: ctx,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: Image.network(
+                                              post.images![3],
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(ctx).pop();
+                                            },
+                                            child: const Text(
+                                              "Close",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.all(12),
+                                  height: 125,
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: CachedNetworkImage(
+                                          imageUrl: post.images![3],
+                                          placeholder: (ctx, url) => Container(
+                                            color: Colors.grey,
+                                          ),
+                                          errorWidget: (ctx, url, err) =>
+                                              const Icon(Icons.error),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Container(
+                                        color: Colors.black.withOpacity(
+                                            0.5), // Adjust opacity as needed
+                                        child: Center(
+                                          child: Text(
+                                            "${post.images!.length - 3}+",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                ],
+                if (isVideoFile)
+                  VideoPostWidget(videoUrl: post.images![0] ?? ""),
                 Row(
                   children: [
                     sizeHor(10),
