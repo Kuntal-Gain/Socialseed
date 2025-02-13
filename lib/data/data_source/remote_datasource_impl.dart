@@ -993,10 +993,10 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Stream<List<StoryEntity>> fetchStories(String uid) {
-    final userCollection = firebaseFirestore.collection(FirebaseConst.story);
+    final storyCollection = firebaseFirestore.collection(FirebaseConst.story);
 
-    return userCollection
-        .where('userId', isEqualTo: uid) // Add this line to filter by uid
+    return storyCollection
+        // Remove the where clause to fetch all stories
         .snapshots()
         .map((querySnapshot) {
       final currentTime = DateTime.now();

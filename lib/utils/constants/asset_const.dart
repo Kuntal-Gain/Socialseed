@@ -5,6 +5,7 @@ class IconConst {
   static const String chatIcon = 'assets/icons/messenger.png';
   static const String bellIcon = 'assets/icons/bell.png';
   static const String userIcon = 'assets/icons/user.png';
+  static const String exploreBtn = 'assets/icons/compass.png';
 
   // post
   static const String likeIcon = 'assets/icons/like.png';

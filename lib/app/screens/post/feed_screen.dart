@@ -60,7 +60,7 @@ class _FeedScreenState extends State<FeedScreen> {
     Set<String> creators = {};
 
     for (var story in stories) {
-      if (story.userId != null) {
+      if (story.userId != null && story.userId.isNotEmpty) {
         creators.add(story.userId);
       }
     }
@@ -104,9 +104,20 @@ class _FeedScreenState extends State<FeedScreen> {
                         if (state is StoryLoaded) {
                           final stories = state.stories
                               .where((story) =>
-                                  widget.user.friends!.contains(story.userId) ||
-                                  widget.user.uid == story.userId)
+                                      story.userId ==
+                                          widget.user
+                                              .uid || // Show user's own stories
+                                      (widget.user.friends != null &&
+                                          widget.user.friends!.contains(story
+                                              .userId)) // Show friends' stories
+                                  )
                               .toList();
+
+                          if (stories.isEmpty) {
+                            return const Center(
+                              child: Text('No stories available'),
+                            );
+                          }
 
                           return _buildStorySection(
                               stories, widget.user, screenWidth);

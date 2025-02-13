@@ -13,6 +13,8 @@ import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
+import 'post/explore_page.dart';
+
 class HomeScreen extends StatefulWidget {
   final String uid;
 
@@ -60,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> navIcons = [
     IconConst.homeIcon,
     IconConst.friendIcon,
-    IconConst.chatIcon,
+    IconConst.exploreBtn,
     IconConst.bellIcon,
     IconConst.userIcon,
   ];
@@ -113,7 +115,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     List<Widget> screens = [
                       FeedScreen(user: currentUser),
                       FriendSuggestion(user: currentUser),
-                      ChatScreen(user: currentUser),
+                      // ChatScreen(user: currentUser),
+                      ExplorePage(user: currentUser),
                       NotificationScreen(uid: currentUser.uid!),
                       UserProfile(
                         otherUid: currentUser.uid.toString(),
