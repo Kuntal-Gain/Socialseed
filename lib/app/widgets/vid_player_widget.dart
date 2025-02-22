@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:video_player/video_player.dart';
@@ -8,6 +9,7 @@ class VideoPostWidget extends StatefulWidget {
   const VideoPostWidget({Key? key, required this.videoUrl}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _VideoPostWidgetState createState() => _VideoPostWidgetState();
 }
 
@@ -26,7 +28,9 @@ class _VideoPostWidgetState extends State<VideoPostWidget> {
             _isInitialized = true;
           });
         }).catchError((error) {
-          print("Video loading error: $error");
+          if (kDebugMode) {
+            print("Video loading error: $error");
+          }
         });
 
       // Stop looping and listen for video end
@@ -69,7 +73,7 @@ class _VideoPostWidgetState extends State<VideoPostWidget> {
                         child: VideoProgressIndicator(
                           _controller,
                           allowScrubbing: true,
-                          colors: VideoProgressColors(
+                          colors: const VideoProgressColors(
                             playedColor: AppColor.redColor,
                             backgroundColor: Colors.grey,
                             bufferedColor: Colors.white54,

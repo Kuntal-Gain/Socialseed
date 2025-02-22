@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
+import 'package:socialseed/app/screens/post/video_post_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 import 'package:socialseed/domain/entities/post_entity.dart';
@@ -24,9 +26,6 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  late VideoPlayerController _controller;
-  bool _isInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -60,7 +59,8 @@ class _ExplorePageState extends State<ExplorePage> {
         centerTitle: true,
       ),
       body: BlocProvider(
-        create: (context) => di.sl<PostCubit>()..getPosts(post: PostEntity()),
+        create: (context) =>
+            di.sl<PostCubit>()..getPosts(post: const PostEntity()),
         child: BlocBuilder<PostCubit, PostState>(
           builder: (context, state) {
             if (state is PostFailure) {
@@ -72,7 +72,8 @@ class _ExplorePageState extends State<ExplorePage> {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: MasonryGridView.builder(
-                  gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate:
+                      const SliverSimpleGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3, // Number of columns
                   ),
                   itemCount: posts.length,
@@ -84,7 +85,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       return VideoTileWidget(
                         videoUrl: image,
                         post: post,
-                        user: UserEntity(),
+                        user: const UserEntity(),
                       );
                     }
 
@@ -100,7 +101,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         );
                       },
                       child: Container(
-                        margin: EdgeInsets.all(5),
+                        margin: const EdgeInsets.all(5),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: image != null && image.isNotEmpty
@@ -119,7 +120,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
               );
             }
-            return SizedBox();
+            return const SizedBox();
           },
         ),
       ),
@@ -140,6 +141,7 @@ class VideoTileWidget extends StatefulWidget {
       : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _VideoTileWidgetState createState() => _VideoTileWidgetState();
 }
 
@@ -158,7 +160,9 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
             _isInitialized = true;
           });
         }).catchError((error) {
-          print("Video loading error: $error");
+          if (kDebugMode) {
+            print("Video loading error: $error");
+          }
         });
 
       // Stop looping and listen for video end
@@ -181,12 +185,18 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) =>
-                PostViewScreen(post: widget.post, user: widget.user)));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => VideoPostScreen(
+              videoUrl: widget.videoUrl,
+              user: widget.user,
+              post: widget.post,
+            ),
+          ),
+        );
       },
       child: Container(
-        margin: EdgeInsets.all(5),
+        margin: const EdgeInsets.all(5),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: _isInitialized
@@ -196,7 +206,7 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
                       aspectRatio: _controller.value.aspectRatio,
                       child: VideoPlayer(_controller),
                     ),
-                    Positioned.fill(
+                    const Positioned.fill(
                       child: Center(
                         child: Icon(
                           Icons.play_arrow,
@@ -205,7 +215,7 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
                         ),
                       ),
                     ),
-                    Positioned.fill(
+                    const Positioned.fill(
                       child: Center(
                         child: Icon(
                           Icons.play_circle,

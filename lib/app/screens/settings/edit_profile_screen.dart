@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -37,7 +38,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   var selectedCoverImage = "";
   File? _image;
-  String? _imageUrl;
 
   @override
   void initState() {
@@ -122,6 +122,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future selectImage() async {
     try {
       // Initiate image picking from the gallery
+      // ignore: invalid_use_of_visible_for_testing_member
       final pickedFile = await ImagePicker.platform
           .getImageFromSource(source: ImageSource.gallery);
 
@@ -129,7 +130,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (pickedFile != null) {
           _image = File(pickedFile.path);
         } else {
-          print("No image selected");
+          if (kDebugMode) {
+            print("No image selected");
+          }
         }
       });
 
@@ -149,7 +152,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
       }
     } catch (e) {
-      print('Something went wrong: $e');
+      if (kDebugMode) {
+        print('Something went wrong: $e');
+      }
     }
   }
 
@@ -250,6 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                     imageQuality: 80,
                                                   );
 
+                                                  // ignore: use_build_context_synchronously
                                                   Navigator.of(context).pop();
 
                                                   if (image != null) {

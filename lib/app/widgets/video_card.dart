@@ -18,7 +18,7 @@ Widget videoCard1(VideoPlayerController controller) {
           borderRadius: BorderRadius.circular(16),
           child: VideoPlayer(controller),
         ),
-        Align(
+        const Align(
           alignment: Alignment.center,
           child: Icon(
             Icons.play_arrow,
@@ -26,7 +26,7 @@ Widget videoCard1(VideoPlayerController controller) {
             size: 35,
           ),
         ),
-        Align(
+        const Align(
           alignment: Alignment.center,
           child: Icon(
             Icons.play_circle_fill,
@@ -56,7 +56,7 @@ Widget videoCard2(List<VideoPlayerController> controllers) {
                 borderRadius: BorderRadius.circular(16),
                 child: VideoPlayer(controllers[0]),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.play_arrow,
@@ -64,7 +64,7 @@ Widget videoCard2(List<VideoPlayerController> controllers) {
                   size: 35,
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.play_circle_fill,
@@ -90,7 +90,7 @@ Widget videoCard2(List<VideoPlayerController> controllers) {
                 borderRadius: BorderRadius.circular(16),
                 child: VideoPlayer(controllers[1]),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.play_arrow,
@@ -98,7 +98,7 @@ Widget videoCard2(List<VideoPlayerController> controllers) {
                   size: 35,
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.play_circle_fill,
@@ -152,7 +152,7 @@ Widget _buildVideoContainer(VideoPlayerController controller) {
               child: VideoPlayer(controller),
             ),
           ),
-          Align(
+          const Align(
             alignment: Alignment.center,
             child: Icon(
               Icons.play_circle_fill,

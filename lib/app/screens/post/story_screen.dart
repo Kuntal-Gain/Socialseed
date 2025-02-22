@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/data/models/story_model.dart';
 
-import '../../../data/models/user_model.dart';
 import '../../../domain/entities/story_entity.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../utils/constants/color_const.dart';
@@ -72,12 +72,18 @@ class _StoryScreenState extends State<StoryScreen> {
           }).toList();
         }
 
-        print("Loaded ${stories.length} stories for user ${widget.userId}");
+        if (kDebugMode) {
+          print("Loaded ${stories.length} stories for user ${widget.userId}");
+        }
       } else {
-        print("No stories found for user ${widget.userId}");
+        if (kDebugMode) {
+          print("No stories found for user ${widget.userId}");
+        }
       }
     } catch (e) {
-      print("Error loading stories: $e");
+      if (kDebugMode) {
+        print("Error loading stories: $e");
+      }
     } finally {
       if (mounted) {
         setState(() {

@@ -49,7 +49,7 @@ class _PostScreenState extends State<PostScreen> {
   List<String?> videoFiles = [];
   List<String> topics = [];
   bool isAI = false;
-  List<VideoPlayerController> _controllers = [];
+  final List<VideoPlayerController> _controllers = [];
 
   List<String> splitTopics(String data) {
     // Split the string by commas and trim whitespace from each topic
@@ -425,7 +425,7 @@ class _PostScreenState extends State<PostScreen> {
                       Container(
                         height: 150,
                         alignment: Alignment.center,
-                        child: Text(
+                        child: const Text(
                           "No media available",
                           style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
@@ -450,7 +450,7 @@ class _PostScreenState extends State<PostScreen> {
                         builder: (BuildContext context) {
                           return Container(
                             height: 150,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(14),
                                 topRight: Radius.circular(14),
@@ -474,9 +474,10 @@ class _PostScreenState extends State<PostScreen> {
                                   ),
                                   onTap: () {
                                     Navigator.pop(context);
-                                    if (videos.isEmpty)
+                                    if (videos.isEmpty) {
                                       addImage();
-                                    else if (videos.isNotEmpty)
+                                    } else if (videos.isNotEmpty)
+                                      // ignore: curly_braces_in_flow_control_structures
                                       failureBar(
                                         context,
                                         "Images cannot be Added Here.",
@@ -500,9 +501,10 @@ class _PostScreenState extends State<PostScreen> {
                                   onTap: () {
                                     Navigator.pop(context);
 
-                                    if (images.isEmpty)
+                                    if (images.isEmpty) {
                                       _pickVideo();
-                                    else if (images.isNotEmpty)
+                                    } else if (images.isNotEmpty)
+                                      // ignore: curly_braces_in_flow_control_structures
                                       failureBar(context,
                                           "Videos cannot be Added Here.");
                                   },

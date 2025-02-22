@@ -17,7 +17,6 @@ import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';

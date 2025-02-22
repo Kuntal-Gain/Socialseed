@@ -99,8 +99,10 @@ class _ForgotScreenState extends State<ForgotScreen> {
                 await di
                     .sl<CredentialCubit>()
                     .forgotPassword(email: _emailController.text);
+                // ignore: use_build_context_synchronously
                 successBar(context, "Request has been sent to you Email");
               } catch (error) {
+                // ignore: use_build_context_synchronously
                 failureBar(context, "Error : $error");
               } finally {
                 setState(() {

@@ -109,9 +109,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () {
               BlocProvider.of<AuthCubit>(context).logout().then((_) {
                 Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const MyApp()));
+                    // ignore: use_build_context_synchronously
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyApp()));
               });
-              
             },
             child: Container(
               margin: const EdgeInsets.all(12),

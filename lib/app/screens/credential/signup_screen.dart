@@ -336,7 +336,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: _image == null
                         ? Image.asset(
                             'assets/icons/user.png',
-                            color: Color(0xffc2c2c2),
+                            color: const Color(0xffc2c2c2),
                           )
                         : null,
                   ),

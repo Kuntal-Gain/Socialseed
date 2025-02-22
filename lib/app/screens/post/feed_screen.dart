@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/story/story_cubit.dart';
+import 'package:socialseed/app/screens/chat/chat_screen.dart';
 import 'package:socialseed/app/screens/post/post_screen.dart';
 import 'package:socialseed/app/screens/post/post_story_screen.dart';
 import 'package:socialseed/app/screens/post/story_screen.dart';
@@ -13,11 +14,11 @@ import 'package:socialseed/dependency_injection.dart' as di;
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
-import '../../../data/models/story_model.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
 import '../../../utils/custom/shimmer_effect.dart';
@@ -60,7 +61,7 @@ class _FeedScreenState extends State<FeedScreen> {
     Set<String> creators = {};
 
     for (var story in stories) {
-      if (story.userId != null && story.userId.isNotEmpty) {
+      if (story.userId.isNotEmpty) {
         creators.add(story.userId);
       }
     }
@@ -113,22 +114,16 @@ class _FeedScreenState extends State<FeedScreen> {
                                   )
                               .toList();
 
-                          if (stories.isEmpty) {
-                            return const Center(
-                              child: Text('No stories available'),
-                            );
-                          }
-
                           return _buildStorySection(
                               stories, widget.user, screenWidth);
                         } else if (state is StoryInitial) {
-                          return const Center(
-                              child: CircularProgressIndicator());
+                          return _buildStorySection(
+                              [], widget.user, screenWidth);
                         } else if (state is StoryFailure) {
-                          return const Center(
-                              child: Text('Failed to load stories'));
+                          return _buildStorySection(
+                              [], widget.user, screenWidth);
                         }
-                        return const SizedBox.shrink();
+                        return _buildStorySection([], widget.user, screenWidth);
                       },
                     ),
                   ),
@@ -148,43 +143,72 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Widget _buildSearchBar(BuildContext context, double screenWidth) {
-    return Container(
-      height: 60,
-      margin: EdgeInsets.all(screenWidth * 0.03), // Responsive margin
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(50),
-        color: AppColor.greyColor,
-      ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(18.0),
-            child: Image.asset(
-              'assets/icons/search.png',
-              color: AppColor.textGreyColor,
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 60,
+            margin: EdgeInsets.all(screenWidth * 0.03), // Responsive margin
+
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              color: AppColor.greyColor,
             ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (ctx) => SearchScreen(
-                    currentUid: widget.user.uid!,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Image.asset(
+                    'assets/icons/search.png',
+                    color: AppColor.textGreyColor,
                   ),
                 ),
-              ),
-              child: Text(
-                'Search User',
-                style: TextConst.MediumStyle(
-                  16,
-                  AppColor.textGreyColor,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) => SearchScreen(
+                          currentUid: widget.user.uid!,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Search User',
+                      style: TextConst.MediumStyle(
+                        16,
+                        AppColor.textGreyColor,
+                      ),
+                    ),
+                  ),
                 ),
+              ],
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(user: widget.user),
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: 12),
+            child: CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.transparent,
+              child: Image.asset(
+                IconConst.chatIcon,
+                width: 35,
+                height: 35,
+                fit: BoxFit.contain,
+                color: AppColor.redColor,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -198,9 +222,11 @@ class _FeedScreenState extends State<FeedScreen> {
       margin: const EdgeInsets.only(bottom: 10.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        // Always show at least 1 item (the add story option)
         itemCount: creators.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
+            // Add story option
             return Stack(
               children: [
                 GestureDetector(
@@ -215,7 +241,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                    width: screenWidth * 0.24, // Responsive width
+                    width: screenWidth * 0.24,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: NetworkImage(user.imageUrl!),

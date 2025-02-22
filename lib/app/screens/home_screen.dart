@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
-import 'package:socialseed/app/screens/chat/chat_screen.dart';
 import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
 import 'package:socialseed/app/screens/notification/notification_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
