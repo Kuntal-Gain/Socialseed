@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
+import 'package:socialseed/app/screens/post/explore_page.dart';
 
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/screens/user/single_profile_screen.dart';
@@ -280,9 +281,22 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) =>
-                            PostViewScreen(post: post, user: widget.user))),
+                    onTap: () {
+                      if (isVideoFile) {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (ctx) => VideoTileWidget(
+                            videoUrl: post.images!.first,
+                            user: widget.user,
+                            post: post,
+                          ),
+                        ));
+                      } else {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (ctx) =>
+                              PostViewScreen(post: post, user: widget.user),
+                        ));
+                      }
+                    },
                     child: Container(
                       padding: const EdgeInsets.only(
                         left: 12,

@@ -200,7 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                     Expanded(
-                      flex: 1,
                       child: _isLoading
                           ? ListView.builder(
                               scrollDirection: Axis.horizontal,
@@ -306,7 +305,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
 
                   Expanded(
-                    flex: 4,
+                    flex: 7,
                     child: BlocBuilder<ChatCubit, ChatState>(
                       builder: (context, state) {
                         // Show shimmer loading initially or when explicitly loading
@@ -332,56 +331,79 @@ class _ChatScreenState extends State<ChatScreen> {
                             );
                           }
 
-                          return ListView.builder(
-                            itemCount: conversations.length,
-                            itemBuilder: (ctx, idx) {
-                              final members = conversations[idx]
-                                  .members!
-                                  .where((uid) => uid != widget.user.uid)
-                                  .toList();
-
-                              // Try to find friend in friendList
-                              final friendOptional = friendList
-                                  .where((friend) => friend.uid == members[0])
-                                  .toList();
-
-                              // Skip if friend not found
-                              if (friendOptional.isEmpty) {
-                                return shimmerEffectChat();
-                              }
-
-                              final friend = friendOptional.first;
-
-                              return GestureDetector(
-                                onTap: () async {
-                                  final existingMessageId =
-                                      await getExistingMessageId(
-                                    widget.user.uid!,
-                                    friend.uid!,
-                                  );
-                                  final messageId =
-                                      existingMessageId ?? const Uuid().v4();
-
-                                  // ignore: use_build_context_synchronously
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (ctx) =>
-                                          BlocProvider<MessageCubit>(
-                                        create: (context) =>
-                                            di.sl<MessageCubit>(),
-                                        child: MessageScreen(
-                                          sender: widget.user,
-                                          receiver: friend,
-                                          messageId: messageId,
-                                        ),
-                                      ),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (conversations.isNotEmpty) ...[
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Text(
+                                    'Conversations',
+                                    style: TextConst.headingStyle(
+                                      22,
+                                      AppColor.blackColor,
                                     ),
-                                  );
-                                },
-                                child: messageTileWidget(friend, widget.user,
-                                    conversations[idx].lastMessage!),
-                              );
-                            },
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: conversations.length,
+                                    itemBuilder: (ctx, idx) {
+                                      final members = conversations[idx]
+                                          .members!
+                                          .where(
+                                              (uid) => uid != widget.user.uid)
+                                          .toList();
+
+                                      // Try to find friend in friendList
+                                      final friendOptional = friendList
+                                          .where((friend) =>
+                                              friend.uid == members[0])
+                                          .toList();
+
+                                      // Skip if friend not found
+                                      if (friendOptional.isEmpty) {
+                                        return shimmerEffectChat();
+                                      }
+
+                                      final friend = friendOptional.first;
+
+                                      return GestureDetector(
+                                        onTap: () async {
+                                          final existingMessageId =
+                                              await getExistingMessageId(
+                                            widget.user.uid!,
+                                            friend.uid!,
+                                          );
+                                          final messageId = existingMessageId ??
+                                              const Uuid().v4();
+
+                                          // ignore: use_build_context_synchronously
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (ctx) =>
+                                                  BlocProvider<MessageCubit>(
+                                                create: (context) =>
+                                                    di.sl<MessageCubit>(),
+                                                child: MessageScreen(
+                                                  sender: widget.user,
+                                                  receiver: friend,
+                                                  messageId: messageId,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: messageTileWidget(
+                                            friend,
+                                            widget.user,
+                                            conversations[idx].lastMessage!),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ],
                           );
                         }
 
