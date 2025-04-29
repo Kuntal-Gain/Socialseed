@@ -2,11 +2,13 @@ import 'package:animated_menu/animated_menu.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'package:socialseed/app/screens/post/explore_page.dart';
+import 'package:socialseed/app/screens/post/tagged_feed_screen.dart';
 
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/app/screens/user/single_profile_screen.dart';
@@ -42,6 +44,59 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
   bool isVideo(String url) {
     return url.toLowerCase().contains(".mp4");
+  }
+
+  Widget captionField(String caption) {
+    RegExp exp = RegExp(r'\#[a-zA-Z0-9_]+');
+    Iterable<Match> matches = exp.allMatches(caption);
+
+    List<InlineSpan> children = [];
+    int currentIndex = 0;
+
+    for (final match in matches) {
+      if (match.start > currentIndex) {
+        children.add(TextSpan(
+          text: caption.substring(currentIndex, match.start),
+          style: const TextStyle(color: Colors.black),
+        ));
+      }
+
+      final tagText = match.group(0)!;
+
+      children.add(
+        TextSpan(
+          text: tagText,
+          style:
+              const TextStyle(color: Colors.red, fontWeight: FontWeight.w900),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              print("navigated to $tagText");
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => TaggedFeedScreen(
+                        tag: tagText,
+                        posts: widget.posts
+                            .where((val) => val.content!.contains(tagText))
+                            .toList(),
+                        user: widget.user,
+                      )));
+            },
+        ),
+      );
+
+      currentIndex = match.end;
+    }
+
+    if (currentIndex < caption.length) {
+      children.add(TextSpan(
+        text: caption.substring(currentIndex),
+        style: const TextStyle(color: Colors.black),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: children),
+      textScaleFactor: 1.2,
+    );
   }
 
   @override
@@ -305,15 +360,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         bottom: 2,
                       ),
                       width: double.infinity,
-                      child: Text(
-                        widget.posts[idx].content.toString(),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          height: 1.2,
-                        ),
-                      ),
+                      child: captionField(widget.posts[idx].content.toString()),
                     ),
                   ),
                 ),
