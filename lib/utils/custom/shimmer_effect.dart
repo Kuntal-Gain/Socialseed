@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../features/services/theme_service.dart';
 import '../constants/color_const.dart';
 import '../constants/page_const.dart';
 
-Widget shimmerEffectPost() {
+Widget shimmerEffectPost(BuildContext ctx) {
+  final isDark = Provider.of<ThemeService>(ctx).isDarkMode;
+
+  // 🎨 Dynamic shimmer colors
+  final baseShimmer = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+  final highlightShimmer = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+  final containerColor = isDark ? Colors.grey[900]! : Colors.white;
+
   return Container(
     height: 350,
     width: double.infinity,
@@ -17,11 +26,10 @@ Widget shimmerEffectPost() {
           blurRadius: 1,
         ),
       ],
-      color: Colors.white,
+      color: containerColor,
       borderRadius: BorderRadius.circular(16),
     ),
     child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -32,10 +40,10 @@ Widget shimmerEffectPost() {
               Row(
                 children: [
                   Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.white,
+                    baseColor: baseShimmer,
+                    highlightColor: highlightShimmer,
+                    child: CircleAvatar(
+                      backgroundColor: containerColor,
                       radius: 20.0,
                     ),
                   ),
@@ -46,40 +54,34 @@ Widget shimmerEffectPost() {
                       Row(
                         children: [
                           Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
+                            baseColor: baseShimmer,
+                            highlightColor: highlightShimmer,
                             child: Container(
                               height: 20,
                               width: 100,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
+                              color: containerColor,
                             ),
                           ),
                           sizeHor(5),
                           Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
+                            baseColor: baseShimmer,
+                            highlightColor: highlightShimmer,
                             child: Container(
                               height: 20,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
+                              color: containerColor,
                             ),
                           ),
                         ],
                       ),
                       sizeVar(5),
                       Shimmer.fromColors(
-                        baseColor: Colors.grey[300]!,
-                        highlightColor: Colors.grey[100]!,
+                        baseColor: baseShimmer,
+                        highlightColor: highlightShimmer,
                         child: Container(
                           height: 20,
                           width: 150,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                          ),
+                          color: containerColor,
                         ),
                       ),
                     ],
@@ -91,14 +93,14 @@ Widget shimmerEffectPost() {
         ),
         Expanded(
           child: Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
+            baseColor: baseShimmer,
+            highlightColor: highlightShimmer,
             child: Container(
               height: 20,
               margin: const EdgeInsets.all(12),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: containerColor,
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
@@ -107,20 +109,14 @@ Widget shimmerEffectPost() {
         Row(
           children: [
             sizeHor(10),
-
-            // like
-
-            // Like button with animation
             Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
+              baseColor: baseShimmer,
+              highlightColor: highlightShimmer,
               child: Container(
                 height: 40,
                 width: 160,
                 margin: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                ),
+                color: containerColor,
               ),
             ),
           ],

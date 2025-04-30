@@ -417,7 +417,7 @@ class _FeedScreenState extends State<FeedScreen> {
               physics:
                   const NeverScrollableScrollPhysics(), // Add this to prevent nested scrolling
               itemCount: 5,
-              itemBuilder: (ctx, idx) => shimmerEffectPost(),
+              itemBuilder: (ctx, idx) => shimmerEffectPost(context),
             ),
           );
         }

@@ -895,12 +895,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                           failureBar(context, "Failed to Like the Post");
                         }
                       },
-                      child: postItem(
-                          iconId: post.likes?.contains(widget.user.uid) ?? false
-                              ? IconConst.likePressedIcon
-                              : IconConst.likeIcon,
-                          value: totalLikes,
-                          context: context),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 25,
+                            width: 25,
+                            margin: const EdgeInsets.all(12),
+                            child: Image.asset(
+                              post.likes?.contains(widget.user.uid) ?? false
+                                  ? IconConst.likePressedIcon
+                                  : IconConst.likeIcon,
+                            ),
+                          ),
+                          Text(
+                            totalLikes.toString(),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     sizeHor(10),
