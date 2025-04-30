@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/app/screens/chat/chat_screen.dart';
@@ -19,6 +20,7 @@ import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
 import '../../../utils/custom/shimmer_effect.dart';
@@ -75,7 +77,9 @@ class _FeedScreenState extends State<FeedScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Provider.of<ThemeService>(context).isDarkMode
+          ? AppColor.bgDark
+          : AppColor.whiteColor,
       body: BlocProvider<PostCubit>(
         create: (context) =>
             di.sl<PostCubit>()..getPosts(post: const PostEntity(), delay: true),
@@ -152,7 +156,17 @@ class _FeedScreenState extends State<FeedScreen> {
 
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(50),
-              color: AppColor.greyColor,
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.secondaryDark
+                  : AppColor.whiteColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Provider.of<ThemeService>(context).isDarkMode
+                      ? AppColor.blackColor
+                      : AppColor.greyShadowColor,
+                  blurRadius: 2,
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -353,9 +367,18 @@ class _FeedScreenState extends State<FeedScreen> {
         child: Container(
           height: 60,
           decoration: BoxDecoration(
-            border: Border.all(color: AppColor.greyShadowColor),
+            boxShadow: [
+              BoxShadow(
+                color: Provider.of<ThemeService>(context).isDarkMode
+                    ? AppColor.blackColor
+                    : AppColor.greyShadowColor,
+                blurRadius: 2,
+              ),
+            ],
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.secondaryDark
+                : AppColor.whiteColor,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

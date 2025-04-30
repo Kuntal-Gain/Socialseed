@@ -2,6 +2,7 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
@@ -22,6 +23,7 @@ import 'app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'app/widgets/opacity_leaf_animation.dart';
 import 'dependency_injection.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/services/theme_service.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +34,14 @@ Future main() async {
 
   await di.init();
 
-  runApp(const MyApp());
+  final themeService = ThemeService();
+  await themeService.loadTheme();
+  runApp(
+    ChangeNotifierProvider<ThemeService>.value(
+      value: themeService,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -61,8 +70,7 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<ArchivepostCubit>()),
       ],
       child: MaterialApp(
-        theme: ThemeData(
-          primaryColor: Colors.white,
+        theme: ThemeData.light().copyWith(
           textTheme: ThemeData.light().textTheme.apply(
                 bodyColor: AppColor.blackColor,
                 displayColor: AppColor.blackColor,
@@ -74,6 +82,7 @@ class _MyAppState extends State<MyApp> {
                 displayColor: AppColor.blackColor,
               ),
         ),
+        themeMode: Provider.of<ThemeService>(context).themeMode,
         debugShowCheckedModeBanner: false,
         home: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {

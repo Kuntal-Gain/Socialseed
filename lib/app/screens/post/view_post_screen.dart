@@ -333,12 +333,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
                             iconId: !isLiked
                                 ? IconConst.likeIcon
                                 : IconConst.likePressedIcon,
-                            value: totalLikes),
+                            value: totalLikes,
+                            context: context),
                       ),
                       sizeHor(10),
                       postItem(
                           iconId: IconConst.commentIcon,
-                          value: widget.post.totalComments),
+                          value: widget.post.totalComments,
+                          context: context),
                       sizeHor(10),
                       if (widget.post.images!.isNotEmpty)
                         GestureDetector(

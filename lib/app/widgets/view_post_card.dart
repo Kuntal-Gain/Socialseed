@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-Widget postItem({required String iconId, required num? value}) {
+import '../../features/services/theme_service.dart';
+import '../../utils/constants/color_const.dart';
+
+Widget postItem(
+    {required String iconId,
+    required num? value,
+    required BuildContext context}) {
   return Row(
     children: [
       Container(
@@ -9,6 +16,9 @@ Widget postItem({required String iconId, required num? value}) {
         margin: const EdgeInsets.all(12),
         child: Image.asset(
           iconId,
+          color: Provider.of<ThemeService>(context).isDarkMode
+              ? AppColor.whiteColor
+              : AppColor.blackColor,
         ),
       ),
       Text(

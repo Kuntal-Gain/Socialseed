@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/screens/settings/about_screen.dart';
 import 'package:socialseed/app/screens/settings/account_privacy_screen.dart';
@@ -13,6 +14,7 @@ import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/custom/custom_widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -79,6 +81,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: Column(
         children: [
+          ListTile(
+            leading: Icon(
+              Provider.of<ThemeService>(context).isDarkMode
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+              color: AppColor.blackColor,
+            ),
+            title: Text(
+              '${Provider.of<ThemeService>(context).isDarkMode ? "Dark" : "Light"} Mode',
+              style: TextConst.headingStyle(20, AppColor.blackColor),
+            ),
+            trailing: Switch(
+              value: Provider.of<ThemeService>(context).isDarkMode,
+              onChanged: (val) {
+                Provider.of<ThemeService>(context, listen: false).toggleTheme();
+              },
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: settings.length,
@@ -91,7 +111,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         horizontal: 16, vertical: 10),
                     child: Row(
                       children: [
-                        Icon(settings[idx].icon, size: 30),
+                        Icon(
+                          settings[idx].icon,
+                          size: 30,
+                        ),
                         sizeHor(10),
                         Text(
                           settings[idx].option,

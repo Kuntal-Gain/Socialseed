@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'package:socialseed/app/screens/post/explore_page.dart';
@@ -21,6 +22,7 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
+import '../../features/services/theme_service.dart';
 import '../../utils/constants/asset_const.dart';
 import '../../utils/constants/color_const.dart';
 import '../../utils/constants/tags_const.dart';
@@ -57,10 +59,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       if (match.start > currentIndex) {
         children.add(TextSpan(
           text: caption.substring(currentIndex, match.start),
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor),
         ));
       }
-
       final tagText = match.group(0)!;
 
       children.add(
@@ -102,6 +106,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   @override
   Widget build(BuildContext context) {
     var mq = MediaQuery.of(context).size;
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final color = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
 
     return ListView.builder(
       physics: const ScrollPhysics(),
@@ -129,14 +140,15 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             width: double.infinity,
             margin: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: AppColor.greyShadowColor,
-                  spreadRadius: 1,
-                  blurRadius: 1,
+                  color: Provider.of<ThemeService>(context).isDarkMode
+                      ? AppColor.blackColor
+                      : AppColor.greyShadowColor,
+                  blurRadius: 3,
                 ),
               ],
-              color: Colors.white,
+              color: bg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -887,7 +899,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                           iconId: post.likes?.contains(widget.user.uid) ?? false
                               ? IconConst.likePressedIcon
                               : IconConst.likeIcon,
-                          value: totalLikes),
+                          value: totalLikes,
+                          context: context),
                     ),
 
                     sizeHor(10),
@@ -898,7 +911,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                     post: post, user: widget.user))),
                         child: postItem(
                             iconId: IconConst.commentIcon,
-                            value: post.totalComments)),
+                            value: post.totalComments,
+                            context: context)),
                     sizeHor(10),
 
                     if (post.images!.isNotEmpty)
@@ -959,12 +973,14 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                         ?.contains(post.postid) ??
                                     false
                                 ? AppColor.redColor
-                                : AppColor.blackColor,
+                                : Provider.of<ThemeService>(context).isDarkMode
+                                    ? AppColor.whiteColor
+                                    : AppColor.blackColor,
                           ),
                         ),
-                      )
+                      ),
                   ],
-                )
+                ),
               ],
             ),
           ),

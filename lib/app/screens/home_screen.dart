@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
 import 'package:socialseed/app/screens/notification/notification_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/screens/user/user_profile.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
@@ -83,15 +85,27 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(45),
+          boxShadow: [
+            BoxShadow(
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.blackColor
+                  : AppColor.whiteColor,
+              blurRadius: 5,
+            ),
+          ],
           color: (currentIdx == selectedIdx)
               ? AppColor.redColor
-              : AppColor.whiteColor,
+              : Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.secondaryDark
+                  : AppColor.greyShadowColor,
         ),
         child: Image.asset(
           icon,
-          color: !(currentIdx == selectedIdx)
-              ? AppColor.blackColor
-              : AppColor.whiteColor,
+          color: (currentIdx == selectedIdx)
+              ? AppColor.whiteColor
+              : Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor,
         ),
       ),
     );
@@ -99,9 +113,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backGroundColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backGroundColor,
+      // appBar: AppBar(
+      //   title: const Text('SocialSeed'),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(
+      //         Provider.of<ThemeService>(context).isDarkMode
+      //             ? Icons.light_mode
+      //             : Icons.dark_mode,
+      //       ),
+      //       onPressed: () =>
+      //           Provider.of<ThemeService>(context, listen: false).toggleTheme(),
+      //     ),
+      //   ],
+      // ),
       body: SafeArea(
+        bottom: false,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -152,9 +185,20 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColor.whiteColor,
+          color: Provider.of<ThemeService>(context).isDarkMode
+              ? AppColor.bgDark
+              : AppColor.whiteColor,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColor.textGreyColor),
+          boxShadow: [
+            BoxShadow(
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.blackColor
+                  : AppColor.greyShadowColor,
+              blurRadius: 5,
+            ),
+          ],
+
+          // border: Border.all(color: AppColor.textGreyColor),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
