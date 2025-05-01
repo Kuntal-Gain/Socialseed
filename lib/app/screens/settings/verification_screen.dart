@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/widgets/profile_widget.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
@@ -75,6 +77,10 @@ class _RequestForVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final color = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
       backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
@@ -208,6 +214,7 @@ class _RequestForVerificationScreenState
                       debugPrint("User is not eligible");
                     },
               (followers >= 100) ? false : true,
+              color,
             ),
         ],
       ),

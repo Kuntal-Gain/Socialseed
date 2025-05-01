@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:scroll_date_picker/scroll_date_picker.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
@@ -20,6 +21,7 @@ import 'package:socialseed/utils/constants/text_const.dart';
 // ignore: unused_import
 import 'package:uuid/uuid.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/custom/custom_snackbar.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -181,6 +183,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _showDatePicker(BuildContext context) {
+    final color = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -201,7 +207,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
               ),
-              getButton("SET", () => Navigator.pop(context), false),
+              getButton("SET", () => Navigator.pop(context), false, color),
             ],
           ),
         );

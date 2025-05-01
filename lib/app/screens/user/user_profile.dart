@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/chat/message_screen.dart';
@@ -29,6 +30,7 @@ import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../domain/entities/chat_entity.dart';
+import '../../../features/services/theme_service.dart';
 import '../../cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import '../../cubits/message/chat_id/chat_cubit.dart';
 import '../../cubits/message/message_cubit.dart';
@@ -209,21 +211,34 @@ class _UserProfileState extends State<UserProfile>
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final tabShadow = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.greyShadowColor;
+
     return BlocBuilder<GetSingleOtherUserCubit, GetSingleOtherUserState>(
       builder: (ctx, state) {
         if (state is GetSingleOtherUserLoaded) {
           final user = state.otherUser;
 
           return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: bg,
             appBar: AppBar(
               automaticallyImplyLeading:
                   widget.otherUid == currentUid ? false : true,
               centerTitle: true,
-              surfaceTintColor: AppColor.whiteColor,
+              surfaceTintColor: AppColor.bgDark,
               elevation: 0,
-              backgroundColor: AppColor.whiteColor,
-              title: Text('${user.fullname.toString()} • Profile'),
+              backgroundColor: bg,
+              title: Text('${user.fullname.toString()} • Profile',
+                  style: TextStyle(color: textColor)),
               actions: [
                 if (widget.otherUid == currentUid)
                   IconButton(
@@ -471,6 +486,7 @@ class _UserProfileState extends State<UserProfile>
 
                               // profile data
                               Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -480,7 +496,7 @@ class _UserProfileState extends State<UserProfile>
                                             '', // Use empty string as default if fullname is null
                                         style: TextConst.headingStyle(
                                           18,
-                                          AppColor.blackColor,
+                                          textColor,
                                         ),
                                       ),
                                       sizeHor(10),
@@ -491,8 +507,8 @@ class _UserProfileState extends State<UserProfile>
                                   ),
                                   Text(
                                     '@${user.username}',
-                                    style: TextConst.headingStyle(
-                                        16, AppColor.redColor),
+                                    style:
+                                        TextConst.headingStyle(16, textColor),
                                   ),
                                   Container(
                                     height: 30,
@@ -776,8 +792,17 @@ class _UserProfileState extends State<UserProfile>
                       height: 100,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColor.greyShadowColor),
+                        color: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.bgDark
+                            : AppColor.whiteColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Provider.of<ThemeService>(context).isDarkMode
+                                ? AppColor.blackColor
+                                : AppColor.greyShadowColor,
+                            blurRadius: 5,
+                          ),
+                        ],
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -792,8 +817,7 @@ class _UserProfileState extends State<UserProfile>
                               child: Text(
                                 '${user.friends!.length}\nFriends',
                                 textAlign: TextAlign.center,
-                                style: TextConst.MediumStyle(
-                                    16, AppColor.blackColor),
+                                style: TextConst.MediumStyle(16, textColor),
                               ),
                             ),
                           ),
@@ -806,8 +830,7 @@ class _UserProfileState extends State<UserProfile>
                               child: Text(
                                 '${user.followerCount!}\nFollowers',
                                 textAlign: TextAlign.center,
-                                style: TextConst.MediumStyle(
-                                    16, AppColor.blackColor),
+                                style: TextConst.MediumStyle(16, textColor),
                               ),
                             ),
                           ),
@@ -815,8 +838,7 @@ class _UserProfileState extends State<UserProfile>
                             child: Text(
                               '${user.posts!.length}\nPosts',
                               textAlign: TextAlign.center,
-                              style: TextConst.MediumStyle(
-                                  16, AppColor.blackColor),
+                              style: TextConst.MediumStyle(16, textColor),
                             ),
                           ),
                         ],
@@ -837,8 +859,7 @@ class _UserProfileState extends State<UserProfile>
                         dividerHeight: 0,
                         indicatorColor: AppColor.redColor,
                         labelColor: AppColor.redColor,
-                        overlayColor:
-                            const WidgetStatePropertyAll(AppColor.whiteColor),
+                        overlayColor: WidgetStatePropertyAll(tabShadow),
                         tabs: const [
                           Text('Post'),
                           Text('Media'),
@@ -991,14 +1012,21 @@ class _UserProfileState extends State<UserProfile>
 }
 
 Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
+  final color = Provider.of<ThemeService>(ctx).isDarkMode
+      ? AppColor.whiteColor
+      : AppColor.blackColor;
+
+  final bg = Provider.of<ThemeService>(ctx).isDarkMode
+      ? AppColor.bgDark
+      : AppColor.whiteColor;
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 20),
     child: Column(
       children: [
-        infoCard(Icons.work, "Work at ", user.work.toString()),
-        infoCard(Icons.school, "Studied at ", user.college.toString()),
-        infoCard(Icons.school, "Went to ", user.school.toString()),
-        infoCard(Icons.home, "Live at ", user.location.toString()),
+        infoCard(Icons.work, "Work at ", user.work.toString(), color),
+        infoCard(Icons.school, "Studied at ", user.college.toString(), color),
+        infoCard(Icons.school, "Went to ", user.school.toString(), color),
+        infoCard(Icons.home, "Live at ", user.location.toString(), color),
         if (user.uid == currentUid)
           getButton(
               "Milestones",
@@ -1006,7 +1034,8 @@ Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
                   builder: (ctx) => MilestoneScreen(
                         user: user,
                       ))),
-              true),
+              true,
+              bg),
       ],
     ),
   );

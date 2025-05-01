@@ -905,6 +905,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                               post.likes?.contains(widget.user.uid) ?? false
                                   ? IconConst.likePressedIcon
                                   : IconConst.likeIcon,
+                              color:
+                                  post.likes?.contains(widget.user.uid) ?? false
+                                      ? AppColor.redColor
+                                      : Provider.of<ThemeService>(context)
+                                              .isDarkMode
+                                          ? AppColor.whiteColor
+                                          : AppColor.blackColor,
                             ),
                           ),
                           Text(

@@ -73,10 +73,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         title: const Text('User Settings'),
       ),
       body: Column(
@@ -86,11 +94,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Provider.of<ThemeService>(context).isDarkMode
                   ? Icons.dark_mode
                   : Icons.light_mode,
-              color: AppColor.blackColor,
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor,
             ),
             title: Text(
               '${Provider.of<ThemeService>(context).isDarkMode ? "Dark" : "Light"} Mode',
-              style: TextConst.headingStyle(20, AppColor.blackColor),
+              style: TextConst.headingStyle(20, textColor),
             ),
             trailing: Switch(
               value: Provider.of<ThemeService>(context).isDarkMode,
@@ -118,8 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         sizeHor(10),
                         Text(
                           settings[idx].option,
-                          style:
-                              TextConst.headingStyle(20, AppColor.blackColor),
+                          style: TextConst.headingStyle(20, textColor),
                         ),
                       ],
                     ),

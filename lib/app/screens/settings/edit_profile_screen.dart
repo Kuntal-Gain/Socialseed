@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/profile_widget.dart';
@@ -15,6 +16,7 @@ import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/firebase_const.dart';
 
@@ -164,6 +166,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    final color = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
     return Scaffold(
       backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
@@ -441,7 +446,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     builder: (ctx) => HomeScreen(uid: widget.user.uid!),
                   ),
                 );
-              }, false),
+              }, false, color),
               SizedBox(height: screenHeight * 0.03), // Responsive spacing
               Center(
                 child: Text(

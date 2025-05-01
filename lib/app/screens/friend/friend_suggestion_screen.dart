@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
@@ -91,12 +93,13 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
     });
   }
 
-  Widget suggestionCard(UserEntity otherUser, UserEntity currentUser) {
+  Widget suggestionCard(
+      UserEntity otherUser, UserEntity currentUser, Color color) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColor.whiteColor,
+        color: color,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColor.greyShadowColor),
       ),
@@ -206,12 +209,12 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
     );
   }
 
-  Widget requestCard(UserEntity user) {
+  Widget requestCard(UserEntity user, Color color) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColor.whiteColor,
+        color: color,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColor.greyShadowColor),
       ),
@@ -303,8 +306,16 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       body: (suggestion.isEmpty && requests.isEmpty)
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -314,7 +325,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                 Center(
                   child: Text(
                     'No Friend Suggestions \ncurrently now',
-                    style: TextConst.headingStyle(20, AppColor.blackColor),
+                    style: TextConst.headingStyle(20, textColor),
                   ),
                 ),
               ],
@@ -331,7 +342,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         'Friend Requests',
                         style: TextConst.headingStyle(
                           21,
-                          AppColor.blackColor,
+                          textColor,
                         ),
                       ),
                     ),
@@ -342,7 +353,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         itemCount: requests.length,
                         itemBuilder: (ctx, idx) {
                           final user = requests[idx];
-                          return requestCard(user);
+                          return requestCard(user, textColor);
                         },
                       ),
                     ),
@@ -353,7 +364,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         'Find Friends',
                         style: TextConst.headingStyle(
                           21,
-                          AppColor.blackColor,
+                          textColor,
                         ),
                       ),
                     ),
@@ -364,7 +375,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                     shrinkWrap: true, // Adjust height to fit content
                     itemBuilder: (ctx, idx) {
                       final user = suggestion[idx];
-                      return suggestionCard(user, widget.user);
+                      return suggestionCard(user, widget.user, textColor);
                     },
                   ),
                 ],
