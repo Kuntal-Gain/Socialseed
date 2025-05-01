@@ -101,7 +101,14 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColor.greyShadowColor),
+        boxShadow: [
+          BoxShadow(
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.blackColor
+                : AppColor.greyShadowColor,
+            blurRadius: 4,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -128,7 +135,9 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                             otherUser.fullname!,
                             style: TextConst.headingStyle(
                               16,
-                              AppColor.blackColor,
+                              Provider.of<ThemeService>(context).isDarkMode
+                                  ? AppColor.whiteColor
+                                  : AppColor.blackColor,
                             ),
                             overflow: TextOverflow.ellipsis, // Prevent overflow
                           ),
@@ -153,7 +162,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: AppColor.redColor,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
                             child: Text(
@@ -169,7 +178,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 15),
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -183,8 +192,18 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                            border: Border.all(color: AppColor.greyShadowColor),
-                            color: AppColor.whiteColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Provider.of<ThemeService>(context)
+                                        .isDarkMode
+                                    ? AppColor.blackColor
+                                    : AppColor.greyShadowColor,
+                                blurRadius: 2,
+                              ),
+                            ],
+                            color: Provider.of<ThemeService>(context).isDarkMode
+                                ? AppColor.secondaryDark
+                                : AppColor.whiteColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
@@ -192,7 +211,9 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                               'View Profile',
                               style: TextConst.headingStyle(
                                 14,
-                                AppColor.blackColor,
+                                Provider.of<ThemeService>(context).isDarkMode
+                                    ? AppColor.whiteColor
+                                    : AppColor.blackColor,
                               ),
                             ),
                           ),
@@ -216,7 +237,14 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColor.greyShadowColor),
+        boxShadow: [
+          BoxShadow(
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.blackColor
+                : AppColor.greyShadowColor,
+            blurRadius: 2,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -237,9 +265,12 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                   user.fullname!,
                   style: TextConst.headingStyle(
                     16,
-                    AppColor.blackColor,
+                    Provider.of<ThemeService>(context).isDarkMode
+                        ? AppColor.whiteColor
+                        : AppColor.blackColor,
                   ),
                 ),
+                sizeVar(10),
                 Row(
                   children: [
                     Expanded(
@@ -255,8 +286,18 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                            border: Border.all(color: AppColor.greyShadowColor),
-                            color: AppColor.whiteColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Provider.of<ThemeService>(context)
+                                        .isDarkMode
+                                    ? AppColor.blackColor
+                                    : AppColor.greyShadowColor,
+                                blurRadius: 2,
+                              ),
+                            ],
+                            color: Provider.of<ThemeService>(context).isDarkMode
+                                ? AppColor.secondaryDark
+                                : AppColor.whiteColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
@@ -264,14 +305,16 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                               'Accept',
                               style: TextConst.headingStyle(
                                 14,
-                                AppColor.blackColor,
+                                Provider.of<ThemeService>(context).isDarkMode
+                                    ? AppColor.whiteColor
+                                    : AppColor.blackColor,
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 15),
                     Expanded(
                       child: GestureDetector(
                         onTap: () => BlocProvider.of<UserCubit>(context)
@@ -280,7 +323,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: AppColor.redColor,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
                             child: Text(
@@ -353,7 +396,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                         itemCount: requests.length,
                         itemBuilder: (ctx, idx) {
                           final user = requests[idx];
-                          return requestCard(user, textColor);
+                          return requestCard(user, bg);
                         },
                       ),
                     ),
@@ -375,7 +418,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                     shrinkWrap: true, // Adjust height to fit content
                     itemBuilder: (ctx, idx) {
                       final user = suggestion[idx];
-                      return suggestionCard(user, widget.user, textColor);
+                      return suggestionCard(user, widget.user, bg);
                     },
                   ),
                 ],
