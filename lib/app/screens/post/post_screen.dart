@@ -5,6 +5,7 @@ import 'package:cool_dropdown/cool_dropdown.dart';
 import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_editor_plus/image_editor_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/screens/post/tags_screen.dart';
 import 'package:socialseed/app/widgets/image_card.dart';
 import 'package:socialseed/app/widgets/video_card.dart';
@@ -25,6 +26,8 @@ import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../features/api/generate_caption.dart';
+import '../../../features/services/theme_service.dart';
+import '../../../utils/constants/text_const.dart';
 import '../../../utils/custom/custom_snackbar.dart';
 
 class PostScreen extends StatefulWidget {
@@ -239,15 +242,26 @@ class _PostScreenState extends State<PostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backGroundColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backGroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: backGroundColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Create Post'),
+        title: Text(
+          'Create Post',
+          style: TextConst.headingStyle(20, textColor),
+        ),
         centerTitle: true,
         actions: [
           GestureDetector(
@@ -323,33 +337,26 @@ class _PostScreenState extends State<PostScreen> {
                               children: [
                                 Text(
                                   widget.currentUser.username.toString(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.black,
+                                    color: textColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 if (tags.isNotEmpty) getTagUsers(tags),
                                 const SizedBox(width: 10),
-                                if (location.isNotEmpty) getLocation(location),
+                                if (location.isNotEmpty)
+                                  getLocation(location, textColor),
                               ],
                             ),
                             SizedBox(
-                              width: 100,
                               height: 40,
-                              child: CoolDropdown(
-                                defaultItem: CoolDropdownItem(
-                                  label: 'Public',
-                                  value: 1,
+                              child: Text(
+                                "Posts will be published in Public",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: textColor,
                                 ),
-                                dropdownList: [
-                                  CoolDropdownItem(label: 'Public', value: 1),
-                                  CoolDropdownItem(label: 'Private', value: 2),
-                                ],
-                                controller: DropdownController(),
-                                onChange: (value) {
-                                  type = (value == 2) ? "Private" : "Public";
-                                },
                               ),
                             ),
                           ],
@@ -400,9 +407,7 @@ class _PostScreenState extends State<PostScreen> {
                               child: Image.network(
                                 'https://cdn-icons-png.flaticon.com/512/17653/17653338.png',
                                 fit: BoxFit.contain,
-                                color: isAI
-                                    ? AppColor.redColor
-                                    : AppColor.blackColor,
+                                color: isAI ? AppColor.redColor : textColor,
                               ),
                             ),
                           ),

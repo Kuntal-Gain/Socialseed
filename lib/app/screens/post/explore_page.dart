@@ -139,6 +139,7 @@ class _ExplorePageState extends State<ExplorePage> {
                             builder: (_) => PostViewScreen(
                               post: post,
                               user: widget.user,
+                              posts: posts,
                             ),
                           ),
                         );

@@ -85,8 +85,8 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
                 return GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) =>
-                            PostViewScreen(post: post, user: widget.user)));
+                        builder: (_) => PostViewScreen(
+                            post: post, user: widget.user, posts: posts)));
                   },
                   child: Container(
                     margin: const EdgeInsets.all(10),

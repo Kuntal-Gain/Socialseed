@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 
 // ignore: constant_identifier_names
-enum MenuOptions { Edit, Copy, Delete, Report }
+enum MenuOptions { Edit, Copy, Delete, Report, Archive }
 
 List<PopupMenuEntry<MenuOptions>> getPopupMenuItems() {
   return [

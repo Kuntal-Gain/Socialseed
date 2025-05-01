@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/widgets/message_card_widget.dart';
 import 'package:socialseed/app/widgets/view_post_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -50,8 +52,16 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final backgroundColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -73,8 +83,7 @@ class _MessageScreenState extends State<MessageScreen> {
                       children: [
                         Text(
                           widget.receiver.fullname!,
-                          style:
-                              TextConst.headingStyle(16, AppColor.blackColor),
+                          style: TextConst.headingStyle(16, textColor),
                         ),
                         if (widget.receiver.work!.toLowerCase() != "none" &&
                             widget.sender.work!.toLowerCase() ==
@@ -109,12 +118,15 @@ class _MessageScreenState extends State<MessageScreen> {
                         DateTime lastSeen =
                             (userData['last_seen'] as Timestamp).toDate();
 
-                        return Text(isActive
-                            ? 'Online'
-                            : getTime(Timestamp.fromDate(lastSeen)) ==
-                                    "Just Now"
-                                ? 'recently active'
-                                : 'last active ${getTime(Timestamp.fromDate(lastSeen))}');
+                        return Text(
+                          isActive
+                              ? 'Online'
+                              : getTime(Timestamp.fromDate(lastSeen)) ==
+                                      "Just Now"
+                                  ? 'recently active'
+                                  : 'last active ${getTime(Timestamp.fromDate(lastSeen))}',
+                          style: TextConst.RegularStyle(16, textColor),
+                        );
                       },
                     ),
                   ],
@@ -139,7 +151,7 @@ class _MessageScreenState extends State<MessageScreen> {
                       final uid = FirebaseAuth.instance.currentUser!.uid;
                       final message = messages[idx];
                       return messageBox(message.senderId != uid,
-                          message.message!, message.createAt!);
+                          message.message!, message.createAt!, context);
                     },
                   );
                 } else if (state is MessageFailure) {
@@ -157,15 +169,23 @@ class _MessageScreenState extends State<MessageScreen> {
                     height: 60,
                     margin: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColor.whiteColor,
+                      color: backgroundColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColor.greyShadowColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Provider.of<ThemeService>(context).isDarkMode
+                              ? AppColor.blackColor
+                              : AppColor.greyColor,
+                          blurRadius: 5,
+                        ),
+                      ],
                     ),
                     child: TextField(
                       controller: _controller,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                         hintText: 'Type a message',
                       ),
                     ),

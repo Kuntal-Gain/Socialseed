@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
@@ -15,15 +17,31 @@ String formatTimestampTo12Hour(Timestamp timestamp) {
   return formatter.format(dateTime);
 }
 
-Widget messageBox(bool isSender, String message, Timestamp time) {
+Widget messageBox(
+    bool isSender, String message, Timestamp time, BuildContext context) {
+  final textColor = Provider.of<ThemeService>(context).isDarkMode
+      ? AppColor.whiteColor
+      : AppColor.blackColor;
+
+  final backgroundColor = Provider.of<ThemeService>(context).isDarkMode
+      ? AppColor.bgDark
+      : AppColor.whiteColor;
+
   return Align(
     alignment: isSender ? Alignment.bottomLeft : Alignment.bottomRight,
     child: Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isSender ? Colors.red : Colors.white,
-        border: Border.all(color: AppColor.greyShadowColor),
+        color: isSender ? Colors.red : backgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.blackColor
+                : AppColor.greyColor,
+            blurRadius: 5,
+          ),
+        ],
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(20),
           topRight: const Radius.circular(20),
@@ -45,13 +63,13 @@ Widget messageBox(bool isSender, String message, Timestamp time) {
             Text(
               message,
               style: TextConst.headingStyle(
-                  16, isSender ? AppColor.whiteColor : AppColor.blackColor),
+                  16, isSender ? AppColor.whiteColor : textColor),
               softWrap: true,
               overflow: TextOverflow.clip,
             ),
             Text(formatTimestampTo12Hour(time),
                 style: TextConst.MediumStyle(
-                    12, isSender ? AppColor.whiteColor : AppColor.blackColor)),
+                    12, isSender ? AppColor.whiteColor : textColor)),
           ],
         ),
       ),

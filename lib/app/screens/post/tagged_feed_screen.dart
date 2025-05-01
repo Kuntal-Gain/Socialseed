@@ -61,6 +61,7 @@ class _TaggedFeedScreenState extends State<TaggedFeedScreen> {
                           builder: (_) => PostViewScreen(
                             post: post,
                             user: widget.user,
+                            posts: widget.posts,
                           ),
                         ),
                       );

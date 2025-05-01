@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/comment/cubit/comment_cubit.dart';
 
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -23,16 +26,20 @@ import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
 
+import '../../../features/services/theme_service.dart';
 import '../../cubits/savedcontent/savedcontent_cubit.dart';
+import 'tagged_feed_screen.dart';
 
 class PostViewScreen extends StatefulWidget {
   final PostEntity post;
   final UserEntity user;
+  final List<PostEntity> posts;
 
   const PostViewScreen({
     super.key,
     required this.post,
     required this.user,
+    required this.posts,
   });
 
   @override
@@ -52,6 +59,61 @@ class _PostViewScreenState extends State<PostViewScreen> {
   final _commentController = TextEditingController();
 
   int commentLines = 1;
+
+  Widget captionField(String caption) {
+    RegExp exp = RegExp(r'\#[a-zA-Z0-9_]+');
+    Iterable<Match> matches = exp.allMatches(caption);
+
+    List<InlineSpan> children = [];
+    int currentIndex = 0;
+
+    for (final match in matches) {
+      if (match.start > currentIndex) {
+        children.add(TextSpan(
+          text: caption.substring(currentIndex, match.start),
+          style: TextStyle(
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor),
+        ));
+      }
+      final tagText = match.group(0)!;
+
+      children.add(
+        TextSpan(
+          text: tagText,
+          style:
+              const TextStyle(color: Colors.red, fontWeight: FontWeight.w900),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              print("navigated to $tagText");
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => TaggedFeedScreen(
+                        tag: tagText,
+                        posts: widget.posts
+                            .where((val) => val.content!.contains(tagText))
+                            .toList(),
+                        user: widget.user,
+                      )));
+            },
+        ),
+      );
+
+      currentIndex = match.end;
+    }
+
+    if (currentIndex < caption.length) {
+      children.add(TextSpan(
+        text: caption.substring(currentIndex),
+        style: const TextStyle(color: Colors.black),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: children),
+      textScaleFactor: 1.2,
+    );
+  }
 
   @override
   void initState() {
@@ -122,15 +184,19 @@ class _PostViewScreenState extends State<PostViewScreen> {
         ),
       ),
       PopupMenuItem<MenuOptions>(
-        value: MenuOptions.Copy,
+        value: MenuOptions.Archive,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Icon(Icons.copy),
+            const Icon(Icons.archive),
             sizeHor(10),
             GestureDetector(
-              onTap: () => {},
-              child: const Text('Copy'),
+              onTap: () => {
+                BlocProvider.of<ArchivepostCubit>(context)
+                    .archivePost(widget.post),
+                Navigator.pop(context)
+              },
+              child: const Text('Archive'),
             ),
           ],
         ),
@@ -171,11 +237,19 @@ class _PostViewScreenState extends State<PostViewScreen> {
 
 // Local variable
 
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       appBar: AppBar(
-        surfaceTintColor: AppColor.whiteColor,
-        backgroundColor: AppColor.whiteColor,
+        surfaceTintColor: bg,
+        backgroundColor: bg,
         title: const Text('View Post'),
         centerTitle: true,
         leading: IconButton(
@@ -192,7 +266,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
               width: double.infinity,
               margin: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColor.greyShadowColor),
+                boxShadow: [
+                  BoxShadow(
+                    color: Provider.of<ThemeService>(context).isDarkMode
+                        ? AppColor.secondaryDark
+                        : AppColor.greyShadowColor,
+                    blurRadius: 5,
+                  ),
+                ],
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -219,9 +300,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                   children: [
                                     Text(
                                       widget.post.username.toString(),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16.0,
+                                        color: textColor,
                                       ),
                                     ),
                                     sizeHor(5),
@@ -238,8 +320,8 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                     sizeHor(5),
                                     Text(
                                       getTime(widget.post.creationDate),
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
+                                        color: textColor,
                                         fontSize: 14.0,
                                       ),
                                     ),
@@ -268,11 +350,17 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         ),
                         PopupMenuButton(
                           itemBuilder: (ctx) => getPopupMenuItems(),
-                          surfaceTintColor: Colors.white,
+                          surfaceTintColor:
+                              Provider.of<ThemeService>(context).isDarkMode
+                                  ? AppColor.blackColor
+                                  : AppColor.whiteColor,
                           child: Image.asset(
                             IconConst.moreIcon,
                             height: 25,
                             width: 25,
+                            color: Provider.of<ThemeService>(context).isDarkMode
+                                ? AppColor.whiteColor
+                                : AppColor.blackColor,
                           ),
                         )
                       ],
@@ -285,14 +373,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         top: 5,
                       ),
                       width: double.infinity,
-                      child: Text(
-                        widget.post.content.toString(),
-                        maxLines: null,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.1,
-                        ),
-                      ),
+                      child: captionField(widget.post.content.toString()),
                     ),
                   ),
                   if (widget.post.images!.isNotEmpty)
@@ -329,12 +410,39 @@ class _PostViewScreenState extends State<PostViewScreen> {
                             }
                           });
                         },
-                        child: postItem(
-                            iconId: !isLiked
-                                ? IconConst.likeIcon
-                                : IconConst.likePressedIcon,
-                            value: totalLikes,
-                            context: context),
+                        // child: postItem(
+                        //     iconId: !isLiked
+                        //         ? IconConst.likeIcon
+                        //         : IconConst.likePressedIcon,
+                        //     value: totalLikes,
+                        //     context: context),
+
+                        child: Row(
+                          children: [
+                            Container(
+                              height: 25,
+                              width: 25,
+                              margin: const EdgeInsets.all(12),
+                              child: Image.asset(
+                                !isLiked
+                                    ? IconConst.likeIcon
+                                    : IconConst.likePressedIcon,
+                                color: isLiked
+                                    ? AppColor.redColor
+                                    : Provider.of<ThemeService>(context)
+                                            .isDarkMode
+                                        ? AppColor.whiteColor
+                                        : AppColor.blackColor,
+                              ),
+                            ),
+                            Text(
+                              totalLikes.toString(),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       sizeHor(10),
                       postItem(
@@ -404,7 +512,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                           ?.contains(widget.post.postid) ??
                                       false
                                   ? AppColor.redColor
-                                  : AppColor.blackColor,
+                                  : Provider.of<ThemeService>(context)
+                                          .isDarkMode
+                                      ? AppColor.whiteColor
+                                      : AppColor.blackColor,
                             ),
                           ),
                         )
@@ -445,7 +556,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         itemBuilder: (ctx, idx) {
                           final comment = comments[idx];
 
-                          return commentCard(comment);
+                          return commentCard(comment, context);
                         });
                   }
 
@@ -470,13 +581,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   height: commentLines * (mq.height * 0.07),
                   width: 200,
                   decoration: BoxDecoration(
-                    color: AppColor.whiteColor,
-                    border: Border.all(
-                      color: AppColor.greyShadowColor,
-                    ),
-                    boxShadow: const [
+                    color: Provider.of<ThemeService>(context).isDarkMode
+                        ? AppColor.bgDark
+                        : AppColor.whiteColor,
+                    boxShadow: [
                       BoxShadow(
-                        color: AppColor.greyShadowColor,
+                        color: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.blackColor
+                            : AppColor.greyShadowColor,
                         blurRadius: 1,
                         spreadRadius: 1,
                       )
@@ -486,12 +598,20 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(13.0),
                     child: TextField(
+                      style: TextStyle(
+                        color: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.whiteColor
+                            : AppColor.blackColor,
+                      ),
                       maxLines: null,
                       controller: _commentController,
                       keyboardType: TextInputType.multiline,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Comment',
                         border: InputBorder.none,
+                        fillColor: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.bgDark
+                            : AppColor.whiteColor,
                       ),
                     ),
                   )),
@@ -501,14 +621,18 @@ class _PostViewScreenState extends State<PostViewScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: AppColor.greyShadowColor,
-                    spreadRadius: 1,
+                    color: Provider.of<ThemeService>(context).isDarkMode
+                        ? AppColor.blackColor
+                        : AppColor.greyShadowColor,
                     blurRadius: 1,
+                    spreadRadius: 1,
                   )
                 ],
-                color: AppColor.whiteColor,
+                color: Provider.of<ThemeService>(context).isDarkMode
+                    ? AppColor.secondaryDark
+                    : AppColor.whiteColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: IconButton(
@@ -530,7 +654,9 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   IconConst.commentIcon,
                   height: 32,
                   width: 32,
-                  color: AppColor.redColor,
+                  color: Provider.of<ThemeService>(context).isDarkMode
+                      ? AppColor.whiteColor
+                      : AppColor.redColor,
                 ),
               ),
             ),

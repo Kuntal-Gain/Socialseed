@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/screens/chat/message_screen.dart';
 import 'package:socialseed/app/widgets/message_tile_widget.dart';
 import 'package:socialseed/domain/entities/chat_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
@@ -156,6 +158,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -163,12 +173,12 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.arrow_back_ios)),
         title: Text(
           'My Chats',
-          style: TextConst.headingStyle(22, AppColor.blackColor),
+          style: TextConst.headingStyle(22, textColor),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: bg,
         elevation: 0,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       body: SafeArea(
         child: (friendList.isEmpty)
             ? Column(
@@ -195,7 +205,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         'Friends',
                         style: TextConst.headingStyle(
                           22,
-                          AppColor.blackColor,
+                          textColor,
                         ),
                       ),
                     ),
@@ -341,7 +351,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     'Conversations',
                                     style: TextConst.headingStyle(
                                       22,
-                                      AppColor.blackColor,
+                                      textColor,
                                     ),
                                   ),
                                 ),
@@ -397,7 +407,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                         child: messageTileWidget(
                                             friend,
                                             widget.user,
-                                            conversations[idx].lastMessage!),
+                                            conversations[idx].lastMessage!,
+                                            context),
                                       );
                                     },
                                   ),

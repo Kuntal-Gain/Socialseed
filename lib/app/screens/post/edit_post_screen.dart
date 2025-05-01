@@ -6,6 +6,7 @@ import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // Useful Imports
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -14,6 +15,7 @@ import 'package:socialseed/app/widgets/post_widget.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/color_const.dart';
 
 class EditPostScreen extends StatefulWidget {
@@ -73,6 +75,10 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
       backgroundColor: AppColor.whiteColor,
       appBar: AppBar(
@@ -161,7 +167,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                                   getTagUsers(tags),
                                 const SizedBox(width: 10),
                                 if (widget.post.location!.isNotEmpty)
-                                  getLocation(location),
+                                  getLocation(location, textColor),
                               ],
                             ),
                             SizedBox(

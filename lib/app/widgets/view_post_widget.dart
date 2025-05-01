@@ -199,7 +199,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                     ),
                                   sizeHor(5),
                                   if (post.location!.isNotEmpty)
-                                    getLocation(post.location!),
+                                    getLocation(post.location!, color),
                                   sizeHor(5),
                                   const CircleAvatar(
                                     radius: 3,
@@ -359,8 +359,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         ));
                       } else {
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (ctx) =>
-                              PostViewScreen(post: post, user: widget.user),
+                          builder: (ctx) => PostViewScreen(
+                              post: post,
+                              user: widget.user,
+                              posts: widget.posts),
                         ));
                       }
                     },
@@ -929,7 +931,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                                 builder: (ctx) => PostViewScreen(
-                                    post: post, user: widget.user))),
+                                    post: post,
+                                    user: widget.user,
+                                    posts: widget.posts))),
                         child: postItem(
                             iconId: IconConst.commentIcon,
                             value: post.totalComments,

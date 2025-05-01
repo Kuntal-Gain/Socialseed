@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
 import '../../utils/constants/tags_const.dart';
 
-Widget messageTileWidget(
-    UserEntity friend, UserEntity current, String lastMessage) {
+Widget messageTileWidget(UserEntity friend, UserEntity current,
+    String lastMessage, BuildContext context) {
+  final textColor = Provider.of<ThemeService>(context).isDarkMode
+      ? AppColor.whiteColor
+      : AppColor.blackColor;
+
   return SizedBox(
     width: double.infinity,
     child: Padding(
@@ -35,7 +41,7 @@ Widget messageTileWidget(
                           friend.username!,
                           style: TextConst.headingStyle(
                             16,
-                            AppColor.blackColor,
+                            textColor,
                           ),
                         ),
                         if (friend.work!.toLowerCase() != "none" &&
@@ -56,7 +62,11 @@ Widget messageTileWidget(
                           mutualTag("home"),
                       ],
                     ),
-                    Text(lastMessage),
+                    Text(lastMessage,
+                        style: TextConst.RegularStyle(
+                          16,
+                          textColor,
+                        )),
                   ],
                 ),
               ],

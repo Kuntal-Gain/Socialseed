@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/widgets/view_post_widget.dart';
 import 'package:socialseed/domain/entities/comment_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 
+import '../../utils/constants/color_const.dart';
 import '../../utils/constants/page_const.dart';
 
-Widget commentCard(CommentEntity comment) {
+Widget commentCard(CommentEntity comment, BuildContext context) {
   String caption = comment.content.toString();
 
   double size = 80;
@@ -12,13 +15,29 @@ Widget commentCard(CommentEntity comment) {
 
   size = size + totalLines * 35;
 
+  final bg = Provider.of<ThemeService>(context).isDarkMode
+      ? AppColor.bgDark
+      : AppColor.whiteColor;
+
+  final textColor = Provider.of<ThemeService>(context).isDarkMode
+      ? AppColor.whiteColor
+      : AppColor.blackColor;
+
   return Container(
     height: size,
     width: double.infinity,
     margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      border: Border.all(color: const Color(0xffc2c2c2)),
+      boxShadow: [
+        BoxShadow(
+          color: Provider.of<ThemeService>(context).isDarkMode
+              ? AppColor.blackColor
+              : AppColor.greyShadowColor,
+          blurRadius: 3,
+        ),
+      ],
+      color: bg,
       borderRadius: BorderRadius.circular(16),
     ),
     child: Row(
@@ -41,9 +60,10 @@ Widget commentCard(CommentEntity comment) {
                   children: [
                     Text(
                       comment.username.toString(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0,
+                        color: textColor,
                       ),
                     ),
                     sizeHor(5),
@@ -55,7 +75,12 @@ Widget commentCard(CommentEntity comment) {
                     sizeHor(20),
                   ],
                 ),
-                Text(comment.content.toString()),
+                Text(
+                  comment.content.toString(),
+                  style: TextStyle(
+                    color: textColor,
+                  ),
+                ),
               ],
             ),
           ],
@@ -64,7 +89,8 @@ Widget commentCard(CommentEntity comment) {
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: Text(getTime(comment.createAt)),
+              child: Text(getTime(comment.createAt),
+                  style: TextStyle(color: textColor)),
             )),
       ],
     ),

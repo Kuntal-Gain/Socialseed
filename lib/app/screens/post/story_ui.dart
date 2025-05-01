@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
@@ -49,6 +51,10 @@ class _StoryUIState extends State<StoryUI> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
+    final secondary = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 24, 17, 17),
@@ -246,8 +252,10 @@ class _StoryUIState extends State<StoryUI> {
           height: viewers.isEmpty
               ? size.height * 0.1
               : size.height * 0.15 * viewers.length,
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.bgDark
+                : AppColor.whiteColor,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
