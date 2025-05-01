@@ -81,11 +81,19 @@ class _RequestForVerificationScreenState
         ? AppColor.whiteColor
         : AppColor.blackColor;
 
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('Request Verification'),
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
       ),
       body: Column(
         children: [
@@ -181,9 +189,16 @@ class _RequestForVerificationScreenState
               width: double.infinity,
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: AppColor.whiteColor,
+                  color: secondaryColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColor.greyShadowColor)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Provider.of<ThemeService>(context).isDarkMode
+                          ? AppColor.blackColor
+                          : AppColor.greyShadowColor,
+                      blurRadius: 5,
+                    ),
+                  ]),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -214,7 +229,7 @@ class _RequestForVerificationScreenState
                       debugPrint("User is not eligible");
                     },
               (followers >= 100) ? false : true,
-              color,
+              context,
             ),
         ],
       ),

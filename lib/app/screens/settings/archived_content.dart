@@ -2,9 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
 import '../post/view_post_screen.dart';
@@ -28,23 +30,31 @@ class _ArchivedContentScreenState extends State<ArchivedContentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         title: Text(
           'Archived Content',
           style: TextConst.headingStyle(
             22,
-            AppColor.blackColor,
+            textColor,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios,
-              color: AppColor.blackColor,
+              color: textColor,
             )),
       ),
       body: BlocBuilder<ArchivepostCubit, ArchivepostState>(

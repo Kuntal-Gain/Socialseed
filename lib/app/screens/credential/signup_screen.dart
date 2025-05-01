@@ -207,7 +207,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
               ),
-              getButton("SET", () => Navigator.pop(context), false, color),
+              getButton("SET", () => Navigator.pop(context), false, context),
             ],
           ),
         );

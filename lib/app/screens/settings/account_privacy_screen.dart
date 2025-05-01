@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 
 import '../../../utils/constants/color_const.dart';
@@ -67,11 +69,19 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('Privacy Settings'),
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
       ),
       body: ListView(
         children: [
@@ -80,14 +90,14 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
               'Private Account',
               style: TextConst.headingStyle(
                 16,
-                AppColor.blackColor,
+                textColor,
               ),
             ),
             subtitle: Text(
               'Only people you approve can see your posts',
               style: TextConst.MediumStyle(
                 14,
-                AppColor.greyShadowColor,
+                textColor,
               ),
             ),
             trailing: CustomAnimatedToggleSwitch<bool>(

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/utils/custom/shimmer_effect.dart';
 
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/firebase_const.dart';
 import '../../../utils/constants/text_const.dart';
@@ -56,10 +58,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: const Text('My Notifications'),
@@ -121,7 +131,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ? (notification['createdAt'] as Timestamp)
                       : Timestamp.now();
 
-                  return notificationCard(imageUrl, message, time, type);
+                  return notificationCard(
+                      imageUrl, message, time, type, textColor);
                 },
               );
             },

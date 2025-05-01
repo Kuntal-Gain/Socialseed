@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:socialseed/app/widgets/view_post_widget.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/utils/constants/text_const.dart';
 
-Widget notificationCard(
-    String? imageUrl, String message, Timestamp time, String type) {
+Widget notificationCard(String? imageUrl, String message, Timestamp time,
+    String type, Color color) {
   return Container(
     margin: const EdgeInsets.all(12),
     child: Row(
@@ -52,22 +53,13 @@ Widget notificationCard(
             children: [
               Text(
                 message,
-                style: GoogleFonts.montserrat(
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                overflow: TextOverflow.visible, // Ensures text wraps
+                style: TextConst.headingStyle(16, color),
+                overflow: TextOverflow.visible,
               ),
               const SizedBox(height: 10),
               Text(
                 getTime(time),
-                style: GoogleFonts.montserrat(
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                style: TextConst.headingStyle(14, color),
               ),
             ],
           ),
@@ -98,19 +90,9 @@ Widget getIcon(String type) {
       break;
   }
 
-  return Stack(
-    alignment: Alignment.center,
-    children: [
-      Icon(
-        icon,
-        color: Colors.white, // Border color
-        size: 36, // Slightly larger to act as the "border"
-      ),
-      Icon(
-        icon,
-        color: AppColor.redColor, // Actual icon color
-        size: 32, // Original size
-      ),
-    ],
+  return Icon(
+    icon,
+    color: AppColor.redColor,
+    size: 32,
   );
 }

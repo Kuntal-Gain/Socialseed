@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/screens/post/video_post_screen.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
@@ -15,6 +17,7 @@ import 'package:socialseed/utils/custom/custom_snackbar.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../data/models/user_model.dart';
+import '../../../features/services/theme_service.dart';
 import '../../../utils/constants/firebase_const.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -48,24 +51,64 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
+    final backGroundColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: backGroundColor,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: backGroundColor,
         title: Text(
           "Explore",
-          style: TextConst.headingStyle(25, AppColor.blackColor),
+          style: TextConst.headingStyle(
+            25,
+            Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.whiteColor
+                : AppColor.blackColor,
+          ),
         ),
         centerTitle: true,
       ),
       body: BlocProvider(
         create: (context) =>
-            di.sl<PostCubit>()..getPosts(post: const PostEntity()),
+            di.sl<PostCubit>()..getPosts(post: const PostEntity(), delay: true),
         child: BlocBuilder<PostCubit, PostState>(
           builder: (context, state) {
             if (state is PostFailure) {
               failureBar(context, "Something Went Wrong.");
             }
+
+            if (state is PostLoading) {
+              return MasonryGridView.builder(
+                gridDelegate:
+                    const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, // Number of columns
+                ),
+                itemCount: 30,
+                itemBuilder: (context, index) {
+                  final height = index.isEven ? 150 : 100;
+                  final width = index.isEven ? 150 : 100;
+
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      margin: const EdgeInsets.all(5),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: height.toDouble(),
+                          width: width.toDouble(),
+                          color: AppColor.greyColor.withOpacity(0.3),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+
             if (state is PostLoaded) {
               final posts = state.posts;
 
@@ -103,7 +146,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: Container(
                         margin: const EdgeInsets.all(5),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: image != null && image.isNotEmpty
                               ? Image.network(image)
                               : Container(

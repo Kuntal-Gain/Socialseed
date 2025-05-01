@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? AppColor.redColor
               : Provider.of<ThemeService>(context).isDarkMode
                   ? AppColor.secondaryDark
-                  : AppColor.greyShadowColor,
+                  : AppColor.whiteColor,
         ),
         child: Image.asset(
           icon,

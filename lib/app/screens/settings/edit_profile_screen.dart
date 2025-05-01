@@ -62,7 +62,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             label,
             style: TextConst.headingStyle(
               16,
-              AppColor.blackColor,
+              Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor,
             ),
           ),
         ),
@@ -72,11 +74,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
           decoration: BoxDecoration(
-            color: AppColor.greyColor,
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.secondaryDark
+                : AppColor.greyColor,
             borderRadius: BorderRadius.circular(14),
           ),
           child: TextFormField(
             controller: controller,
+            style: TextStyle(
+              color: Provider.of<ThemeService>(context).isDarkMode
+                  ? AppColor.whiteColor
+                  : AppColor.blackColor,
+            ),
             validator: (value) {
               // Add your validation logic here
               if (value!.isEmpty) {
@@ -88,6 +97,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: label,
+              hintStyle: TextConst.headingStyle(
+                16,
+                Provider.of<ThemeService>(context).isDarkMode
+                    ? AppColor.whiteColor
+                    : AppColor.blackColor,
+              ),
             ),
           ),
         ),
@@ -169,11 +184,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final color = Provider.of<ThemeService>(context).isDarkMode
         ? AppColor.whiteColor
         : AppColor.blackColor;
+
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text("Edit Profile"),
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -446,12 +465,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     builder: (ctx) => HomeScreen(uid: widget.user.uid!),
                   ),
                 );
-              }, false, color),
+              }, false, context),
               SizedBox(height: screenHeight * 0.03), // Responsive spacing
               Center(
                 child: Text(
                   'Socialseed @2024 Copyright (c)',
-                  style: TextConst.RegularStyle(18, AppColor.blackColor),
+                  style: TextConst.RegularStyle(
+                      18,
+                      Provider.of<ThemeService>(context).isDarkMode
+                          ? AppColor.whiteColor
+                          : AppColor.blackColor),
                 ),
               ),
               SizedBox(height: screenHeight * 0.03), // Responsive spacing

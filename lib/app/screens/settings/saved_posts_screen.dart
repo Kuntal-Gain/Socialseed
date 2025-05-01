@@ -2,11 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'package:socialseed/app/screens/post/view_post_screen.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+
+import '../../../features/services/theme_service.dart';
 
 class SavedPostsScreen extends StatefulWidget {
   const SavedPostsScreen({super.key, required this.user});
@@ -27,23 +30,31 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         title: Text(
           'Saved Content',
           style: TextConst.headingStyle(
             22,
-            AppColor.blackColor,
+            textColor,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios,
-              color: AppColor.blackColor,
+              color: textColor,
             )),
       ),
       body: BlocBuilder<SavedcontentCubit, SavedcontentState>(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
+
+import '../../../features/services/theme_service.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -35,15 +38,30 @@ class AboutScreen extends StatelessWidget {
       ),
     ];
 
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('About Socialseed'),
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
       ),
       body: Column(
         children: [
-          Image.asset('assets/logo.png'),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Image.asset('assets/logo.png'),
+          ),
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Text(
@@ -61,8 +79,15 @@ class AboutScreen extends StatelessWidget {
                 height: 120,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: AppColor.whiteColor,
-                    border: Border.all(color: AppColor.greyShadowColor)),
+                    color: secondaryColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.blackColor
+                            : AppColor.greyShadowColor,
+                        blurRadius: 5,
+                      ),
+                    ]),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -102,7 +127,7 @@ class AboutScreen extends StatelessWidget {
                                   devs[idx].role,
                                   style: TextConst.headingStyle(
                                     13,
-                                    AppColor.whiteColor,
+                                    Colors.white,
                                   ),
                                 ),
                               ),
@@ -110,8 +135,7 @@ class AboutScreen extends StatelessWidget {
                           ),
                           Text(
                             devs[idx].label,
-                            style:
-                                TextConst.headingStyle(18, AppColor.blackColor),
+                            style: TextConst.headingStyle(18, textColor),
                           ),
                         ],
                       ),

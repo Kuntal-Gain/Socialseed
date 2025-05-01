@@ -1035,7 +1035,7 @@ Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
                         user: user,
                       ))),
               true,
-              bg),
+              ctx),
       ],
     ),
   );
