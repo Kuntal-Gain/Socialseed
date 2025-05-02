@@ -530,8 +530,8 @@ class _UserProfileState extends State<UserProfile>
                                   ),
                                   Text(
                                     '@${user.username}',
-                                    style:
-                                        TextConst.headingStyle(16, textColor),
+                                    style: TextConst.headingStyle(
+                                        16, AppColor.redColor),
                                   ),
                                   Container(
                                     height: 30,

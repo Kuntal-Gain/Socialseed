@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:scroll_date_picker/scroll_date_picker.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/screens/credential/forgot_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -42,18 +44,26 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Widget getTextField(
       TextEditingController controller, String label, TextInputType key) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondary = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.greyColor;
     return Container(
       height: 66,
       width: double.infinity,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondary,
         borderRadius: BorderRadius.circular(14),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: key,
+        style: TextStyle(color: textColor),
         validator: (value) {
           // Add your validation logic here
           if (value!.isEmpty) {
@@ -72,13 +82,20 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Widget getTextFieldWithPassword(
       TextEditingController controller, String label) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondary = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.greyColor;
     return Container(
       height: 66,
       width: double.infinity,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondary,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -87,6 +104,7 @@ class _SignInScreenState extends State<SignInScreen> {
             flex: 7,
             child: TextFormField(
               controller: controller,
+              style: TextStyle(color: textColor),
               obscureText:
                   !isPressed, // Invert the value for password visibility
               validator: (value) {
@@ -100,6 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: label,
+                hintStyle: TextStyle(color: textColor),
               ),
             ),
           ),
@@ -121,125 +140,134 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   _bodyWidget() {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return SingleChildScrollView(
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo
-            Image.asset('assets/SOCIALSEED.png'),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo
+              Image.asset('assets/SOCIALSEED.png'),
 
-            // JOIN NOW
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Text(
-                'Welcome Back',
-                style: TextConst.MediumStyle(49, AppColor.blackColor),
+              // JOIN NOW
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: Text(
+                  'Welcome Back',
+                  style: TextConst.MediumStyle(49, textColor),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Text(
-                "Hoe've you been this days , Let's Hope on... ",
-                style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Text(
+                  "Hoe've you been this days , Let's Hope on... ",
+                  style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+                ),
               ),
-            ),
 
-            sizeVar(15),
+              sizeVar(15),
 
-            sizeVar(15),
-            // Form Fields
+              sizeVar(15),
+              // Form Fields
 
-            getTextField(_emailController, 'Email', TextInputType.emailAddress),
-            getTextFieldWithPassword(_passwordController, 'Password'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ForgotScreen(),
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Forgot Password?',
-                      style: TextConst.headingStyle(
-                        16,
-                        AppColor.redColor,
+              getTextField(
+                  _emailController, 'Email', TextInputType.emailAddress),
+              getTextFieldWithPassword(_passwordController, 'Password'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ForgotScreen(),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextConst.headingStyle(
+                          16,
+                          AppColor.redColor,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            // dob
-
-            // Submit Button
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isSigningUp = true;
-                });
-                loginUser();
-              },
-              child: Container(
-                height: 66,
-                width: double.infinity,
-                margin: const EdgeInsets.all(10),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: AppColor.redColor,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: !_isSigningUp
-                      ? Text(
-                          "Login",
-                          style:
-                              TextConst.headingStyle(18, AppColor.whiteColor),
-                        )
-                      : CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                ),
+                ],
               ),
-            ),
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    "Don't Have an Account?",
-                    style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+              // dob
+
+              // Submit Button
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isSigningUp = true;
+                  });
+                  loginUser();
+                },
+                child: Container(
+                  height: 66,
+                  width: double.infinity,
+                  margin: const EdgeInsets.all(10),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: AppColor.redColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: !_isSigningUp
+                        ? Text(
+                            "Login",
+                            style:
+                                TextConst.headingStyle(18, AppColor.whiteColor),
+                          )
+                        : CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => SignUpScreen()));
-                  },
-                  child: Text('Create Now',
-                      style: TextConst.headingStyle(15, AppColor.redColor)),
-                )
-              ],
-            ),
-            sizeVar(30),
-            Center(
-              child: Text(
-                'Socialseed @2024 Copyright (c)',
-                style: TextConst.RegularStyle(18, AppColor.blackColor),
               ),
-            ),
-            sizeVar(30),
-          ],
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 14.0),
+                    child: Text(
+                      "Don't Have an Account?",
+                      style: TextConst.RegularStyle(15, textColor),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text('Create Now',
+                        style: TextConst.headingStyle(15, AppColor.redColor)),
+                  )
+                ],
+              ),
+              sizeVar(30),
+              Center(
+                child: Text(
+                  'Socialseed @2024 Copyright (c)',
+                  style: TextConst.RegularStyle(18, textColor),
+                ),
+              ),
+              sizeVar(30),
+            ],
+          ),
         ),
       ),
     );
@@ -265,8 +293,12 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       body: BlocConsumer<CredentialCubit, CredentialState>(
         listener: (context, state) {
           if (state is CredentialSuccess) {

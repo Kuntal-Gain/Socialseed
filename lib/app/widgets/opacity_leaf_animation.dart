@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import '../screens/credential/signup_screen.dart';
 
@@ -174,7 +175,7 @@ class _OpacityAnimationWidgetState extends State<OpacityAnimationWidget>
                       child: GestureDetector(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (ctx) => const SignUpScreen()));
+                              builder: (ctx) => const UsernameScreen()));
                         },
                         child: Container(
                           height:

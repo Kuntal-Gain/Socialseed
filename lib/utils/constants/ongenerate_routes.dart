@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
+import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -13,7 +14,7 @@ class OnGenerateRoutes {
 
     switch (settings.name) {
       case PageConst.registerPage:
-        return routeBuilder(const SignUpScreen());
+        return routeBuilder(const UsernameScreen());
       case PageConst.loginPage:
         return routeBuilder(const SignInScreen());
 

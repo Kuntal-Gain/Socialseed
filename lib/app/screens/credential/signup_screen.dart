@@ -17,6 +17,7 @@ import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/profile_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 // ignore: unused_import
 import 'package:uuid/uuid.dart';
@@ -25,7 +26,9 @@ import '../../../features/services/theme_service.dart';
 import '../../../utils/custom/custom_snackbar.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String username;
+
+  const SignUpScreen({super.key, required this.username});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -74,18 +77,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget getTextField(
       TextEditingController controller, String label, TextInputType key) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
     return Container(
       height: 66,
       width: double.infinity,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondaryColor,
         borderRadius: BorderRadius.circular(14),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: key,
+        style: TextStyle(color: textColor),
         validator: _validateNotEmpty,
         decoration: InputDecoration(
           border: InputBorder.none,
@@ -97,13 +108,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget getTextFieldWithCareer(
       TextEditingController controller, String label, TextInputType key) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
     return Container(
       height: 66,
       width: double.infinity,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondaryColor,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -112,6 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           Expanded(
             flex: 7,
             child: TextFormField(
+              style: TextStyle(color: textColor),
               controller: controller,
               keyboardType: key,
               decoration: InputDecoration(
@@ -140,6 +159,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget getTextFieldWithPassword(
       TextEditingController controller, String label) {
     // Assuming you have this boolean in your class
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
 
     return Container(
       height: 66,
@@ -147,7 +173,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondaryColor,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -155,6 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           Expanded(
             flex: 7,
             child: TextFormField(
+              style: TextStyle(color: textColor),
               controller: controller,
               obscureText:
                   !isPressed, // Invert the value for password visibility
@@ -183,9 +210,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _showDatePicker(BuildContext context) {
-    final color = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.whiteColor
-        : AppColor.blackColor;
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final color =
+        themeService.isDarkMode ? AppColor.whiteColor : AppColor.blackColor;
 
     showModalBottomSheet(
       context: context,
@@ -304,8 +331,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   // Body Widget
-  Widget _bodyWidget() {
+  Widget _bodyWidget(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
     return SingleChildScrollView(
       child: Form(
         key: _formKey,
@@ -316,19 +350,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              sizeVar(20),
               Image.asset('assets/SOCIALSEED.png'),
               const SizedBox(height: 20),
               Text(
                 'Join Now',
                 style: TextConst.MediumStyle(
                   screenWidth * 0.1, // Adjust text size with MediaQuery
-                  AppColor.blackColor,
+                  textColor,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 "Let's get started by filling out the form below.",
-                style: TextConst.RegularStyle(15, AppColor.textGreyColor),
+                style: TextConst.RegularStyle(15, textColor),
               ),
               const SizedBox(height: 15),
               GestureDetector(
@@ -337,7 +372,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: CircleAvatar(
                     radius:
                         screenWidth * 0.15, // Adjust image size with MediaQuery
-                    backgroundColor: Colors.white,
+                    backgroundColor: secondaryColor,
                     backgroundImage: _image != null ? FileImage(_image!) : null,
                     child: _image == null
                         ? Image.asset(
@@ -362,13 +397,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
-                  color: AppColor.greyColor,
+                  color: secondaryColor,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
+                    Text(
+                      DateFormat('dd/MM/yyyy').format(_selectedDate),
+                      style: TextStyle(color: textColor),
+                    ),
                     TextButton(
                       onPressed: () => _showDatePicker(context),
                       child: Text(
@@ -404,9 +442,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: BoxDecoration(
                     color: _formKey.currentState?.validate() ?? false
                         ? AppColor.redColor
-                        : AppColor.whiteColor,
+                        : secondaryColor,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xffc2c2c2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Provider.of<ThemeService>(context).isDarkMode
+                            ? AppColor.blackColor
+                            : AppColor.whiteColor,
+                        blurRadius: 2,
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: !_isSigningUp
@@ -457,8 +502,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       body: BlocConsumer<CredentialCubit, CredentialState>(
         listener: (context, state) {
           if (state is CredentialSuccess) {
@@ -476,13 +525,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 if (state is Authenticated) {
                   return HomeScreen(uid: state.uid);
                 } else {
-                  return _bodyWidget();
+                  return _bodyWidget(context);
                 }
               },
             );
           }
 
-          return _bodyWidget();
+          return _bodyWidget(context);
         },
       ),
     );
