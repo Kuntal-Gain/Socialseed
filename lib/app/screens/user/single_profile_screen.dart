@@ -19,7 +19,7 @@ class SingleUserProfilePage extends StatelessWidget {
           create: (context) => di.sl<PostCubit>(),
         ),
       ],
-      child: UserProfile(otherUid: otherUserId),
+      child: OtherUserProfile(otherUid: otherUserId),
     );
   }
 }

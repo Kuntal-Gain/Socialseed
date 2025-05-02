@@ -373,12 +373,13 @@ class _PostScreenState extends State<PostScreen> {
                             child: TextField(
                               controller: _captionController,
                               maxLines: null,
+                              style: TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 hintText: !isAI
                                     ? "What's on your mind?"
                                     : "Write few topic names eg. Nature , Environment , Urban",
                                 border: InputBorder.none,
-                                hintStyle: const TextStyle(fontSize: 16),
+                                hintStyle: TextStyle(color: textColor),
                               ),
                             ),
                           ),

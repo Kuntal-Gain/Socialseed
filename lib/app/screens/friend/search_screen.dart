@@ -116,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (ctx) =>
-                                    UserProfile(otherUid: user.uid!),
+                                    OtherUserProfile(otherUid: user.uid!),
                               ),
                             );
                           },

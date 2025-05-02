@@ -93,7 +93,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     if (currentIndex < caption.length) {
       children.add(TextSpan(
         text: caption.substring(currentIndex),
-        style: const TextStyle(color: Colors.black),
+        style: TextStyle(
+            color: Provider.of<ThemeService>(context).isDarkMode
+                ? AppColor.whiteColor
+                : AppColor.blackColor),
       ));
     }
 

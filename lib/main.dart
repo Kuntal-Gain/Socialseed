@@ -44,6 +44,8 @@ Future main() async {
   );
 }
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -96,6 +98,7 @@ class _MyAppState extends State<MyApp> {
             }
           },
         ),
+        navigatorObservers: [routeObserver],
       ),
     );
   }

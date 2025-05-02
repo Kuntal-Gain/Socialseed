@@ -31,6 +31,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/entities/chat_entity.dart';
 import '../../../features/services/theme_service.dart';
+import '../../../main.dart';
 import '../../cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import '../../cubits/message/chat_id/chat_cubit.dart';
 import '../../cubits/message/message_cubit.dart';
@@ -40,16 +41,16 @@ import 'package:socialseed/dependency_injection.dart' as di;
 import '../../widgets/view_post_widget.dart';
 import 'follower_list_screen.dart';
 
-class OtherUserProfile extends StatefulWidget {
+class UserProfile extends StatefulWidget {
   final String otherUid;
-  const OtherUserProfile({super.key, required this.otherUid});
+  const UserProfile({super.key, required this.otherUid});
 
   @override
-  State<OtherUserProfile> createState() => _OtherUserProfileState();
+  State<UserProfile> createState() => _UserProfileState();
 }
 
-class _OtherUserProfileState extends State<OtherUserProfile>
-    with SingleTickerProviderStateMixin {
+class _UserProfileState extends State<UserProfile>
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _controller;
 
   int currentIdx = 0;
@@ -205,6 +206,28 @@ class _OtherUserProfileState extends State<OtherUserProfile>
     if (kDebugMode) {
       print(isPrivate);
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    context
+        .read<GetSingleOtherUserCubit>()
+        .getSingleOtherUser(otherUid: widget.otherUid); // ⏪ Reload current user
   }
 
   @override

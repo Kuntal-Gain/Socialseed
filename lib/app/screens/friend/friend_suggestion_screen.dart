@@ -185,7 +185,7 @@ class _FriendSuggestionState extends State<FriendSuggestion> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (ctx) =>
-                                  UserProfile(otherUid: otherUser.uid!),
+                                  OtherUserProfile(otherUid: otherUser.uid!),
                             ),
                           );
                         },
