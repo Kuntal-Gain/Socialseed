@@ -106,6 +106,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  Widget usernameField(
+      TextEditingController controller, String label, TextInputType key) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          controller.text = widget.username;
+        });
+
+        failureBar(context, "Username Cannot be Modified!");
+      },
+      child: Container(
+        height: 66,
+        width: double.infinity,
+        margin: const EdgeInsets.all(5),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        decoration: BoxDecoration(
+          color: secondaryColor,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Username",
+              style: TextConst.MediumStyle(13, AppColor.greyColor),
+            ),
+            Text(
+              widget.username,
+              style: TextConst.headingStyle(16, AppColor.greyShadowColor),
+            ),
+            Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget getTextFieldWithCareer(
       TextEditingController controller, String label, TextInputType key) {
     final textColor = Provider.of<ThemeService>(context).isDarkMode
@@ -270,7 +315,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         BlocProvider.of<CredentialCubit>(context)
             .signUpUser(
           user: UserEntity(
-            username: _usernameController.text,
+            username: widget.username,
             fullname: _nameController.text,
             email: _emailController.text,
             password: _passwordController.text,
@@ -384,7 +429,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 15),
-              getTextField(_usernameController, 'Username', TextInputType.name),
+              usernameField(
+                  _usernameController, 'Username', TextInputType.name),
               getTextField(_nameController, 'Name', TextInputType.name),
               getTextField(
                   _emailController, 'Email', TextInputType.emailAddress),

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
@@ -238,7 +239,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                   child: Center(
                     child: !_isSigningUp
                         ? Text(
-                            isUsernameUnique ? "Check" : "Next",
+                            !isUsernameUnique ? "Check" : "Next",
                             style:
                                 TextConst.headingStyle(18, AppColor.whiteColor),
                           )
@@ -252,13 +253,20 @@ class _UsernameScreenState extends State<UsernameScreen> {
               const SizedBox(height: 15),
               Row(
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 14.0),
-                    child: Text("Already have an account?"),
+                    child: Text("Already have an account?",
+                        style: TextConst.headingStyle(15, textColor)),
                   ),
                   TextButton(
                     onPressed: () {
                       // Handle login navigation here
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignInScreen(),
+                        ),
+                      );
                     },
                     child: Text('Login',
                         style: TextConst.headingStyle(15, AppColor.redColor)),

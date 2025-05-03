@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -19,26 +21,26 @@ class _ForgotScreenState extends State<ForgotScreen> {
 
   Widget getTextField(
       TextEditingController controller, String label, TextInputType key) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
+    final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.secondaryDark
+        : AppColor.whiteColor;
     return Container(
       height: 66,
       width: double.infinity,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColor.greyColor,
+        color: secondaryColor,
         borderRadius: BorderRadius.circular(14),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: key,
-        validator: (value) {
-          // Add your validation logic here
-          if (value!.isEmpty) {
-            return 'Please enter $label';
-          }
-
-          return null;
-        },
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: label,
@@ -49,10 +51,17 @@ class _ForgotScreenState extends State<ForgotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_ios),
@@ -66,7 +75,7 @@ class _ForgotScreenState extends State<ForgotScreen> {
               'Forgot Password',
               style: TextConst.MediumStyle(
                 40,
-                AppColor.blackColor,
+                textColor,
               ),
             ),
           ),
@@ -75,13 +84,14 @@ class _ForgotScreenState extends State<ForgotScreen> {
             'We will send you an email with a link to reset your password, please enter the email associated with your account below.',
             style: TextConst.MediumStyle(
               18,
-              AppColor.blackColor,
+              textColor,
             ),
             textAlign: TextAlign.center,
           ),
+          sizeVar(20),
           getTextField(
             _emailController,
-            "email",
+            "E-mail",
             TextInputType.emailAddress,
           ),
           GestureDetector(

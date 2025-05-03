@@ -13,6 +13,7 @@ import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
 import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/screens/credential/forgot_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
+import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
@@ -252,7 +253,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UsernameScreen(),
+                        ),
+                      );
+                    },
                     child: Text('Create Now',
                         style: TextConst.headingStyle(15, AppColor.redColor)),
                   )

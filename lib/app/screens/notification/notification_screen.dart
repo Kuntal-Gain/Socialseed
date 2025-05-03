@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/shimmer_effect.dart';
 
 import '../../../features/services/theme_service.dart';
@@ -97,9 +100,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.network(
-                    'https://cdn.dribbble.com/users/1319343/screenshots/6238304/_01-no-notifications.gif'),
+                if (!Provider.of<ThemeService>(context).isDarkMode)
+                  Image.network(
+                      'https://cdn.dribbble.com/users/1319343/screenshots/6238304/_01-no-notifications.gif'),
+                if (Provider.of<ThemeService>(context).isDarkMode)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/icons/bell.png',
+                        height: 100,
+                        width: 100,
+                        color: AppColor.whiteColor,
+                      ),
+                    ],
+                  ),
+                sizeVar(20),
                 Text(
                   'No Notifications',
                   style: TextConst.headingStyle(20, AppColor.redColor),

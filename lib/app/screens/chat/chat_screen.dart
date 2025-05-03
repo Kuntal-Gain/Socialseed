@@ -186,8 +186,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    child: Image.network(
-                      "https://img.freepik.com/free-vector/conversation-concept-illustration_114360-1102.jpg?t=st=1740221127~exp=1740224727~hmac=02ee2d91363b6f0878735564ecd4b94592e5b85873063b3d4cfcb04f13b293ee&w=740",
+                    child: Image.asset(
+                      "assets/no-chat.png",
                     ),
                   ),
                   Text("Dude! , Make a Friend First",

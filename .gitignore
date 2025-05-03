@@ -10,6 +10,9 @@
 .svn/
 migrate_working_dir/
 
+# TODO
+TODO.md
+
 # IntelliJ related
 *.iml
 *.ipr
