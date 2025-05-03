@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
@@ -49,6 +51,10 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Milestones'),
@@ -84,7 +90,7 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
                     milestone.title,
                     style: TextConst.headingStyle(
                       16,
-                      AppColor.redColor,
+                      textColor,
                     ),
                   ),
                 ),
@@ -100,7 +106,12 @@ class _MilestoneScreenState extends State<MilestoneScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                            '${milestone.currentValue} / ${milestone.targetValue}'),
+                          '${milestone.currentValue} / ${milestone.targetValue}',
+                          style: TextConst.headingStyle(
+                            16,
+                            textColor,
+                          ),
+                        ),
                       ],
                     ),
                   ),
