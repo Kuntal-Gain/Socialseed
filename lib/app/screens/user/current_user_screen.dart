@@ -185,6 +185,16 @@ class _UserProfileState extends State<UserProfile>
     });
   }
 
+  String valueConvertion(num val) {
+    if (val >= 1000000) {
+      return "${(val / 1000000).round()}M";
+    } else if (val >= 1000) {
+      return "${(val / 1000).round()}K";
+    } else {
+      return val.toStringAsFixed(0);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -556,8 +566,8 @@ class _UserProfileState extends State<UserProfile>
                                   sizeVar(10),
                                   Text(
                                     user.bio.toString(),
-                                    style: TextConst.RegularStyle(
-                                        15, AppColor.blackColor),
+                                    style:
+                                        TextConst.RegularStyle(15, textColor),
                                   ),
                                 ],
                               ),
@@ -838,7 +848,7 @@ class _UserProfileState extends State<UserProfile>
                                         FriendListScreen(user: user))),
                             child: Center(
                               child: Text(
-                                '${user.friends!.length}\nFriends',
+                                '${valueConvertion(user.friends!.length)}\nFriends',
                                 textAlign: TextAlign.center,
                                 style: TextConst.MediumStyle(16, textColor),
                               ),
@@ -851,7 +861,7 @@ class _UserProfileState extends State<UserProfile>
                                         FollowerListScreen(user: user))),
                             child: Center(
                               child: Text(
-                                '${user.followerCount!}\nFollowers',
+                                '${valueConvertion(user.followerCount!)}\nFollowers',
                                 textAlign: TextAlign.center,
                                 style: TextConst.MediumStyle(16, textColor),
                               ),
@@ -859,7 +869,7 @@ class _UserProfileState extends State<UserProfile>
                           ),
                           Center(
                             child: Text(
-                              '${user.posts!.length}\nPosts',
+                              '${valueConvertion(user.posts!.length)}\nPosts',
                               textAlign: TextAlign.center,
                               style: TextConst.MediumStyle(16, textColor),
                             ),

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../utils/constants/color_const.dart';
@@ -72,17 +74,25 @@ class FollowerListScreenState extends State<FollowerListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios,
-            color: AppColor.blackColor,
+            color: textColor,
           ),
         ),
-        backgroundColor: AppColor.whiteColor,
+        backgroundColor: bg,
         title: Text('${widget.user.fullname} • Followers'),
         centerTitle: true,
       ),
@@ -103,7 +113,7 @@ class FollowerListScreenState extends State<FollowerListScreen> {
                     ),
                     Text(
                       "Don't Lose Hope Yet",
-                      style: TextConst.headingStyle(17, AppColor.blackColor),
+                      style: TextConst.headingStyle(17, textColor),
                     ),
                   ],
                 ),
@@ -130,8 +140,7 @@ class FollowerListScreenState extends State<FollowerListScreen> {
                             children: [
                               Text(
                                 follower.fullname.toString(),
-                                style: TextConst.headingStyle(
-                                    16, AppColor.blackColor),
+                                style: TextConst.headingStyle(16, textColor),
                               ),
                               sizeHor(10),
                               if (follower.work!.toLowerCase() != "none" &&
