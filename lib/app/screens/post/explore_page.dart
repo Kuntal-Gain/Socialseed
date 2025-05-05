@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,8 @@ class _ExplorePageState extends State<ExplorePage> {
         ? AppColor.bgDark
         : AppColor.whiteColor;
 
+    final mq = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: backGroundColor,
       appBar: AppBar(
@@ -87,8 +90,8 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
                 itemCount: 30,
                 itemBuilder: (context, index) {
-                  final height = index.isEven ? 150 : 100;
-                  final width = index.isEven ? 150 : 100;
+                  final isTall = index != 0 &&
+                      ((index + 1) % 3 == 0 || (index + 1) % 6 == 0);
 
                   return Shimmer.fromColors(
                     baseColor: Colors.grey[300]!,
@@ -98,8 +101,8 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          height: height.toDouble(),
-                          width: width.toDouble(),
+                          height: !isTall ? 125 : mq.height * 0.275,
+                          width: !isTall ? 125 : mq.width / 3,
                           color: AppColor.greyColor.withOpacity(0.3),
                         ),
                       ),
@@ -121,6 +124,9 @@ class _ExplorePageState extends State<ExplorePage> {
                   ),
                   itemCount: posts.length,
                   itemBuilder: (context, index) {
+                    final isTall = index != 0 &&
+                        ((index + 1) % 3 == 0 || (index + 1) % 6 == 0);
+
                     final image = posts[index].images![0];
                     final post = posts[index];
 
@@ -145,11 +151,26 @@ class _ExplorePageState extends State<ExplorePage> {
                         );
                       },
                       child: Container(
+                        height: !isTall ? 125 : mq.height * 0.275,
+                        width: !isTall ? 125 : mq.width / 3,
                         margin: const EdgeInsets.all(5),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                           child: image != null && image.isNotEmpty
-                              ? Image.network(image)
+                              ? Image.network(
+                                  image,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    return loadingProgress == null
+                                        ? child
+                                        : Center(
+                                            child: CupertinoActivityIndicator(
+                                              color: AppColor.redColor,
+                                            ),
+                                          );
+                                  },
+                                )
                               : Container(
                                   height: 150,
                                   color: AppColor.greyColor.withOpacity(0.3),
