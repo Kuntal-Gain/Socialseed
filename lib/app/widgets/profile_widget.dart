@@ -57,8 +57,8 @@ Widget getButton(String label, Function()? onClick, bool isColorExists,
       : AppColor.greyShadowColor;
 
   final textColor = (Provider.of<ThemeService>(context).isDarkMode)
-      ? AppColor.whiteColor
-      : AppColor.blackColor;
+      ? AppColor.blackColor
+      : AppColor.whiteColor;
 
   final secondaryColor = (Provider.of<ThemeService>(context).isDarkMode)
       ? AppColor.secondaryDark

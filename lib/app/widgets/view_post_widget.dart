@@ -344,6 +344,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             IconConst.moreIcon,
                             height: 25,
                             width: 25,
+                            color: color,
                           ),
                         )
                     ],

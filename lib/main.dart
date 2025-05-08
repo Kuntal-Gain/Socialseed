@@ -1,5 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +20,7 @@ import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/firebase_options.dart';
 // Added
 import 'package:socialseed/utils/constants/color_const.dart';
+import 'package:socialseed/utils/custom/custom_error.dart';
 
 import 'app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'app/widgets/opacity_leaf_animation.dart';
@@ -25,23 +28,41 @@ import 'dependency_injection.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'features/services/theme_service.dart';
 
-Future main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  runZonedGuarded(() async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  await di.init();
+    await di.init();
 
-  final themeService = ThemeService();
-  await themeService.loadTheme();
-  runApp(
-    ChangeNotifierProvider<ThemeService>.value(
-      value: themeService,
-      child: const MyApp(),
-    ),
-  );
+    final themeService = ThemeService();
+    await themeService.loadTheme();
+
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // 🛡️ Just log the error. No runApp here!
+      FlutterError.presentError(details);
+    };
+
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      // ❗️Build error UI here, but DON’T call runApp
+      return ErrorApp(errorDetails: details);
+    };
+
+    runApp(
+      ChangeNotifierProvider<ThemeService>.value(
+        value: themeService,
+        child: const MyApp(),
+      ),
+    );
+  }, (error, stackTrace) {
+    // Only here it's safe to call runApp for error fallback
+    final details = FlutterErrorDetails(exception: error, stack: stackTrace);
+    FlutterError.presentError(details);
+    runApp(ErrorApp(errorDetails: details));
+  });
 }
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
