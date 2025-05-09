@@ -21,43 +21,38 @@ class MessageCubit extends Cubit<MessageState> {
     required this.fetchMessageUsecase,
   }) : super(MessageInitial());
 
-  Future<void> getMessage({required String messageId}) async {
+  Future<void> sendMessage({required MessageEntity message}) async {
     emit(MessageLoading());
+
     try {
-      final streamResponse = fetchMessageUsecase.call(messageId);
-      streamResponse.listen((message) {
-        emit(MessageLoaded(messages: message));
-      });
+      if (message.messageId == null || message.message == null) {
+        emit(MessageFailure(err: "Missing message ID or message text"));
+        return;
+      }
+
+      await sendMessageUsecase.call(message.messageId!, message.message!);
+      emit(MessageSuccess(message: "Message sent successfully"));
     } catch (e) {
       emit(MessageFailure(err: e.toString()));
     }
   }
 
-  Future<void> sendMessage(
-      {required String messageId, required String msg}) async {
+  Future<void> fetchMessages({required String messageId}) async {
+    emit(MessageLoading());
+
     try {
-      await sendMessageUsecase.call(messageId, msg);
-      // getMessage(messageId: messageId);
-    } on SocketException catch (_) {
-      emit(MessageFailure(err: _.toString()));
-    } catch (_) {
-      emit(MessageFailure(err: _.toString()));
+      final response = fetchMessageUsecase.call(messageId);
+      response.listen((messages) {
+        if (messages.isEmpty) {
+          emit(MessageLoaded(messages: const []));
+        } else {
+          emit(MessageLoaded(messages: messages));
+        }
+      }, onError: (e) {
+        emit(MessageFailure(err: e.toString()));
+      });
+    } catch (e) {
+      emit(MessageFailure(err: e.toString()));
     }
-  }
-
-  Stream<List<MessageEntity>> streamMessages(String messageId) {
-    final db = FirebaseDatabase.instance.ref();
-    final messageRef = db.child("messages").child(messageId).child("chats");
-
-    return messageRef.onValue.map((event) {
-      final data = event.snapshot.value as Map?;
-      if (data == null) return [];
-
-      return data.entries.map((entry) {
-        final msgMap = Map<String, dynamic>.from(entry.value);
-        return MessageModel.fromSnapshot(msgMap as DocumentSnapshot<Object?>);
-      }).toList()
-        ..sort((a, b) => a.createAt!.compareTo(b.createAt!)); // Sort by time
-    });
   }
 }

@@ -21,50 +21,50 @@ class ChatCubit extends Cubit<ChatState> {
     required this.isMessageIdExistsUsecase,
   }) : super(ChatInitial());
 
-  Future<void> createMessageId({required ChatEntity chat}) async {
-    try {
-      if (chat.messageId == null) {
-        emit(const ChatIDCreationError('Message ID is null'));
-        return;
-      }
-
-      final isExists = await isMessageIdExistsUsecase.call(chat.messageId!);
-      if (!isExists) {
-        await createMessageWithId.call(chat);
-        emit(ChatIDCreated(chat.messageId!));
-      } else {
-        emit(ChatIDAlreadyExists(chat.messageId!));
-      }
-    } on SocketException catch (e) {
-      emit(ChatIDCreationError('No Internet connection: ${e.message}'));
-    } catch (e) {
-      emit(ChatIDCreationError('An error occurred: ${e.toString()}'));
-    }
-  }
-
-  Future<void> fetchConversation(String currentUserId) async {
+  Future<void> createNewConversation({required ChatEntity chat}) async {
     emit(ChatLoading());
 
     try {
-      // Fetch the user's message IDs from Firestore
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUserId)
-          .get();
+      await createMessageWithId.call(chat);
 
-      final List<String> userMessageIds =
-          List<String>.from(userDoc.data()?['messages'] ?? []);
+      emit(ChatIDCreated(chat.messageId!));
+    } catch (e) {
+      emit(ChatIDCreationError(e.toString()));
+    }
+  }
 
-      // Fetch conversations and filter based on user's message IDs
-      final streamResponse = fetchConversationUsecase.call();
-      streamResponse.listen((chatIds) {
-        final filteredConversations = chatIds.where((chat) {
-          return userMessageIds.contains(chat.messageId);
-        }).toList();
-        emit(ChatLoaded(conversations: filteredConversations));
+  Future<void> fetchConversations() async {
+    emit(ChatLoading());
+
+    try {
+      final response = fetchConversationUsecase.call();
+      response.listen((conversations) {
+        if (conversations.isEmpty) {
+          emit(const ChatLoaded(conversations: []));
+        } else {
+          emit(ChatLoaded(conversations: conversations));
+        }
+      }, onError: (e) {
+        emit(ChatIDCreationError(e.toString()));
       });
     } catch (e) {
-      emit(ChatIDCreationError('An error occurred: ${e.toString()}'));
+      emit(ChatIDCreationError(e.toString()));
+    }
+  }
+
+  Future<void> isMessageIdExists({required String messageId}) async {
+    emit(ChatLoading());
+
+    try {
+      final response = await isMessageIdExistsUsecase.call(messageId);
+
+      if (response) {
+        emit(ChatIDAlreadyExists(messageId)); // it will load the conversation
+      } else {
+        emit(ChatIDDoesNotExist(messageId)); // it will create the conversation
+      }
+    } catch (e) {
+      emit(ChatIDCreationError(e.toString()));
     }
   }
 }

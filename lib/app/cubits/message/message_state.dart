@@ -32,3 +32,12 @@ final class MessageFailure extends MessageState {
   @override
   List<Object> get props => [err];
 }
+
+final class MessageSuccess extends MessageState {
+  final String message;
+
+  const MessageSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

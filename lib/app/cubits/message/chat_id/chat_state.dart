@@ -34,6 +34,15 @@ final class ChatIDAlreadyExists extends ChatState {
   List<Object> get props => [existingChatId];
 }
 
+final class ChatIDDoesNotExist extends ChatState {
+  final String chatId;
+
+  const ChatIDDoesNotExist(this.chatId);
+
+  @override
+  List<Object> get props => [chatId];
+}
+
 // State for handling errors during chat ID creation
 final class ChatIDCreationError extends ChatState {
   final String message;

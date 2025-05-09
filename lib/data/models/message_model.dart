@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import '../../domain/entities/message_entity.dart';
 
@@ -7,32 +8,42 @@ class MessageModel extends MessageEntity {
   final String? message;
   @override
   final String? senderId;
-  @override
-  final Timestamp? createAt;
+
+  final String? messageId;
+  final int? timestamp;
+  final bool? isSeen;
 
   const MessageModel({
     required this.message,
     required this.senderId,
-    required this.createAt,
+    required this.messageId,
+    required this.timestamp,
+    required this.isSeen,
   }) : super(
-          createAt: createAt,
+          messageId: messageId,
+          timestamp: timestamp,
+          isSeen: isSeen,
           senderId: senderId,
           message: message,
         );
 
-  factory MessageModel.fromSnapshot(DocumentSnapshot snap) {
-    var ss = snap.data() as Map<String, dynamic>;
+  factory MessageModel.fromRTDBSnapshot(DataSnapshot snap) {
+    final data = snap.value as Map<dynamic, dynamic>;
 
     return MessageModel(
-      message: ss['message'],
-      senderId: ss['senderId'],
-      createAt: ss['createAt'], // Ensure this is fetched correctly
+      messageId: snap.key, // since RTDB doesn’t store the key inside value
+      message: data['message'],
+      senderId: data['senderId'],
+      timestamp: data['timestamp'],
+      isSeen: data['isSeen'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'createAt': createAt,
         'senderId': senderId,
         'message': message,
+        'messageId': messageId,
+        'timestamp': timestamp,
+        'isSeen': isSeen,
       };
 }

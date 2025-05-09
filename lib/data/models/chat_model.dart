@@ -6,12 +6,16 @@ class ChatModel extends ChatEntity {
     required String? messageId,
     required List<String>? members,
     required String? lastMessage,
-    required bool? isRead,
+    required Map<String, bool>? isRead,
+    required String? lastMessageSenderId,
+    required int? timestamp,
   }) : super(
           messageId: messageId,
           members: members,
           lastMessage: lastMessage,
           isRead: isRead,
+          lastMessageSenderId: lastMessageSenderId,
+          timestamp: timestamp,
         );
 
   factory ChatModel.fromJson(DocumentSnapshot snap) {
@@ -21,7 +25,9 @@ class ChatModel extends ChatEntity {
       messageId: ss['messageId'],
       members: List.from(snap.get("members")),
       lastMessage: ss['lastMessage'],
-      isRead: ss['isRead'],
+      isRead: ss['isRead'] as Map<String, bool>?,
+      lastMessageSenderId: ss['lastMessageSenderId'],
+      timestamp: ss['timestamp'],
     );
   }
 
@@ -31,6 +37,8 @@ class ChatModel extends ChatEntity {
       'members': members,
       'lastMessage': lastMessage,
       'isRead': isRead,
+      'lastMessageSenderId': lastMessageSenderId,
+      'timestamp': timestamp,
     };
   }
 }

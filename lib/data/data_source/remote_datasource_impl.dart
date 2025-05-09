@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/data/data_source/remote_datasource.dart';
@@ -27,10 +28,12 @@ import '../models/message_model.dart';
 class RemoteDataSourceImpl implements RemoteDataSource {
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firebaseFirestore;
+  final FirebaseDatabase firebaseDatabase;
 
   RemoteDataSourceImpl({
     required this.firebaseAuth,
     required this.firebaseFirestore,
+    required this.firebaseDatabase,
   });
 
   @override
@@ -801,139 +804,176 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Future<void> createMessageWithId(ChatEntity message) async {
-    final uid = await getCurrentUid(); // Sender's UID
-    final receiverId =
-        message.members!.firstWhere((id) => id != uid); // Receiver's UID
+    // get current uid
+    final uid = await getCurrentUid();
 
+    // references
     final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
-    final userCollection = firebaseFirestore.collection(FirebaseConst.users);
+    final dbRef = firebaseDatabase.ref();
 
-    final newMessage = ChatModel(
+    // models
+    final convo = ChatModel(
       messageId: message.messageId,
       members: message.members,
       lastMessage: message.lastMessage,
       isRead: message.isRead,
+      lastMessageSenderId: message.lastMessageSenderId,
+      timestamp: message.timestamp,
+    ).toJson();
+
+    final messageEntity = MessageModel(
+      messageId: null, // will be added after push()
+      senderId: uid,
+      message: message.lastMessage,
+      timestamp: message.timestamp,
+      isSeen: false,
     ).toJson();
 
     try {
-      final messageExists = await isMessageIdExists(message.messageId!);
-
-      // Add the message to the chat collection
-      if (!messageExists) {
-        await chatCollection.doc(message.messageId).set(newMessage);
+      // get the chat reference
+      final chatRef = await chatCollection.doc(message.messageId).get();
+      if (!chatRef.exists) {
+        await chatCollection.doc(message.messageId).set(convo);
       } else {
-        await chatCollection.doc(message.messageId).update(newMessage);
+        await chatCollection.doc(message.messageId).update(convo);
       }
 
-      // Update the sender's document with the message ID
-      final senderRef = await userCollection.doc(uid).get();
-      if (!senderRef.exists) {
-        await userCollection.doc(uid).set({
-          "messages": FieldValue.arrayUnion([message.messageId]),
-        });
-      } else {
-        await userCollection.doc(uid).update({
-          "messages": FieldValue.arrayUnion([message.messageId]),
+      //  get the chat metadata reference
+      final chatMetaRef = dbRef.child("chats").child(message.messageId!);
+      final metaSnapshot = await chatMetaRef.once();
+
+      if (metaSnapshot.snapshot.value == null) {
+        await chatMetaRef.update({
+          "participants": message.members,
+          "createdAt": message.timestamp,
         });
       }
 
-      // Update the receiver's document with the message ID
-      final receiverRef = await userCollection.doc(receiverId).get();
-      if (!receiverRef.exists) {
-        await userCollection.doc(receiverId).set({
-          "messages": FieldValue.arrayUnion([message.messageId]),
-        });
-      } else {
-        await userCollection.doc(receiverId).update({
-          "messages": FieldValue.arrayUnion([message.messageId]),
-        });
-      }
-    } catch (error) {
-      debugPrint(error.toString());
+      // push message inside /chats/{chatId}/messages/
+      final newMessageRef = chatMetaRef.child("messages").push();
+
+      final key = newMessageRef.key;
+
+      await newMessageRef.set({...messageEntity, "messageId": key});
+
+      print("Message pushed with key: $key");
+    } catch (e) {
+      print("Error: $e");
     }
   }
 
   @override
   Stream<List<MessageEntity>> fetchMessages(String messageId) {
-    final chatCollection = FirebaseFirestore.instance
-        .collection(FirebaseConst.messages)
-        .doc(messageId)
-        .collection(FirebaseConst.messages)
-        .orderBy("createAt", descending: false); // Ensure field name is correct
+    final dbRef = firebaseDatabase
+        .ref()
+        .child("chats")
+        .child(messageId)
+        .child("messages");
 
-    return chatCollection.snapshots().map((querySnapshot) {
-      print(
-          "Received ${querySnapshot.docs.length} messages from Firestore"); // Debug print
-      return querySnapshot.docs.map((doc) {
-        print("Document data: ${doc.data()}"); // Debug print each document
-        return MessageModel.fromSnapshot(doc);
+    return dbRef.onValue.map((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data == null) return [];
+
+      final messages = data.entries.map((entry) {
+        final msgMap = Map<String, dynamic>.from(entry.value);
+
+        return MessageModel(
+          messageId: entry.key,
+          message: msgMap['message'],
+          senderId: msgMap['senderId'],
+          timestamp: msgMap['timestamp'],
+          isSeen: msgMap['isSeen'],
+        );
       }).toList();
+
+      // Optional: Sort messages by timestamp
+      messages.sort((a, b) => (a.timestamp ?? 0).compareTo(b.timestamp ?? 0));
+
+      return messages;
     });
   }
 
   @override
   Future<void> sendMessage(String messageId, String message) async {
+    /* 2 Tasks
+
+    1. Push new message to RealtimeDB
+    2. Update last message in firestoreDB
+    
+    
+    */
+
+    // current uid
     final uid = await getCurrentUid();
-    final userDoc = firebaseFirestore
-        .collection(FirebaseConst.messages)
-        .doc(messageId)
-        .collection(FirebaseConst.messages);
 
-    final msgDoc = firebaseFirestore.collection(FirebaseConst.messages);
+    // references
+    final chatCollection =
+        firebaseFirestore.collection(FirebaseConst.messages).doc(messageId);
+    final dbRef = firebaseDatabase
+        .ref()
+        .child("chats")
+        .child(messageId)
+        .child("messages")
+        .push();
 
-    // Create the message data structure
-    final messageData = MessageModel(
-      message: message,
+    final newMessage = MessageModel(
+      messageId: null,
       senderId: uid,
-      createAt: Timestamp
-          .now(), // Local timestamp, will be updated with server timestamp
+      message: message,
+      timestamp: Timestamp.now().millisecondsSinceEpoch,
+      isSeen: false,
     ).toJson();
 
-    final mid = const Uuid().v4(); // Generate a unique message ID
-
     try {
-      // Attempt to add the new message document
-      await userDoc.doc(mid).set(messageData);
+      await dbRef.set(newMessage);
 
-      // Update the last message in the parent messageId document
-      await msgDoc.doc(messageId).update({
-        "lastMessage": message,
-        "isRead": false,
-        "lastMessageTimestamp":
-            FieldValue.serverTimestamp(), // Set to server timestamp
+      await chatCollection.update({
+        'lastMessage': message,
+        'isRead': false,
+        'lastMessageSenderId': uid,
+        'timestamp': Timestamp.now().millisecondsSinceEpoch,
       });
     } catch (e) {
-      print('Error sending message: $e');
-      // Handle error, maybe rethrow or handle it within the UI
+      print("Error: $e");
     }
   }
 
   @override
   Stream<List<ChatEntity>> fetchConversations() {
-    final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
+    final chatCollection = firebaseFirestore.collection("messages");
 
-    return chatCollection.snapshots().map((querySnapshot) {
-      print(
-          "Received ${querySnapshot.docs.length} messages from Firestore"); // Debug print
-      return querySnapshot.docs.map((doc) {
-        print("Document data: ${doc.data()}"); // Debug print each document
-        return ChatModel.fromJson(doc);
-      }).toList();
+    return chatCollection.snapshots().map((snapshot) {
+      try {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+
+          // Defensive check in case any key is missing
+          return ChatModel(
+            messageId: data['messageId'] ?? '',
+            members: List<String>.from(data['members'] ?? []),
+            lastMessage: data['lastMessage'] ?? '',
+            isRead: data['isRead'] ?? false,
+            lastMessageSenderId: data['lastMessageSenderId'] ?? '',
+            timestamp: data['timestamp'] ?? 0,
+          );
+        }).toList();
+      } catch (e) {
+        print("Error in fetchConversations(): $e");
+        return [];
+      }
     });
   }
 
   @override
   Future<bool> isMessageIdExists(String messageId) async {
-    try {
-      final doc = await firebaseFirestore
-          .collection(FirebaseConst.messages)
-          .doc(messageId)
-          .get();
+    final chatCollection = firebaseFirestore.collection("messages");
 
-      return doc.exists;
-    } catch (_) {
-      return false;
-    }
+    // Try to get the doc with given messageId
+    final chatDoc = await chatCollection.doc(messageId).get();
+
+    // Return true if it exists, otherwise false
+    return chatDoc.exists;
   }
 
   @override

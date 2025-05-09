@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get_it/get_it.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
@@ -242,6 +243,7 @@ Future<void> init() async {
     () => RemoteDataSourceImpl(
       firebaseFirestore: sl.call(),
       firebaseAuth: sl.call(),
+      firebaseDatabase: sl.call(),
     ),
   );
 
@@ -249,7 +251,9 @@ Future<void> init() async {
 
   final firebaseFirestore = FirebaseFirestore.instance;
   final firebaseAuth = FirebaseAuth.instance;
+  final firebaseDatabase = FirebaseDatabase.instance;
 
   sl.registerLazySingleton(() => firebaseFirestore);
   sl.registerLazySingleton(() => firebaseAuth);
+  sl.registerLazySingleton(() => firebaseDatabase);
 }

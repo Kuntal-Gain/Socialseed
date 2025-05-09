@@ -1,17 +1,45 @@
 import 'package:equatable/equatable.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MessageEntity extends Equatable {
-  final String? message;
+  final String? messageId;
   final String? senderId;
-  final Timestamp? createAt;
+  final String? message;
+  final int? timestamp;
+  final bool? isSeen;
 
   const MessageEntity({
-    required this.message,
-    required this.createAt,
+    required this.messageId,
     required this.senderId,
+    required this.message,
+    required this.timestamp,
+    required this.isSeen,
   });
 
+  factory MessageEntity.fromMap(Map<String, dynamic> map, String messageId) {
+    return MessageEntity(
+      messageId: messageId,
+      senderId: map['senderId'],
+      message: map['message'],
+      timestamp: map['timestamp'],
+      isSeen: map['isSeen'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'senderId': senderId,
+      'message': message,
+      'timestamp': timestamp,
+      'isSeen': isSeen,
+    };
+  }
+
   @override
-  List<Object?> get props => [message, createAt, senderId];
+  List<Object?> get props => [
+        messageId,
+        senderId,
+        message,
+        timestamp,
+        isSeen,
+      ];
 }
