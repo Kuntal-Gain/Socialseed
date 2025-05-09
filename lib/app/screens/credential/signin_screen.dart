@@ -141,10 +141,6 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   _bodyWidget() {
-    final bg = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.bgDark
-        : AppColor.whiteColor;
-
     final textColor = Provider.of<ThemeService>(context).isDarkMode
         ? AppColor.whiteColor
         : AppColor.blackColor;

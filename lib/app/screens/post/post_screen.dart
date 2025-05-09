@@ -1,8 +1,6 @@
 // Nececcessy Dependencies
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cool_dropdown/cool_dropdown.dart';
-import 'package:cool_dropdown/models/cool_dropdown_item.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_editor_plus/image_editor_plus.dart';
 import 'package:provider/provider.dart';

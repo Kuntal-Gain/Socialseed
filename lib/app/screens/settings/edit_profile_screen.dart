@@ -181,10 +181,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    final color = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.whiteColor
-        : AppColor.blackColor;
-
     final bg = Provider.of<ThemeService>(context).isDarkMode
         ? AppColor.bgDark
         : AppColor.whiteColor;

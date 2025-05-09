@@ -108,10 +108,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget usernameField(
       TextEditingController controller, String label, TextInputType key) {
-    final textColor = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.whiteColor
-        : AppColor.blackColor;
-
     final secondaryColor = Provider.of<ThemeService>(context).isDarkMode
         ? AppColor.secondaryDark
         : AppColor.whiteColor;
@@ -144,7 +140,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               widget.username,
               style: TextConst.headingStyle(16, AppColor.greyShadowColor),
             ),
-            Spacer(),
+            const Spacer(),
           ],
         ),
       ),
@@ -255,9 +251,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _showDatePicker(BuildContext context) {
-    final themeService = Provider.of<ThemeService>(context, listen: false);
-    final color =
-        themeService.isDarkMode ? AppColor.whiteColor : AppColor.blackColor;
+    Provider.of<ThemeService>(context, listen: false);
 
     showModalBottomSheet(
       context: context,

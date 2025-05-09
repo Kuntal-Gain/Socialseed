@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: overridden_fields, annotate_overrides
+
 import 'package:firebase_database/firebase_database.dart';
 
 import '../../domain/entities/message_entity.dart';

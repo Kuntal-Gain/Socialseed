@@ -52,10 +52,6 @@ class _StoryUIState extends State<StoryUI> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    final secondary = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.secondaryDark
-        : AppColor.whiteColor;
-
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 24, 17, 17),
       body: SafeArea(
@@ -256,7 +252,7 @@ class _StoryUIState extends State<StoryUI> {
             color: Provider.of<ThemeService>(context).isDarkMode
                 ? AppColor.bgDark
                 : AppColor.whiteColor,
-            borderRadius: BorderRadius.only(
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
             ),

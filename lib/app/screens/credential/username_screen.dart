@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
@@ -103,7 +102,6 @@ class _UsernameScreenState extends State<UsernameScreen> {
           .get();
       return querySnapshot.docs.isNotEmpty;
     } catch (e) {
-      print(e.toString());
       return false;
     }
   }
@@ -254,7 +252,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
               Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 14.0),
+                    padding: const EdgeInsets.only(left: 14.0),
                     child: Text("Already have an account?",
                         style: TextConst.headingStyle(15, textColor)),
                   ),

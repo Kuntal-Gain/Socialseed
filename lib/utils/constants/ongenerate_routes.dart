@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:socialseed/app/screens/credential/signin_screen.dart';
-import 'package:socialseed/app/screens/credential/signup_screen.dart';
 import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';

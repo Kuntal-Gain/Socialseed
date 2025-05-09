@@ -38,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     // Fetch both simultaneously
+
     _initializeData();
   }
 
@@ -45,7 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Start both operations concurrently
     await Future.wait([
       fetchFriends(widget.user.uid!),
-      context.read<ChatCubit>().fetchConversation(widget.user.uid!),
+      context.read<ChatCubit>().fetchConversations(),
     ]);
   }
 
@@ -236,7 +237,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                       // Create a new chat
                                       final newMessageId = const Uuid().v4();
                                       // ignore: use_build_context_synchronously
-                                      context.read<ChatCubit>().createMessageId(
+                                      context
+                                          .read<ChatCubit>()
+                                          .createNewConversation(
                                             chat: ChatEntity(
                                               messageId: newMessageId,
                                               members: [
@@ -244,7 +247,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                                 widget.user.uid!
                                               ],
                                               lastMessage: "",
-                                              isRead: false,
+                                              isRead: [widget.user.uid!],
+                                              lastMessageSenderId:
+                                                  widget.user.uid!,
+                                              timestamp: DateTime.now()
+                                                  .millisecondsSinceEpoch,
                                             ),
                                           );
 
@@ -259,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                             child: MessageScreen(
                                               sender: widget.user,
                                               receiver: friend,
-                                              messageId: newMessageId,
+                                              chatId: newMessageId,
                                             ),
                                           ),
                                         ),
@@ -276,7 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                             child: MessageScreen(
                                               sender: widget.user,
                                               receiver: friend,
-                                              messageId: existingMessageId,
+                                              chatId: existingMessageId,
                                             ),
                                           ),
                                         ),
@@ -318,6 +325,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     flex: 7,
                     child: BlocBuilder<ChatCubit, ChatState>(
                       builder: (context, state) {
+                        print(state);
                         // Show shimmer loading initially or when explicitly loading
                         if (state is ChatInitial || state is ChatLoading) {
                           return ListView.builder(
@@ -398,7 +406,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                                 child: MessageScreen(
                                                   sender: widget.user,
                                                   receiver: friend,
-                                                  messageId: messageId,
+                                                  chatId: messageId,
                                                 ),
                                               ),
                                             ),

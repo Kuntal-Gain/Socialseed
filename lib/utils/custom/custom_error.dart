@@ -1,11 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:provider/provider.dart';
-import 'package:socialseed/app/widgets/profile_widget.dart';
-import 'package:socialseed/features/services/encryption_service.dart';
-import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/main.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
+
+import '../../app/screens/home_screen.dart';
 
 class CustomErrorScreen extends StatelessWidget {
   final FlutterErrorDetails errorDetails;
@@ -51,7 +50,11 @@ class CustomErrorScreen extends StatelessWidget {
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
-                  main();
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (context) => HomeScreen(
+                              uid: FirebaseAuth.instance.currentUser!.uid)),
+                      (route) => false);
                 },
                 child: Container(
                   height: 60,
@@ -60,16 +63,16 @@ class CustomErrorScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: AppColor.redColor,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: AppColor.blackColor,
                           blurRadius: 5,
                         ),
                       ]),
-                  child: Center(
+                  child: const Center(
                       child: Text(
                     "Retry",
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColor.whiteColor,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,

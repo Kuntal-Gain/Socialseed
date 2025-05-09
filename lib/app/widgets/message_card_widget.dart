@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -6,9 +5,9 @@ import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
 
-String formatTimestampTo12Hour(Timestamp timestamp) {
+String formatTimestampTo12Hour(int timestamp) {
   // Convert Timestamp to DateTime
-  DateTime dateTime = timestamp.toDate();
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
 
   // Define a DateFormat instance for the 12-hour format
   final DateFormat formatter = DateFormat('h:mm a');
@@ -18,7 +17,7 @@ String formatTimestampTo12Hour(Timestamp timestamp) {
 }
 
 Widget messageBox(
-    bool isSender, String message, Timestamp time, BuildContext context) {
+    bool isSender, String message, int time, BuildContext context) {
   final textColor = Provider.of<ThemeService>(context).isDarkMode
       ? AppColor.whiteColor
       : AppColor.blackColor;

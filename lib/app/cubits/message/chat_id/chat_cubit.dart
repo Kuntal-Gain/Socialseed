@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:socialseed/domain/usecases/chat/create_messageid_usecase.dart';
 import 'package:socialseed/domain/usecases/chat/fetch_conversations_usecase.dart';
 import 'package:socialseed/domain/usecases/chat/is_messageid_exists_usecase.dart';
 // Import your UserModel
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+// Import Firestore
 import '../../../../domain/entities/chat_entity.dart';
 
 part 'chat_state.dart';

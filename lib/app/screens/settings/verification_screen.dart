@@ -77,10 +77,6 @@ class _RequestForVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
-    final color = Provider.of<ThemeService>(context).isDarkMode
-        ? AppColor.whiteColor
-        : AppColor.blackColor;
-
     final bg = Provider.of<ThemeService>(context).isDarkMode
         ? AppColor.bgDark
         : AppColor.whiteColor;

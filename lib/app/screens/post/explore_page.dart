@@ -164,7 +164,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                       (context, child, loadingProgress) {
                                     return loadingProgress == null
                                         ? child
-                                        : Center(
+                                        : const Center(
                                             child: CupertinoActivityIndicator(
                                               color: AppColor.redColor,
                                             ),

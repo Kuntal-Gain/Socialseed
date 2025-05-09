@@ -74,7 +74,6 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               const TextStyle(color: Colors.red, fontWeight: FontWeight.w900),
           recognizer: TapGestureRecognizer()
             ..onTap = () {
-              print("navigated to $tagText");
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => TaggedFeedScreen(
                         tag: tagText,
@@ -102,7 +101,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
     return RichText(
       text: TextSpan(children: children),
-      textScaleFactor: 1.2,
+      textScaler: const TextScaler.linear(1.2),
     );
   }
 

@@ -752,7 +752,9 @@ class _UserProfileState extends State<UserProfile>
                                       // Create a new chat
                                       final newMessageId = const Uuid().v4();
                                       // ignore: use_build_context_synchronously
-                                      context.read<ChatCubit>().createMessageId(
+                                      context
+                                          .read<ChatCubit>()
+                                          .createNewConversation(
                                             chat: ChatEntity(
                                               messageId: newMessageId,
                                               members: [
@@ -760,7 +762,10 @@ class _UserProfileState extends State<UserProfile>
                                                 currentUid
                                               ],
                                               lastMessage: "",
-                                              isRead: false,
+                                              isRead: [currentUid],
+                                              lastMessageSenderId: currentUid,
+                                              timestamp: Timestamp.now()
+                                                  .millisecondsSinceEpoch,
                                             ),
                                           );
 
@@ -775,7 +780,7 @@ class _UserProfileState extends State<UserProfile>
                                             child: MessageScreen(
                                               sender: currentUser!,
                                               receiver: state.otherUser,
-                                              messageId: newMessageId,
+                                              chatId: newMessageId,
                                             ),
                                           ),
                                         ),
@@ -792,7 +797,7 @@ class _UserProfileState extends State<UserProfile>
                                             child: MessageScreen(
                                               sender: currentUser!,
                                               receiver: state.otherUser,
-                                              messageId: existingMessageId,
+                                              chatId: existingMessageId,
                                             ),
                                           ),
                                         ),
@@ -1049,9 +1054,6 @@ Widget getInformtion(UserEntity user, BuildContext ctx, String currentUid) {
       ? AppColor.whiteColor
       : AppColor.blackColor;
 
-  final bg = Provider.of<ThemeService>(ctx).isDarkMode
-      ? AppColor.bgDark
-      : AppColor.whiteColor;
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 20),
     child: Column(

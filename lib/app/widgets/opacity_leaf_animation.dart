@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
-import '../screens/credential/signup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

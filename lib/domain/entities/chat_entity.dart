@@ -6,7 +6,7 @@ class ChatEntity extends Equatable {
   final String? lastMessage;
   final String? lastMessageSenderId;
   final int? timestamp; // Epoch time of last message
-  final Map<String, bool>? isRead; // Per-user read status
+  final List<String>? isRead; // Per-user read status
 
   const ChatEntity({
     required this.messageId,

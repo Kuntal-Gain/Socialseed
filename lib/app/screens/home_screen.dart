@@ -9,7 +9,6 @@ import 'package:socialseed/app/screens/friend/friend_suggestion_screen.dart';
 import 'package:socialseed/app/screens/notification/notification_screen.dart';
 import 'package:socialseed/app/screens/post/feed_screen.dart';
 import 'package:socialseed/app/screens/user/current_user_screen.dart';
-import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';

@@ -11,7 +11,7 @@ Widget taggedWidgetTile(
   return Container(
     height: size.height * 0.15,
     width: size.width,
-    decoration: BoxDecoration(
+    decoration: const BoxDecoration(
       color: AppColor.redColor,
       borderRadius: BorderRadius.only(
         bottomLeft: Radius.circular(16),

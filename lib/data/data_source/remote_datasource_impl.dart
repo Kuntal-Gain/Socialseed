@@ -809,6 +809,8 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
     // references
     final chatCollection = firebaseFirestore.collection(FirebaseConst.messages);
+    final userCollection =
+        firebaseFirestore.collection(FirebaseConst.users).doc(uid);
     final dbRef = firebaseDatabase.ref();
 
     // models
@@ -834,6 +836,9 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       final chatRef = await chatCollection.doc(message.messageId).get();
       if (!chatRef.exists) {
         await chatCollection.doc(message.messageId).set(convo);
+        await userCollection.update({
+          'messages': FieldValue.arrayUnion([message.messageId])
+        });
       } else {
         await chatCollection.doc(message.messageId).update(convo);
       }
@@ -896,20 +901,13 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Future<void> sendMessage(String messageId, String message) async {
-    /* 2 Tasks
-
-    1. Push new message to RealtimeDB
-    2. Update last message in firestoreDB
-    
-    
-    */
-
     // current uid
     final uid = await getCurrentUid();
 
     // references
     final chatCollection =
         firebaseFirestore.collection(FirebaseConst.messages).doc(messageId);
+
     final dbRef = firebaseDatabase
         .ref()
         .child("chats")
@@ -922,7 +920,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       senderId: uid,
       message: message,
       timestamp: Timestamp.now().millisecondsSinceEpoch,
-      isSeen: false,
+      isSeen: true,
     ).toJson();
 
     try {
@@ -930,7 +928,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
       await chatCollection.update({
         'lastMessage': message,
-        'isRead': false,
+        'isRead': FieldValue.arrayUnion([uid]),
         'lastMessageSenderId': uid,
         'timestamp': Timestamp.now().millisecondsSinceEpoch,
       });
@@ -941,7 +939,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Stream<List<ChatEntity>> fetchConversations() {
-    final chatCollection = firebaseFirestore.collection("messages");
+    final chatCollection = firebaseFirestore.collection("chats");
 
     return chatCollection.snapshots().map((snapshot) {
       try {
@@ -953,7 +951,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
             messageId: data['messageId'] ?? '',
             members: List<String>.from(data['members'] ?? []),
             lastMessage: data['lastMessage'] ?? '',
-            isRead: data['isRead'] ?? false,
+            isRead: List<String>.from(data['isRead'] ?? []),
             lastMessageSenderId: data['lastMessageSenderId'] ?? '',
             timestamp: data['timestamp'] ?? 0,
           );

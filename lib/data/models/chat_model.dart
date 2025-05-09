@@ -6,7 +6,7 @@ class ChatModel extends ChatEntity {
     required String? messageId,
     required List<String>? members,
     required String? lastMessage,
-    required Map<String, bool>? isRead,
+    required List<String>? isRead,
     required String? lastMessageSenderId,
     required int? timestamp,
   }) : super(
@@ -25,7 +25,7 @@ class ChatModel extends ChatEntity {
       messageId: ss['messageId'],
       members: List.from(snap.get("members")),
       lastMessage: ss['lastMessage'],
-      isRead: ss['isRead'] as Map<String, bool>?,
+      isRead: List.from(ss['isRead'] as List<dynamic>),
       lastMessageSenderId: ss['lastMessageSenderId'],
       timestamp: ss['timestamp'],
     );
