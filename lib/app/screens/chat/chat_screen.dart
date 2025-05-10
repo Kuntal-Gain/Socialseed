@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -155,6 +156,36 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     return []; // Return an empty list if there's an error or no IDs found
+  }
+
+  Stream<int> unreadMessageCountStream(String messageId) async* {
+    final uid = widget.user.uid!;
+
+    final dbRef = FirebaseDatabase.instance
+        .ref()
+        .child("chats")
+        .child(messageId)
+        .child("messages");
+
+    yield* dbRef.onValue.asyncMap((snapshot) async {
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data == null) return 0;
+
+      int count = 0;
+
+      for (var entry in data.entries) {
+        final msg = Map<String, dynamic>.from(entry.value);
+        final senderId = msg['senderId'];
+        final isSeen = msg['isSeen'] ?? false;
+
+        if (senderId != uid && !isSeen) {
+          count++;
+        }
+      }
+
+      return count;
+    });
   }
 
   @override
@@ -373,50 +404,60 @@ class _ChatScreenState extends State<ChatScreen> {
                                               (uid) => uid != widget.user.uid)
                                           .toList();
 
-                                      // Try to find friend in friendList
                                       final friendOptional = friendList
                                           .where((friend) =>
                                               friend.uid == members[0])
                                           .toList();
 
-                                      // Skip if friend not found
                                       if (friendOptional.isEmpty) {
                                         return shimmerEffectChat();
                                       }
 
                                       final friend = friendOptional.first;
 
-                                      return GestureDetector(
-                                        onTap: () async {
-                                          final existingMessageId =
-                                              await getExistingMessageId(
-                                            widget.user.uid!,
-                                            friend.uid!,
-                                          );
-                                          final messageId = existingMessageId ??
-                                              const Uuid().v4();
+                                      return StreamBuilder<int>(
+                                        stream: unreadMessageCountStream(
+                                            conversations[idx].messageId!),
+                                        builder: (context, snapshot) {
+                                          final unreadCount =
+                                              snapshot.data ?? 0;
 
-                                          // ignore: use_build_context_synchronously
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (ctx) =>
-                                                  BlocProvider<MessageCubit>(
-                                                create: (context) =>
-                                                    di.sl<MessageCubit>(),
-                                                child: MessageScreen(
-                                                  sender: widget.user,
-                                                  receiver: friend,
-                                                  chatId: messageId,
+                                          return GestureDetector(
+                                            onTap: () async {
+                                              final existingMessageId =
+                                                  await getExistingMessageId(
+                                                widget.user.uid!,
+                                                friend.uid!,
+                                              );
+                                              final messageId =
+                                                  existingMessageId ??
+                                                      const Uuid().v4();
+
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (ctx) =>
+                                                      BlocProvider<
+                                                          MessageCubit>(
+                                                    create: (context) =>
+                                                        di.sl<MessageCubit>(),
+                                                    child: MessageScreen(
+                                                      sender: widget.user,
+                                                      receiver: friend,
+                                                      chatId: messageId,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+                                              );
+                                            },
+                                            child: messageTileWidget(
+                                              friend,
+                                              widget.user,
+                                              conversations[idx].lastMessage!,
+                                              context,
+                                              unreadCount, // <- Live count!
                                             ),
                                           );
                                         },
-                                        child: messageTileWidget(
-                                            friend,
-                                            widget.user,
-                                            conversations[idx].lastMessage!,
-                                            context),
                                       );
                                     },
                                   ),

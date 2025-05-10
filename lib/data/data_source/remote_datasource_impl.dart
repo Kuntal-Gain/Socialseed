@@ -875,25 +875,46 @@ class RemoteDataSourceImpl implements RemoteDataSource {
         .child(messageId)
         .child("messages");
 
-    return dbRef.onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+    final chatRef =
+        firebaseFirestore.collection(FirebaseConst.messages).doc(messageId);
 
+    return dbRef.onValue.asyncMap((event) async {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return [];
 
-      final messages = data.entries.map((entry) {
-        final msgMap = Map<String, dynamic>.from(entry.value);
+      final uid = await getCurrentUid(); // 👤 Current user ID
+      final List<MessageModel> messages = [];
 
-        return MessageModel(
+      // 🔁 Loop through messages
+      for (var entry in data.entries) {
+        final msgMap = Map<String, dynamic>.from(entry.value);
+        final message = MessageModel(
           messageId: entry.key,
           message: msgMap['message'],
           senderId: msgMap['senderId'],
           timestamp: msgMap['timestamp'],
           isSeen: msgMap['isSeen'],
         );
-      }).toList();
 
-      // Optional: Sort messages by timestamp
+        messages.add(message);
+
+        // 👁 Mark as seen if sent by someone else and not yet seen
+        if (message.senderId != uid && message.isSeen == false) {
+          await dbRef.child(entry.key).update({'isSeen': true});
+        }
+      }
+
+      // 🧹 Sort messages by timestamp
       messages.sort((a, b) => (a.timestamp ?? 0).compareTo(b.timestamp ?? 0));
+
+      // ✅ Update isRead in Firestore if last message is from someone else
+      final lastMessage = messages.isNotEmpty ? messages.last : null;
+
+      if (lastMessage != null && lastMessage.senderId != uid) {
+        await chatRef.update({
+          'isRead': FieldValue.arrayUnion([uid])
+        });
+      }
 
       return messages;
     });
@@ -920,7 +941,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       senderId: uid,
       message: message,
       timestamp: Timestamp.now().millisecondsSinceEpoch,
-      isSeen: true,
+      isSeen: false,
     ).toJson();
 
     try {
@@ -928,7 +949,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
       await chatCollection.update({
         'lastMessage': message,
-        'isRead': FieldValue.arrayUnion([uid]),
+        'isRead': [uid],
         'lastMessageSenderId': uid,
         'timestamp': Timestamp.now().millisecondsSinceEpoch,
       });

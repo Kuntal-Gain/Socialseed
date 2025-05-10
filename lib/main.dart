@@ -28,41 +28,24 @@ import 'dependency_injection.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'features/services/theme_service.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runZonedGuarded(() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-    await di.init();
+  await di.init();
 
-    final themeService = ThemeService();
-    await themeService.loadTheme();
+  final themeService = ThemeService();
+  await themeService.loadTheme();
 
-    FlutterError.onError = (FlutterErrorDetails details) {
-      // 🛡️ Just log the error. No runApp here!
-      FlutterError.presentError(details);
-    };
-
-    ErrorWidget.builder = (FlutterErrorDetails details) {
-      // ❗️Build error UI here, but DON’T call runApp
-      return ErrorApp(errorDetails: details);
-    };
-
-    runApp(
-      ChangeNotifierProvider<ThemeService>.value(
-        value: themeService,
-        child: const MyApp(),
-      ),
-    );
-  }, (error, stackTrace) {
-    // Only here it's safe to call runApp for error fallback
-    final details = FlutterErrorDetails(exception: error, stack: stackTrace);
-    FlutterError.presentError(details);
-    runApp(ErrorApp(errorDetails: details));
-  });
+  runApp(
+    ChangeNotifierProvider<ThemeService>.value(
+      value: themeService,
+      child: const MyApp(),
+    ),
+  );
 }
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
