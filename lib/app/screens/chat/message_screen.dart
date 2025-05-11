@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
 import 'package:socialseed/app/widgets/message_card_widget.dart';
+import 'package:socialseed/data/models/message_model.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
 import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
@@ -35,6 +37,7 @@ class _MessageScreenState extends State<MessageScreen> {
   final DatabaseReference _messagesRef = FirebaseDatabase.instance.ref('chats');
 
   late StreamSubscription<DatabaseEvent> _messageSub;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -129,19 +132,64 @@ class _MessageScreenState extends State<MessageScreen> {
                             color: AppColor.redColor));
                   } else if (state is MessageLoaded) {
                     final messages = state.messages;
+
+// Wait till next frame and scroll to bottom
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_scrollController.hasClients) {
+                        _scrollController
+                            .jumpTo(_scrollController.position.maxScrollExtent);
+                      }
+                    });
+
+                    final messageItems = getMessageItems(messages);
+
                     return ListView.builder(
-                      itemCount: messages.length,
+                      itemCount: messageItems.length,
+                      controller: _scrollController,
                       itemBuilder: (ctx, idx) {
                         final uid = FirebaseAuth.instance.currentUser!.uid;
-                        final message = messages[idx];
+                        final item = messageItems[idx];
 
-                        if (message.message!.isEmpty) return const SizedBox();
-                        return messageBox(
-                          message.senderId != uid,
-                          message.message!,
-                          message.timestamp!,
-                          context,
-                        );
+                        if (item['type'] == 'date') {
+                          final date = item['value'] as int;
+
+                          String label;
+                          final now = DateTime.now();
+                          if (isSameDay(
+                              DateTime.fromMillisecondsSinceEpoch(date), now)) {
+                            label = 'Today';
+                          } else if (isSameDay(
+                              DateTime.fromMillisecondsSinceEpoch(date),
+                              now.subtract(Duration(days: 1)))) {
+                            label = 'Yesterday';
+                          } else {
+                            label = DateFormat('MMM d, yyyy').format(
+                                DateTime.fromMillisecondsSinceEpoch(date));
+                          }
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Spacer(),
+                              Text(
+                                label,
+                                style: TextConst.headingStyle(22, textColor),
+                              ),
+                              const Spacer(),
+                            ],
+                          );
+                        } else {
+                          final message = item['value'] as MessageModel;
+                          final uid = FirebaseAuth.instance.currentUser!.uid;
+
+                          if (message.message!.isEmpty) return const SizedBox();
+                          return messageBox(
+                            message.senderId != uid,
+                            message.message!,
+                            message.timestamp!,
+                            context,
+                          );
+                        }
                       },
                     );
                   } else if (state is MessageFailure) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -14,6 +15,29 @@ String formatTimestampTo12Hour(int timestamp) {
 
   // Convert the DateTime to the desired format
   return formatter.format(dateTime);
+}
+
+List<dynamic> getMessageItems(List<MessageEntity> messages) {
+  final List<dynamic> messageItems = [];
+  String? lastDate;
+
+  for (final msg in messages) {
+    final messageDate = DateFormat('yyyy-MM-dd').format(
+        DateTime.fromMillisecondsSinceEpoch(msg.timestamp!)); // Strip time
+
+    if (lastDate != messageDate) {
+      lastDate = messageDate;
+      messageItems.add({'type': 'date', 'value': msg.timestamp!});
+    }
+
+    messageItems.add({'type': 'message', 'value': msg});
+  }
+
+  return messageItems;
+}
+
+bool isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
 Widget messageBox(
@@ -74,4 +98,8 @@ Widget messageBox(
       ),
     ),
   );
+}
+
+Widget timeBoxWithChats(Widget child) {
+  return Column();
 }
