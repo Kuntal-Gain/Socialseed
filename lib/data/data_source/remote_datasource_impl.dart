@@ -959,15 +959,31 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
-  Stream<List<ChatEntity>> fetchConversations() {
-    final chatCollection = firebaseFirestore.collection("chats");
+  Stream<List<ChatEntity>> fetchConversations() async* {
+    final uid = await getCurrentUid();
 
-    return chatCollection.snapshots().map((snapshot) {
+    final userDoc = await firebaseFirestore.collection("users").doc(uid).get();
+
+    final List<dynamic> userChatIdsDynamic = userDoc.data()?['messages'] ?? [];
+
+    // Convert to List<String> safely
+    final List<String> userChatIds = userChatIdsDynamic.cast<String>();
+
+    if (userChatIds.isEmpty) {
+      yield [];
+      return;
+    }
+
+    // Listen to the chats collection snapshot
+    yield* firebaseFirestore
+        .collection("chats")
+        .snapshots()
+        .asyncMap((snapshot) {
       try {
-        return snapshot.docs.map((doc) {
+        final chats = snapshot.docs
+            .where((doc) => userChatIds.contains(doc.id))
+            .map((doc) {
           final data = doc.data();
-
-          // Defensive check in case any key is missing
           return ChatModel(
             messageId: data['messageId'] ?? '',
             members: List<String>.from(data['members'] ?? []),
@@ -977,6 +993,8 @@ class RemoteDataSourceImpl implements RemoteDataSource {
             timestamp: data['timestamp'] ?? 0,
           );
         }).toList();
+
+        return chats;
       } catch (e) {
         print("Error in fetchConversations(): $e");
         return [];

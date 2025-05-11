@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:socialseed/data/models/story_model.dart';
+import 'package:socialseed/data/models/user_model.dart';
 
 import '../../../domain/entities/story_entity.dart';
 import '../../../domain/entities/user_entity.dart';
@@ -26,11 +27,13 @@ class StoryScreen extends StatefulWidget {
 class _StoryScreenState extends State<StoryScreen> {
   List<StoryEntity> stories = [];
   bool isLoading = true;
+  UserEntity? user;
 
   @override
   void initState() {
     super.initState();
     loadStories(); // Changed to call new combined function
+    getUserByIdFromUID();
   }
 
   Future<void> loadStories() async {
@@ -93,6 +96,32 @@ class _StoryScreenState extends State<StoryScreen> {
     }
   }
 
+  Future<UserEntity?> getUserById(String userId) async {
+    try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection(FirebaseConst.users)
+          .doc(userId)
+          .get();
+
+      if (docSnapshot.exists) {
+        return UserModel.fromSnapShot(docSnapshot);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching user by ID: $e");
+      }
+    }
+    return null;
+  }
+
+  void getUserByIdFromUID() async {
+    final storyUser = await getUserById(widget.userId);
+
+    setState(() {
+      user = storyUser;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -114,7 +143,7 @@ class _StoryScreenState extends State<StoryScreen> {
 
     return StoryUI(
         stories: stories, // Show the first story (You can modify this)
-        storyUser: widget.curruser,
+        storyUser: user!,
         curruser: widget.curruser);
   }
 }

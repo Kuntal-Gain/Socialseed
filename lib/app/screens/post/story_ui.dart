@@ -179,8 +179,6 @@ class _StoryUIState extends State<StoryUI> {
                         child: Image.network(
                           story.storyData,
                           fit: BoxFit.cover,
-                          height: double.infinity,
-                          width: double.infinity,
                         ),
                       ),
                       Positioned(

@@ -454,7 +454,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                               widget.user,
                                               conversations[idx].lastMessage!,
                                               context,
-                                              unreadCount, // <- Live count!
+                                              unreadCount,
                                             ),
                                           );
                                         },
