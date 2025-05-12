@@ -1,5 +1,10 @@
 # CHANGELOG
 
+> Version 1.0.3+1
+
+- Image Compression
+- Minor Fixes
+- UI/UX Improvements
 
 > Version 1.0.2+1
 
