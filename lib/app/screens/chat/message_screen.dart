@@ -216,7 +216,7 @@ class _MessageScreenState extends State<MessageScreen> {
                         BoxShadow(
                           color: themeService.isDarkMode
                               ? AppColor.blackColor
-                              : AppColor.greyColor,
+                              : AppColor.greyShadowColor,
                           blurRadius: 5,
                         ),
                       ],

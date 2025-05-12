@@ -101,8 +101,9 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          height: !isTall ? 125 : mq.height * 0.275,
-                          width: !isTall ? 125 : mq.width / 3,
+                          height:
+                              !isTall ? mq.height * 0.13 : mq.height * 0.275,
+                          width: !isTall ? mq.height * 0.13 : mq.width / 3,
                           color: AppColor.greyColor.withOpacity(0.3),
                         ),
                       ),
@@ -113,7 +114,7 @@ class _ExplorePageState extends State<ExplorePage> {
             }
 
             if (state is PostLoaded) {
-              final posts = state.posts;
+              final posts = [...state.posts]..shuffle();
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -151,8 +152,8 @@ class _ExplorePageState extends State<ExplorePage> {
                         );
                       },
                       child: Container(
-                        height: !isTall ? 125 : mq.height * 0.275,
-                        width: !isTall ? 125 : mq.width / 3,
+                        height: !isTall ? mq.height * 0.13 : mq.height * 0.275,
+                        width: !isTall ? mq.height * 0.13 : mq.width / 3,
                         margin: const EdgeInsets.all(5),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),

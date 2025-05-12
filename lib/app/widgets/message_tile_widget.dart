@@ -21,10 +21,13 @@ Widget messageTileWidget(UserEntity friend, UserEntity current,
         child: Row(
           children: [
             // pfp
-            CircleAvatar(
-              radius: 32,
-              backgroundImage: NetworkImage(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: Image.network(
                 friend.imageUrl!,
+                fit: BoxFit.cover,
+                height: 64,
+                width: 64,
               ),
             ),
 

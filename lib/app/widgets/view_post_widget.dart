@@ -138,7 +138,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
         return SingleChildScrollView(
           child: Container(
-            height: size + mq.height * 0.05,
+            height: size + mq.height * 0.08,
             width: double.infinity,
             margin: const EdgeInsets.all(15),
             decoration: BoxDecoration(

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:socialseed/app/screens/post/tags_screen.dart';
 import 'package:socialseed/app/widgets/image_card.dart';
 import 'package:socialseed/app/widgets/video_card.dart';
+import 'package:socialseed/features/services/image_compression_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/foundation.dart';
@@ -138,29 +139,31 @@ class _PostScreenState extends State<PostScreen> {
           await ImagePicker().pickImage(source: ImageSource.gallery);
 
       if (pickedFile != null) {
-        // Convert picked file to Uint8List for cropping
         final imageBytes = await File(pickedFile.path).readAsBytes();
 
-        // Show image cropper
         final Uint8List? editedImage = await Navigator.push(
           // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
-            builder: (context) => ImageEditor(
-              image: imageBytes,
-            ),
+            builder: (context) => ImageEditor(image: imageBytes),
           ),
         );
 
         if (editedImage != null) {
-          // Create a temporary file to store the edited image
+          // Save the cropped image to a temp file
           final tempDir = await Directory.systemTemp.createTemp();
-          final tempFile = File('${tempDir.path}/edited_image.jpg');
-          await tempFile.writeAsBytes(editedImage);
+          final originalFile = File('${tempDir.path}/edited_image.jpg');
+          await originalFile.writeAsBytes(editedImage);
 
-          setState(() {
-            images.add(tempFile);
-          });
+          // Compress the image
+          final compressedFile =
+              await ImageCompressionService().compressImage(originalFile);
+
+          if (compressedFile != null) {
+            setState(() {
+              images.add(File(compressedFile.path));
+            });
+          }
         }
       } else {
         if (kDebugMode) {
@@ -169,7 +172,7 @@ class _PostScreenState extends State<PostScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Something Went wrong: $e');
+        print('Something Went Wrong: $e');
       }
     }
   }

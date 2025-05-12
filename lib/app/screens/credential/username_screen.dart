@@ -161,10 +161,10 @@ class _UsernameScreenState extends State<UsernameScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   final isFulfilled = isRuleFulfilled(rules[index]);
-
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           isFulfilled ? Icons.check : Icons.close,
@@ -172,12 +172,14 @@ class _UsernameScreenState extends State<UsernameScreen> {
                           size: 20,
                         ),
                         const SizedBox(width: 10),
-                        AnimatedOpacity(
-                          duration: const Duration(milliseconds: 300),
-                          opacity: isFulfilled ? 1.0 : 0.5,
-                          child: Text(
-                            rules[index],
-                            style: TextConst.headingStyle(15, textColor),
+                        Flexible(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 300),
+                            opacity: isFulfilled ? 1.0 : 0.5,
+                            child: Text(
+                              rules[index],
+                              style: TextConst.headingStyle(15, textColor),
+                            ),
                           ),
                         ),
                       ],

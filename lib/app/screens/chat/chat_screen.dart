@@ -198,6 +198,8 @@ class _ChatScreenState extends State<ChatScreen> {
         ? AppColor.whiteColor
         : AppColor.blackColor;
 
+    final mq = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -322,6 +324,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                     }
                                   },
                                   child: Container(
+                                    height: mq.width * 0.2,
+                                    width: mq.width * 0.2,
                                     margin: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
@@ -333,15 +337,13 @@ class _ChatScreenState extends State<ChatScreen> {
                                       ),
                                     ),
                                     child: CircleAvatar(
-                                      radius: 35,
+                                      radius: mq.width * 0.08,
                                       backgroundImage:
                                           NetworkImage(friend.imageUrl!),
                                       child: ClipOval(
                                         child: Image.network(
                                           friend.imageUrl!,
                                           fit: BoxFit.cover,
-                                          width: 70,
-                                          height: 70,
                                         ),
                                       ),
                                     ),
