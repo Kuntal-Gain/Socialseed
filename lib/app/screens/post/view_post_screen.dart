@@ -265,6 +265,9 @@ class _PostViewScreenState extends State<PostViewScreen> {
               width: double.infinity,
               margin: const EdgeInsets.all(15),
               decoration: BoxDecoration(
+                color: Provider.of<ThemeService>(context).isDarkMode
+                    ? AppColor.secondaryDark
+                    : AppColor.whiteColor,
                 boxShadow: [
                   BoxShadow(
                     color: Provider.of<ThemeService>(context).isDarkMode
@@ -347,21 +350,23 @@ class _PostViewScreenState extends State<PostViewScreen> {
                             ),
                           ],
                         ),
-                        PopupMenuButton(
-                          itemBuilder: (ctx) => getPopupMenuItems(),
-                          surfaceTintColor:
-                              Provider.of<ThemeService>(context).isDarkMode
-                                  ? AppColor.blackColor
-                                  : AppColor.whiteColor,
-                          child: Image.asset(
-                            IconConst.moreIcon,
-                            height: 25,
-                            width: 25,
-                            color: Provider.of<ThemeService>(context).isDarkMode
-                                ? AppColor.whiteColor
-                                : AppColor.blackColor,
-                          ),
-                        )
+                        if (widget.user.uid == widget.post.uid)
+                          PopupMenuButton(
+                            itemBuilder: (ctx) => getPopupMenuItems(),
+                            surfaceTintColor:
+                                Provider.of<ThemeService>(context).isDarkMode
+                                    ? AppColor.blackColor
+                                    : AppColor.whiteColor,
+                            child: Image.asset(
+                              IconConst.moreIcon,
+                              height: 25,
+                              width: 25,
+                              color:
+                                  Provider.of<ThemeService>(context).isDarkMode
+                                      ? AppColor.whiteColor
+                                      : AppColor.blackColor,
+                            ),
+                          )
                       ],
                     ),
                   ),

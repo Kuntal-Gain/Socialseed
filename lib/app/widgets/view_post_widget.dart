@@ -2,6 +2,7 @@ import 'package:animated_menu/animated_menu.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -103,6 +104,49 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       text: TextSpan(children: children),
       textScaler: const TextScaler.linear(1.2),
     );
+  }
+
+  // fetch likes
+  Stream<int> getLikeCount(String postId) {
+    final likedUsersRef =
+        FirebaseDatabase.instance.ref("likes/$postId/likedUsers");
+
+    return likedUsersRef.onValue.map((event) {
+      final data = event.snapshot.value as Map?;
+      return data?.length ?? 0;
+    });
+  }
+
+  Future<void> likePost(String uid, String postId) async {
+    final userLikeRef =
+        FirebaseDatabase.instance.ref('likes/$postId/likedUsers/$uid');
+
+    final snapshot = await userLikeRef.get();
+
+    if (snapshot.exists) {
+      // User already liked the post, so we unlike it
+      await userLikeRef.remove();
+      debugPrint('Post unliked by $uid');
+    } else {
+      // User hasn't liked it yet, so we like it
+      await userLikeRef.set(true);
+      debugPrint('Post liked by $uid');
+    }
+  }
+
+  Stream<bool> isLiked(String uid, String postId) {
+    final userLikeRef =
+        FirebaseDatabase.instance.ref('likes/$postId/likedUsers');
+
+    // Listen to changes at the `likedUsers` node
+    final snapshot = userLikeRef.onValue;
+
+    return snapshot.map((event) {
+      final data = event.snapshot.value as Map?;
+
+      // Check if the uid is in the map keys (if liked)
+      return data != null && data.containsKey(uid);
+    });
   }
 
   @override
@@ -865,66 +909,54 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     // Like button with animation
                     GestureDetector(
                       onTap: () async {
-                        bool wasLiked =
-                            post.likes?.contains(widget.user.uid) ?? false;
+                        await likePost(
+                            widget.user.uid.toString(), post.postid.toString());
 
-                        // Optimistically update the UI
-                        setState(() {
-                          if (wasLiked) {
-                            totalLikes--;
-                            post.likes?.remove(widget.user.uid);
-                          } else {
-                            totalLikes++;
-                            post.likes?.add(widget.user.uid);
-                          }
-                        });
-
-                        // Perform the like operation asynchronously
                         try {
                           await BlocProvider.of<PostCubit>(context)
                               .likePost(post: post);
                         } catch (error) {
                           // Revert the UI state if the operation fails
-                          setState(() {
-                            if (wasLiked) {
-                              post.likes?.add(widget.user.uid);
-                              totalLikes;
-                            } else {
-                              post.likes?.remove(widget.user.uid);
-                              totalLikes--;
-                            }
-                          });
 
-                          // Optionally show an error message to the user
-                          // ignore: use_build_context_synchronously
-                          failureBar(context, "Failed to Like the Post");
+                          failureBar(context,
+                              "Failed to like post : ${error.toString()}");
                         }
                       },
                       child: Row(
                         children: [
-                          Container(
-                            height: 25,
-                            width: 25,
-                            margin: const EdgeInsets.all(12),
-                            child: Image.asset(
-                              post.likes?.contains(widget.user.uid) ?? false
-                                  ? IconConst.likePressedIcon
-                                  : IconConst.likeIcon,
-                              color:
-                                  post.likes?.contains(widget.user.uid) ?? false
-                                      ? AppColor.redColor
-                                      : Provider.of<ThemeService>(context)
-                                              .isDarkMode
-                                          ? AppColor.whiteColor
-                                          : AppColor.blackColor,
-                            ),
-                          ),
-                          Text(
-                            totalLikes.toString(),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                            ),
-                          ),
+                          StreamBuilder<bool>(
+                              stream: isLiked(widget.user.uid.toString(),
+                                  post.postid.toString()),
+                              builder: (context, snapshot) {
+                                final isLiked = snapshot.data ?? false;
+                                return Container(
+                                  height: 25,
+                                  width: 25,
+                                  margin: const EdgeInsets.all(12),
+                                  child: Image.asset(
+                                    isLiked
+                                        ? IconConst.likePressedIcon
+                                        : IconConst.likeIcon,
+                                    color: isLiked
+                                        ? AppColor.redColor
+                                        : Provider.of<ThemeService>(context)
+                                                .isDarkMode
+                                            ? AppColor.whiteColor
+                                            : AppColor.blackColor,
+                                  ),
+                                );
+                              }),
+                          StreamBuilder<int>(
+                              stream: getLikeCount(post.postid!),
+                              builder: (context, snapshot) {
+                                final likeCount = snapshot.data ?? 0;
+                                return Text(
+                                  likeCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              }),
                         ],
                       ),
                     ),
