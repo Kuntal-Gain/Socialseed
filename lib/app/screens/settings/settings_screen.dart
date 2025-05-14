@@ -137,6 +137,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ),
+
+          // switch account
+
+          GestureDetector(
+            onTap: () {
+              final cnt = 2;
+
+              // triggers bottom sheet
+              showModalBottomSheet(
+                  context: context,
+                  backgroundColor: bg,
+                  builder: (ctx) {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Switch Account',
+                            style: TextConst.headingStyle(20, textColor),
+                          ),
+                          sizeVar(20),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.05 *
+                                (cnt > 6 ? 6 : cnt + 1),
+                            child: ListView.builder(
+                              itemCount: cnt,
+                              itemBuilder: (ctx, idx) {
+                                return ListTile(
+                                  leading: const Icon(Icons.person),
+                                  title: Text('Account ${idx + 1}'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  });
+            },
+            child: Center(
+              child: Text(
+                'Switch Account',
+                style: TextConst.headingStyle(18, textColor),
+              ),
+            ),
+          ),
+
           GestureDetector(
             onTap: () {
               BlocProvider.of<AuthCubit>(context).logout().then((_) {
@@ -157,11 +209,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Center(
                 child: Text(
                   'Logout @${widget.user.fullname!.split(' ')[0]}',
-                  style: TextConst.headingStyle(16, AppColor.whiteColor),
+                  style: TextConst.headingStyle(18, AppColor.whiteColor),
                 ),
               ),
             ),
           ),
+
+          sizeVar(20)
         ],
       ),
     );
