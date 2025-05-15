@@ -15,6 +15,8 @@ import 'package:socialseed/app/screens/credential/forgot_screen.dart';
 import 'package:socialseed/app/screens/credential/signup_screen.dart';
 import 'package:socialseed/app/screens/credential/username_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
+import 'package:socialseed/features/services/account_switching_service.dart';
+import 'package:socialseed/features/services/models/account.dart';
 import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
@@ -277,14 +279,24 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  void loginUser() {
+  void loginUser() async {
     BlocProvider.of<CredentialCubit>(context)
         .signInUser(
-          email: _emailController.text,
-          password: _passwordController.text,
-          ctx: context,
-        )
-        .then((val) => _clear());
+      email: _emailController.text,
+      password: _passwordController.text,
+      ctx: context,
+    )
+        .then((val) async {
+      if (FirebaseAuth.instance.currentUser != null) {
+        await AccountSwitchingService().addAccount(
+          StoredAccount(
+              email: _emailController.text,
+              password: _passwordController.text,
+              username: FirebaseAuth.instance.currentUser!.displayName!),
+        );
+      }
+      _clear();
+    });
   }
 
   _clear() {

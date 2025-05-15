@@ -115,6 +115,14 @@ class _MessageScreenState extends State<MessageScreen> {
                       widget.receiver.fullname!,
                       style: TextConst.headingStyle(16, textColor),
                     ),
+                    Text(
+                      (widget.receiver.activeStatus!) ? "Online" : "Offline",
+                      style: TextConst.MediumStyle(
+                          14,
+                          widget.receiver.activeStatus!
+                              ? AppColor.redColor
+                              : AppColor.greyColor),
+                    ),
                   ],
                 ),
               ],

@@ -4,6 +4,8 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
 import 'package:socialseed/app/cubits/auth/auth_cubit.dart';
@@ -17,6 +19,9 @@ import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
 import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
+import 'package:socialseed/app/widgets/restart_widget.dart';
+import 'package:socialseed/features/services/account_switching_service.dart';
+import 'package:socialseed/features/services/stored_account.dart';
 import 'package:socialseed/firebase_options.dart';
 // Added
 import 'package:socialseed/utils/constants/color_const.dart';
@@ -35,15 +40,25 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  await Hive.initFlutter();
+  Hive.registerAdapter(StoredAccountAdapter());
+
   await di.init();
 
   final themeService = ThemeService();
   await themeService.loadTheme();
 
+  final accounts = await AccountSwitchingService().getAllAccounts();
+  for (var account in accounts) {
+    debugPrint('Email: ${account.email}, Username: ${account.username}');
+  }
+
   runApp(
     ChangeNotifierProvider<ThemeService>.value(
       value: themeService,
-      child: const MyApp(),
+      child: const RestartWidget(
+        child: MyApp(),
+      ),
     ),
   );
 }
@@ -93,7 +108,10 @@ class _MyAppState extends State<MyApp> {
         home: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             if (state is Authenticated) {
-              return HomeScreen(uid: state.uid);
+              return HomeScreen(
+                uid: state.uid,
+                key: UniqueKey(),
+              );
               // Show the No Internet screen
             } else if (state is NotAuthenticated) {
               return const SplashScreen();

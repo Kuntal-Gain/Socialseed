@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/screens/user/user_profile.dart';
 import 'package:socialseed/app/widgets/search_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/theme_service.dart';
 
 import '../../../utils/constants/color_const.dart';
 import '../../../utils/constants/text_const.dart';
@@ -53,8 +55,16 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.bgDark
+        : AppColor.whiteColor;
+
+    final textColor = Provider.of<ThemeService>(context).isDarkMode
+        ? AppColor.whiteColor
+        : AppColor.blackColor;
+
     return Scaffold(
-      backgroundColor: AppColor.whiteColor,
+      backgroundColor: bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -83,7 +93,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         hintText: 'Search User',
                         hintStyle: TextConst.RegularStyle(
                           16,
-                          AppColor.textGreyColor,
+                          textColor,
                         ),
                       ),
                     ),
@@ -121,7 +131,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             );
                           },
                           child: searchWidget(
-                            filteredUsers[idx],
+                            user: user,
+                            ctx: context,
                           ),
                         );
                       },

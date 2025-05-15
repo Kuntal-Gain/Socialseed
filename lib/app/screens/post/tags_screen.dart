@@ -119,7 +119,10 @@ class _TagPeopleScreenState extends State<TagPeopleScreen> {
                             Navigator.of(context)
                                 .pop(); // Optionally pop the screen
                           },
-                          child: searchWidget(filteredUsers[idx]),
+                          child: searchWidget(
+                            user: user,
+                            ctx: context,
+                          ),
                         );
                       },
                     );

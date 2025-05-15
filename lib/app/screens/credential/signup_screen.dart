@@ -16,6 +16,8 @@ import 'package:socialseed/app/screens/credential/signin_screen.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/profile_widget.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/account_switching_service.dart';
+import 'package:socialseed/features/services/models/account.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/constants/text_const.dart';
@@ -359,6 +361,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           // ignore: use_build_context_synchronously
           failureBar(context, error.toString());
         });
+
+        AccountSwitchingService().addAccount(
+          StoredAccount(
+              email: _emailController.text,
+              password: _passwordController.text,
+              username: widget.username),
+        );
       } catch (e) {
         setState(() {
           _isSigningUp = false;

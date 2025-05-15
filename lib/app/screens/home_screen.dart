@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,6 +112,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void updateUsername(String username) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user?.displayName != username) {
+      await user?.updateDisplayName(username);
+      await user?.reload();
+    }
+
+    debugPrint(user!.displayName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final backGroundColor = Provider.of<ThemeService>(context).isDarkMode
@@ -143,6 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, state) {
                   if (state is GetSingleUsersLoaded) {
                     final currentUser = state.user;
+
+                    updateUsername(currentUser.username!);
 
                     List<Widget> screens = [
                       FeedScreen(user: currentUser),
