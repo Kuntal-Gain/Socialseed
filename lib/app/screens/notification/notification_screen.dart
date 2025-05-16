@@ -57,6 +57,33 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
+  Future<List<QueryDocumentSnapshot>> filterValidNotifications(
+      List<QueryDocumentSnapshot> docs) async {
+    final List<QueryDocumentSnapshot> validNotifications = [];
+
+    for (final doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final postId = data['postId'];
+      final type = data['type'];
+
+      if ((type == 'like' || type == 'comment') && postId != null) {
+        final postSnap = await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(postId)
+            .get();
+
+        if (postSnap.exists) {
+          validNotifications.add(doc);
+        }
+      } else {
+        // Other notification types (like follow) — always add
+        validNotifications.add(doc);
+      }
+    }
+
+    return validNotifications;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bg = Provider.of<ThemeService>(context).isDarkMode
@@ -93,9 +120,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
               itemBuilder: (context, index) => shimmerEffectNotification(),
             );
           }
+
           if (snapshot.hasError) {
             return const Center(child: Text('Error fetching notifications'));
           }
+
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -124,31 +153,73 @@ class _NotificationScreenState extends State<NotificationScreen> {
             );
           }
 
-          final notifications = snapshot.data!.docs;
+          final allNotifications =
+              snapshot.data!.docs.where((val) => val.data() != null).toList();
 
-          return ListView.builder(
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification =
-                  notifications[index].data() as Map<String, dynamic>;
+          return FutureBuilder<List<QueryDocumentSnapshot>>(
+            future: filterValidNotifications(allNotifications),
+            builder: (context, filteredSnapshot) {
+              if (!filteredSnapshot.hasData) {
+                return ListView.builder(
+                  itemCount: 10,
+                  itemBuilder: (context, index) => shimmerEffectNotification(),
+                );
+              }
 
-              return FutureBuilder<String?>(
-                future: fetchImageFromNotification(notification),
-                builder: (context, imageSnapshot) {
-                  if (!imageSnapshot.hasData || imageSnapshot.data == null) {
-                    // Skip this notification if postId doesn't exist
-                    return const SizedBox.shrink();
-                  }
+              final notifications = filteredSnapshot.data!;
+              if (notifications.isEmpty) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!Provider.of<ThemeService>(context).isDarkMode)
+                      Image.network(
+                          'https://cdn.dribbble.com/users/1319343/screenshots/6238304/_01-no-notifications.gif'),
+                    if (Provider.of<ThemeService>(context).isDarkMode)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/icons/bell.png',
+                            height: 100,
+                            width: 100,
+                            color: AppColor.whiteColor,
+                          ),
+                        ],
+                      ),
+                    sizeVar(20),
+                    Text(
+                      'No Notifications',
+                      style: TextConst.headingStyle(20, AppColor.redColor),
+                    )
+                  ],
+                );
+              }
 
-                  final imageUrl = imageSnapshot.data;
-                  final type = notification['type'] ?? '';
-                  final message = notification['message'] ?? 'No message';
-                  final time = notification['createdAt'] != null
-                      ? (notification['createdAt'] as Timestamp)
-                      : Timestamp.now();
+              return ListView.builder(
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notification =
+                      notifications[index].data() as Map<String, dynamic>;
 
-                  return notificationCard(
-                      imageUrl, message, time, type, textColor);
+                  return FutureBuilder<String?>(
+                    future: fetchImageFromNotification(notification),
+                    builder: (context, imageSnapshot) {
+                      if (!imageSnapshot.hasData ||
+                          imageSnapshot.data == null) {
+                        return const SizedBox.shrink(); // No render if invalid
+                      }
+
+                      final imageUrl = imageSnapshot.data;
+                      final type = notification['type'] ?? '';
+                      final message = notification['message'] ?? 'No message';
+                      final time = notification['createdAt'] != null
+                          ? (notification['createdAt'] as Timestamp)
+                          : Timestamp.now();
+
+                      return notificationCard(
+                          imageUrl, message, time, type, textColor);
+                    },
+                  );
                 },
               );
             },
