@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +16,7 @@ import 'package:socialseed/features/services/theme_service.dart';
 import 'package:socialseed/utils/constants/asset_const.dart';
 import 'package:socialseed/utils/constants/color_const.dart';
 import 'package:socialseed/dependency_injection.dart' as di;
+import 'package:socialseed/utils/constants/firebase_const.dart';
 
 import 'post/explore_page.dart';
 
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    saveFCMTokenOnce(widget.uid);
 
     // Initialize PageController with initialPage
     _controller = PageController(initialPage: 0);
@@ -53,6 +57,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return Future.value(message);
     });
+  }
+
+  Future<void> saveFCMTokenOnce(String uid) async {
+    final token = await FirebaseMessaging.instance.getToken();
+
+    if (token != null) {
+      final docRef =
+          FirebaseFirestore.instance.collection(FirebaseConst.users).doc(uid);
+      final snapshot = await docRef.get();
+      final savedToken = snapshot.data()?['fcmToken'];
+
+      if (savedToken != token) {
+        await docRef.update({'fcmToken': token});
+        debugPrint('FCM token updated');
+      } else {
+        debugPrint('FCM token unchanged');
+      }
+    }
   }
 
   @override

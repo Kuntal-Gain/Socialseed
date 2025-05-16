@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -47,7 +48,19 @@ Future<void> main() async {
 
   final themeService = ThemeService();
   await themeService.loadTheme();
+  await FirebaseMessaging.instance.subscribeToTopic("sample");
+  NotificationSettings settings =
+      await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
 
+  debugPrint('User granted permission: ${settings.authorizationStatus}');
   final accounts = await AccountSwitchingService().getAllAccounts();
   for (var account in accounts) {
     debugPrint('Email: ${account.email}, Username: ${account.username}');
