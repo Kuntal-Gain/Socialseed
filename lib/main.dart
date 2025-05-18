@@ -15,6 +15,7 @@ import 'package:socialseed/app/cubits/credential/credential_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_other_user/get_single_other_user_cubit.dart';
 import 'package:socialseed/app/cubits/get_single_user/get_single_user_cubit.dart';
 import 'package:socialseed/app/cubits/message/message_cubit.dart';
+
 import 'package:socialseed/app/cubits/story/story_cubit.dart';
 import 'package:socialseed/app/cubits/users/user_cubit.dart';
 import 'package:socialseed/app/cubits/post/post_cubit.dart';
@@ -22,6 +23,7 @@ import 'package:socialseed/app/cubits/message/chat_id/chat_cubit.dart';
 import 'package:socialseed/app/screens/home_screen.dart';
 import 'package:socialseed/app/widgets/restart_widget.dart';
 import 'package:socialseed/features/services/account_switching_service.dart';
+import 'package:socialseed/features/services/fcm_token_auth.dart';
 import 'package:socialseed/features/services/stored_account.dart';
 import 'package:socialseed/firebase_options.dart';
 // Added
@@ -49,6 +51,7 @@ Future<void> main() async {
   final themeService = ThemeService();
   await themeService.loadTheme();
   await FirebaseMessaging.instance.subscribeToTopic("sample");
+
   NotificationSettings settings =
       await FirebaseMessaging.instance.requestPermission(
     alert: true,
@@ -65,6 +68,13 @@ Future<void> main() async {
   for (var account in accounts) {
     debugPrint('Email: ${account.email}, Username: ${account.username}');
   }
+
+  final accessToken = await NotificationService.getAccessToken();
+
+  debugPrint("Access Token: $accessToken");
+
+  NotificationService.sendNotification(
+      "kEOK7Gdbw6WvyVOH4KpB0nM5kfO2", "Test", "This is a test notification");
 
   runApp(
     ChangeNotifierProvider<ThemeService>.value(

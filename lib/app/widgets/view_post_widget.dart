@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:socialseed/app/cubits/archivepost/archivepost_cubit.dart';
+
 import 'package:socialseed/app/cubits/savedcontent/savedcontent_cubit.dart';
 import 'package:socialseed/app/screens/post/explore_page.dart';
 import 'package:socialseed/app/screens/post/tagged_feed_screen.dart';
@@ -20,6 +21,7 @@ import 'package:socialseed/app/widgets/vid_player_widget.dart';
 import 'package:socialseed/app/widgets/view_post_card.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/fcm_token_auth.dart';
 import 'package:socialseed/utils/constants/page_const.dart';
 import 'package:socialseed/utils/custom/custom_snackbar.dart';
 
@@ -117,9 +119,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     });
   }
 
-  Future<void> likePost(String uid, String postId) async {
+  Future<void> likePost(String uid, PostEntity post) async {
     final userLikeRef =
-        FirebaseDatabase.instance.ref('likes/$postId/likedUsers/$uid');
+        FirebaseDatabase.instance.ref('likes/${post.postid}/likedUsers/$uid');
 
     final snapshot = await userLikeRef.get();
 
@@ -131,6 +133,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       // User hasn't liked it yet, so we like it
       await userLikeRef.set(true);
       debugPrint('Post liked by $uid');
+
+      NotificationService.sendNotification(
+          post.uid!, "New Like!", "${post.username} liked your post");
     }
   }
 
@@ -909,8 +914,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     // Like button with animation
                     GestureDetector(
                       onTap: () async {
-                        await likePost(
-                            widget.user.uid.toString(), post.postid.toString());
+                        await likePost(widget.user.uid.toString(), post);
 
                         try {
                           await BlocProvider.of<PostCubit>(context)

@@ -20,8 +20,11 @@ import 'package:socialseed/domain/entities/message_entity.dart';
 import 'package:socialseed/domain/entities/post_entity.dart';
 import 'package:socialseed/domain/entities/story_entity.dart';
 import 'package:socialseed/domain/entities/user_entity.dart';
+import 'package:socialseed/features/services/fcm_token_auth.dart';
 import 'package:socialseed/utils/constants/firebase_const.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../models/message_model.dart';
 
@@ -382,13 +385,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
             "likedUsers": FieldValue.arrayUnion([currentUid])
           });
 
-          // Send notification
-          await userCollection.doc(post.uid).collection('notifications').add({
-            "message": "$currentUsername liked your post",
-            "createdAt": FieldValue.serverTimestamp(),
-            "postId": post.postid,
-            "type": "like"
-          });
+          debugPrint("Uid : ${post.uid!}");
         }
       }
     }
@@ -471,16 +468,19 @@ class RemoteDataSourceImpl implements RemoteDataSource {
           }
 
           // Add notification
-          await userCollection
-              .doc(postCreatorId)
-              .collection('notifications')
-              .add({
-            "message": "$currentUsername commented on your post",
-            "createdAt": FieldValue.serverTimestamp(),
-            "postId": comment.postId,
-            "commentId": comment.commentId,
-            "type": "comment"
-          });
+          // await userCollection
+          //     .doc(postCreatorId)
+          //     .collection('notifications')
+          //     .add({
+          //   "message": "$currentUsername commented on your post",
+          //   "createdAt": FieldValue.serverTimestamp(),
+          //   "postId": comment.postId,
+          //   "commentId": comment.commentId,
+          //   "type": "comment"
+          // });
+
+          NotificationService.sendNotification(postCreatorId, comment.content!,
+              "$currentUsername commented on your post");
 
           // Log or debug print before sending notification
           debugPrint('Sending comment notification');
@@ -662,13 +662,19 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       });
 
       // Create a notification for the target user
-      final notificationCollection = targetUserRef.collection('notifications');
-      await notificationCollection.add({
-        'message': '$currentUsername started following you!',
-        'createdAt': FieldValue.serverTimestamp(),
-        'type': 'follow',
-        'userId': currentImage,
-      });
+      // final notificationCollection = targetUserRef.collection('notifications');
+      // await notificationCollection.add({
+      //   'message': '$currentUsername started following you!',
+      //   'createdAt': FieldValue.serverTimestamp(),
+      //   'type': 'follow',
+      //   'userId': currentImage,
+      // });
+
+      await NotificationService.sendNotification(
+        user.uid!,
+        "New Follow!",
+        "$currentUsername started following you!",
+      );
 
       print('Follow and notification added successfully');
     } catch (e) {
@@ -921,20 +927,14 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
-  Future<void> sendMessage(String messageId, String message) async {
-    // current uid
+  Future<void> sendMessage(String chatId, String message) async {
     final uid = await getCurrentUid();
 
-    // references
+    // Firebase references
     final chatCollection =
-        firebaseFirestore.collection(FirebaseConst.messages).doc(messageId);
-
-    final dbRef = firebaseDatabase
-        .ref()
-        .child("chats")
-        .child(messageId)
-        .child("messages")
-        .push();
+        firebaseFirestore.collection(FirebaseConst.messages).doc(chatId);
+    final dbRef = firebaseDatabase.ref("chats/$chatId/messages").push();
+    final participantsRef = firebaseDatabase.ref("chats/$chatId/participants");
 
     final newMessage = MessageModel(
       messageId: null,
@@ -945,16 +945,43 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     ).toJson();
 
     try {
+      // 1. Save message
       await dbRef.set(newMessage);
 
+      // 2. Update Firestore metadata
       await chatCollection.update({
         'lastMessage': message,
         'isRead': [uid],
         'lastMessageSenderId': uid,
         'timestamp': Timestamp.now().millisecondsSinceEpoch,
       });
+
+      // 3. Get sender's username
+      final senderDoc = await firebaseFirestore
+          .collection(FirebaseConst.users)
+          .doc(uid)
+          .get();
+      final senderUsername = senderDoc.data()?['username'] ?? "Someone";
+
+      // 4. Get participants
+      final participantsSnap = await participantsRef.get();
+
+      if (participantsSnap.exists) {
+        final List<dynamic> uids = List.from(participantsSnap.value as List);
+
+        for (final participantUid in uids) {
+          if (participantUid != uid) {
+            // 5. Send notification with username as title
+            await NotificationService.sendNotification(
+              participantUid,
+              "New Message from $senderUsername",
+              message.length > 40 ? '${message.substring(0, 40)}...' : message,
+            );
+          }
+        }
+      }
     } catch (e) {
-      print("Error: $e");
+      debugPrint("sendMessage error: $e");
     }
   }
 
