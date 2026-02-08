@@ -1,36 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
+import 'package:socialseed/core/utils/helpers/app_loader.dart';
+import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/scroll_view.dart';
 import 'package:socialseed/features/feed/ui/widget/post_widget.dart';
 import 'package:socialseed/features/feed/ui/widget/story_widget.dart';
+import 'package:socialseed/features/post/model/post_model.dart';
+import 'package:socialseed/features/post/ui/provider/post_provider.dart';
 
-class FeedScreen extends StatefulWidget {
+class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
 
   @override
-  State<FeedScreen> createState() => _FeedScreenState();
+  ConsumerState<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends State<FeedScreen> {
+class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
+    final postAsync = ref.watch(feedProvider);
+
     return Scaffold(
-        backgroundColor: AppColor.whiteColor,
-        body: CommonScreenWrapper(
-            containsScrollable: true,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  _buildLogo(),
-                  sizeVer(10),
-                  _buildSearchbar(),
-                  sizeVer(10),
-                  _buildStoryList(),
-                  _buildPostList(),
-                ],
+      backgroundColor: AppColor.whiteColor,
+      body: CommonScreenWrapper(
+        containsScrollable: true,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildLogo(),
+              sizeVer(10),
+              _buildSearchbar(),
+              sizeVer(10),
+              _buildStoryList(),
+              postAsync.when(
+                data: (posts) {
+                  return _buildPostList(posts);
+                },
+                error: (e, s) => errorWidget(e, s),
+                loading: () => AppLoader().stateLoader(),
               ),
-            )));
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: _buildAddPostFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
   }
 
   // widgets
@@ -50,13 +68,15 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildPostList() {
+  Widget _buildPostList(List<PostModel> posts) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 5,
+      itemCount: posts.length,
       itemBuilder: (context, index) {
-        return PostWidget(isImage: index % 2 == 0);
+        final post = posts[index];
+
+        return PostWidget(post: post);
       },
     );
   }
@@ -109,6 +129,28 @@ class _FeedScreenState extends State<FeedScreen> {
         child: Image.asset(
           'assets/images/logo.png',
           height: ScreenUtils().screenHeight(context) * 0.065,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddPostFab() {
+    return FloatingActionButton.extended(
+      backgroundColor: Colors.redAccent,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      onPressed: () {
+        // TODO: Navigate to Create Post Screen
+        Navigator.of(context).pushNamed(RouteGenerator.kPostCreate);
+      },
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text(
+        "Add Post",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

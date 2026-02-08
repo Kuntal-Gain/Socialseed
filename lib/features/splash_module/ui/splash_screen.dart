@@ -18,7 +18,7 @@ class SplashScreen extends ConsumerWidget {
         if (isLoggedIn) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Future.delayed(const Duration(seconds: 2), () {
-              Navigator.of(context).pushNamed(RouteGenerator.kHome);
+              Navigator.of(context).pushReplacementNamed(RouteGenerator.kHome);
             });
           });
         }
@@ -60,7 +60,8 @@ class SplashScreen extends ConsumerWidget {
 
               return GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushNamed(RouteGenerator.kAuth);
+                  Navigator.of(context)
+                      .pushReplacementNamed(RouteGenerator.kAuth);
                 },
                 child: Container(
                   height: ScreenUtils().screenHeight(context) * 0.06,

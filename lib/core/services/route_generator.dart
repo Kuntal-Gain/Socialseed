@@ -5,7 +5,11 @@ import 'package:socialseed/core/utils/helpers/font_sizes.dart';
 import 'package:socialseed/features/auth_module/ui/auth_screen.dart';
 import 'package:socialseed/features/auth_module/ui/create_user_screen.dart';
 import 'package:socialseed/features/home/ui/home_screen.dart';
+import 'package:socialseed/features/post/ui/post_creation_screen.dart';
+import 'package:socialseed/features/profile/profile_screen.dart';
 import 'package:socialseed/features/splash_module/ui/splash_screen.dart';
+
+import '../../features/post/ui/post_view_screen.dart';
 
 class RouteGenerator {
   static const kSplash = "/";
@@ -16,6 +20,13 @@ class RouteGenerator {
 
   /// [home]
   static const kHome = "/home";
+
+  /// [POST]
+  static const kPostCreate = "/CreatePost";
+  static const kPostView = "/PostView";
+
+  /// [profile]
+  static const kProfile = "/Profile";
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -36,6 +47,23 @@ class RouteGenerator {
 
       case kHome:
         return _animatedPageRoute(HomeScreen());
+
+      /// [POST] routes
+      case kPostCreate:
+        return _animatedPageRoute(PostCreationScreen());
+      case kPostView:
+        final args = settings.arguments as Map<String, dynamic>;
+
+        return _animatedPageRoute(PostViewScreen(
+          post: args['post'],
+        ));
+
+      case kProfile:
+        final args = settings.arguments as Map<String, dynamic>;
+
+        return _animatedPageRoute(UserProfileScreen(
+          uid: args['uid'],
+        ));
 
       default:
         return _errorRoute(errorMessage: "Route not found: ${settings.name}");

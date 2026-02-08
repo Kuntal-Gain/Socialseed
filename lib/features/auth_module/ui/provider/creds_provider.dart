@@ -62,3 +62,37 @@ class CredsNotifier extends AutoDisposeAsyncNotifier<User?> {
 final credsProvider = AutoDisposeAsyncNotifierProvider<CredsNotifier, User?>(
   CredsNotifier.new,
 );
+
+final currentUserProvider = Provider.autoDispose<User?>(
+  (ref) => ref.watch(credsProvider).valueOrNull,
+);
+
+class UserByIdFamilyNotifier extends FamilyAsyncNotifier<User?, String> {
+  @override
+  Future<User?> build(String uid) async {
+    try {
+      final usecase = getIt<CredsUseCase>();
+      final user = await usecase.getUser(uid);
+      return user;
+    } catch (e) {
+      throw Exception('Failed to fetch user $uid: $e');
+    }
+  }
+
+  /// Optional: manually refresh this user
+  Future<void> refreshUser(String uid) async {
+    state = const AsyncValue.loading();
+    try {
+      final usecase = getIt<CredsUseCase>();
+      final user = await usecase.getUser(uid);
+      state = AsyncValue.data(user);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final userByIdProvider =
+    AsyncNotifierProviderFamily<UserByIdFamilyNotifier, User?, String>(
+  UserByIdFamilyNotifier.new,
+);

@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/features/auth_module/ui/provider/auth_provider.dart';
+import 'package:socialseed/features/feed/ui/explore_feed_screen.dart';
 import 'package:socialseed/features/feed/ui/feed_screen.dart';
+import 'package:socialseed/features/friends_module/ui/friends_suggestion_screen.dart';
 import 'package:socialseed/features/home/ui/widget/navbar.dart';
+import 'package:socialseed/features/notifications/ui/notification_screen.dart';
+import 'package:socialseed/features/profile/profile_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -17,10 +21,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   List<Widget> pages = [
     const FeedScreen(),
-    Center(child: Text("Friends")),
-    Center(child: Text("Explore")),
-    Center(child: Text("Notifications")),
-    Center(child: Text("Profile")),
+    FriendRequestsScreen(),
+    ExploreFeedScreen(),
+    NotificationsScreen(),
+    const UserProfileScreen(),
   ];
 
   @override

@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:socialseed/features/auth_module/model/user_model.dart';
 
-enum Type { text, image, video }
+enum PostType { text, image, video }
 
 class PostModel {
   final String? postId;
   final CreatorModel? creator;
+  final String? creatorUid;
   final bool? isDeleted;
   final Timestamp? createdAt;
   final Timestamp? updatedAt;
-  final Type? type;
+  final PostType? type;
   final String? content;
   final List<String>? assets;
   final List<String>? likes;
@@ -18,6 +19,7 @@ class PostModel {
   const PostModel({
     this.postId,
     this.creator,
+    this.creatorUid,
     this.isDeleted,
     this.createdAt,
     this.updatedAt,
@@ -30,16 +32,11 @@ class PostModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'postId': postId,
       'creator': creator?.toJson(),
-      'isDeleted': isDeleted,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'creatorUid': creatorUid,
       'type': type?.name,
       'content': content,
       'assets': assets,
-      'likes': likes,
-      'comments': comments?.map((x) => x.toJson()).toList(),
     };
   }
 
@@ -47,10 +44,11 @@ class PostModel {
     return PostModel(
       postId: json['postId'],
       creator: CreatorModel.fromJson(json['creator']),
+      creatorUid: json['creatorUid'],
       isDeleted: json['isDeleted'],
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
-      type: Type.values.firstWhere((e) => e.name == json['type']),
+      type: PostType.values.firstWhere((e) => e.name == json['type']),
       content: json['content'],
       assets: List<String>.from(json['assets']),
       likes: List<String>.from(json['likes']),
@@ -99,9 +97,9 @@ class Comment {
   final String? commentId;
   final CreatorModel? creator;
   final String? content;
-  final Timestamp? createdAt;
-  final Timestamp? updatedAt;
-  final List<SubComment>? subComments;
+  final int? createdAt;
+  final int? updatedAt;
+  final List<SubComment> subComments;
 
   const Comment({
     this.commentId,
@@ -109,7 +107,7 @@ class Comment {
     this.content,
     this.createdAt,
     this.updatedAt,
-    this.subComments,
+    this.subComments = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -119,18 +117,41 @@ class Comment {
       'content': content,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
-      'subComments': subComments,
+      'subComments': {
+        for (final c in subComments) c.commentId!: c.toJson(),
+      },
     };
   }
 
-  factory Comment.fromJson(Map<String, dynamic> json) {
+  factory Comment.fromJson(Map<dynamic, dynamic> json) {
+    final map = Map<String, dynamic>.from(json.map(
+      (key, value) => MapEntry(key.toString(), value),
+    ));
+
     return Comment(
-      commentId: json['commentId'],
-      creator: CreatorModel.fromJson(json['creator']),
-      content: json['content'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      subComments: json['subComments'],
+      commentId: map['commentId'],
+      creator: map['creator'] != null
+          ? CreatorModel.fromJson(
+              Map<String, dynamic>.from(
+                (map['creator'] as Map).map(
+                  (k, v) => MapEntry(k.toString(), v),
+                ),
+              ),
+            )
+          : null,
+      content: map['content'],
+      createdAt: map['createdAt'],
+      updatedAt: map['updatedAt'],
+      subComments: map['subComments'] != null
+          ? (map['subComments'] as Map)
+              .values
+              .map((e) => SubComment.fromJson(
+                    Map<String, dynamic>.from(
+                      (e as Map).map((k, v) => MapEntry(k.toString(), v)),
+                    ),
+                  ))
+              .toList()
+          : [],
     );
   }
 }
@@ -139,8 +160,8 @@ class SubComment {
   final String? commentId;
   final CreatorModel? creator;
   final String? content;
-  final Timestamp? createdAt;
-  final Timestamp? updatedAt;
+  final int? createdAt;
+  final int? updatedAt;
 
   const SubComment({
     this.commentId,
@@ -160,13 +181,25 @@ class SubComment {
     };
   }
 
-  factory SubComment.fromJson(Map<String, dynamic> json) {
+  factory SubComment.fromJson(Map<dynamic, dynamic> json) {
+    final map = Map<String, dynamic>.from(json.map(
+      (key, value) => MapEntry(key.toString(), value),
+    ));
+
     return SubComment(
-      commentId: json['commentId'],
-      creator: CreatorModel.fromJson(json['creator']),
-      content: json['content'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+      commentId: map['commentId'],
+      creator: map['creator'] != null
+          ? CreatorModel.fromJson(
+              Map<String, dynamic>.from(
+                (map['creator'] as Map).map(
+                  (k, v) => MapEntry(k.toString(), v),
+                ),
+              ),
+            )
+          : null,
+      content: map['content'],
+      createdAt: map['createdAt'],
+      updatedAt: map['updatedAt'],
     );
   }
 }
