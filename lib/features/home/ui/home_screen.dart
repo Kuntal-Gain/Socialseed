@@ -7,7 +7,7 @@ import 'package:socialseed/features/feed/ui/feed_screen.dart';
 import 'package:socialseed/features/friends_module/ui/friends_suggestion_screen.dart';
 import 'package:socialseed/features/home/ui/widget/navbar.dart';
 import 'package:socialseed/features/notifications/ui/notification_screen.dart';
-import 'package:socialseed/features/profile/profile_screen.dart';
+import 'package:socialseed/features/profile/ui/profile_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

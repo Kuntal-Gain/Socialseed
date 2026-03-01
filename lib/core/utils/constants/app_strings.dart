@@ -7,6 +7,9 @@ class AppStrings {
 
   AppStrings._internal();
 
+  static const dbName = "socialseed";
+  static const cloudName = "db33qrr6s";
+
   //network repository
   static String somethingWentWrong = "Something went wrong";
   static String authError = "Unauthorized";

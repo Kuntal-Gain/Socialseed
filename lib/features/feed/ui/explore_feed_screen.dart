@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialseed/core/services/route_generator.dart';
+import 'package:socialseed/core/utils/helpers/app_loader.dart';
+import 'package:socialseed/core/utils/helpers/failure_widget.dart';
+import 'package:socialseed/features/post/model/post_model.dart';
+import 'package:socialseed/features/post/ui/provider/post_provider.dart';
+
+import 'widget/search_widget.dart';
 
 // Mock models - replace with your actual models
 class ExplorePost {
@@ -179,7 +186,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
     super.dispose();
   }
 
-  void _openPostDetail(ExplorePost post) {
+  void _openPostDetail(PostModel post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -199,125 +206,150 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(feedProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             // Search Bar
+            // Padding(
+            //   padding: const EdgeInsets.all(16),
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: Colors.grey.shade100,
+            //       borderRadius: BorderRadius.circular(12),
+            //     ),
+            //     child: TextField(
+            //       controller: _searchController,
+            //       decoration: InputDecoration(
+            //         hintText: 'Search',
+            //         hintStyle: TextStyle(
+            //           color: Colors.grey.shade500,
+            //           fontSize: 15,
+            //         ),
+            //         prefixIcon: Icon(
+            //           Icons.search,
+            //           color: Colors.grey.shade600,
+            //         ),
+            //         border: InputBorder.none,
+            //         contentPadding: const EdgeInsets.symmetric(
+            //           horizontal: 16,
+            //           vertical: 14,
+            //         ),
+            //       ),
+            //       style: const TextStyle(fontSize: 15),
+            //     ),
+            //   ),
+            // ),
+
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 15,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.grey.shade600,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                  style: const TextStyle(fontSize: 15),
-                ),
-              ),
+              child: const ExploreSearchBar(),
             ),
 
             // Categories
-            SizedBox(
-              height: 44,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final isSelected = _selectedCategoryIndex == index;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategoryIndex = index;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xffFF3131)
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _categories[index],
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black87,
-                            fontSize: 14,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            // SizedBox(
+            //   height: 44,
+            //   child: ListView.builder(
+            //     scrollDirection: Axis.horizontal,
+            //     padding: const EdgeInsets.symmetric(horizontal: 16),
+            //     itemCount: _categories.length,
+            //     itemBuilder: (context, index) {
+            //       final isSelected = _selectedCategoryIndex == index;
+            //       return GestureDetector(
+            //         onTap: () {
+            //           setState(() {
+            //             _selectedCategoryIndex = index;
+            //           });
+            //         },
+            //         child: Container(
+            //           margin: const EdgeInsets.only(right: 8),
+            //           padding: const EdgeInsets.symmetric(
+            //             horizontal: 20,
+            //             vertical: 10,
+            //           ),
+            //           decoration: BoxDecoration(
+            //             color: isSelected
+            //                 ? const Color(0xffFF3131)
+            //                 : Colors.grey.shade100,
+            //             borderRadius: BorderRadius.circular(20),
+            //           ),
+            //           child: Center(
+            //             child: Text(
+            //               _categories[index],
+            //               style: TextStyle(
+            //                 color: isSelected ? Colors.white : Colors.black87,
+            //                 fontSize: 14,
+            //                 fontWeight:
+            //                     isSelected ? FontWeight.w600 : FontWeight.w500,
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // ),
 
             const SizedBox(height: 16),
 
             // Grid of Posts
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
-                  childAspectRatio: 1,
-                ),
-                itemCount: _explorePosts.length,
-                itemBuilder: (context, index) {
-                  final post = _explorePosts[index];
-                  return _buildGridItem(post);
-                },
-              ),
-            ),
+            state.when(
+                loading: () => AppLoader().stateLoader(),
+                error: (e, s) => errorWidget(e, s),
+                data: (data) {
+                  final posts = [
+                    ...data.where((e) => e.type != PostType.text),
+                    ...data.where((e) => e.type != PostType.text),
+                    ...data.where((e) => e.type != PostType.text)
+                  ];
+
+                  return Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+                        return _buildGridItem(post);
+                      },
+                    ),
+                  );
+                }),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGridItem(ExplorePost post) {
+  Widget _buildGridItem(PostModel post) {
     return GestureDetector(
-      onTap: () => _openPostDetail(post),
+      onTap: () =>
+          Navigator.pushNamed(context, RouteGenerator.kPostView, arguments: {
+        'post': post,
+      }),
       child: Stack(
         fit: StackFit.expand,
         children: [
           // Image
-          Image.network(
-            post.imageUrl,
-            fit: BoxFit.cover,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              post.assets?.first ?? "",
+              fit: BoxFit.cover,
+            ),
           ),
 
           // Video Indicator
-          if (post.isVideo)
+          if (post.type == PostType.video)
             Positioned(
               top: 8,
               right: 8,
@@ -340,9 +372,14 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => _openPostDetail(post),
+                onTap: () => Navigator.pushNamed(
+                    context, RouteGenerator.kPostView,
+                    arguments: {
+                      'post': post,
+                    }),
                 child: Container(
                   decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -383,7 +420,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        _formatNumber(post.likes),
+                        _formatNumber(post.likes?.length ?? 0),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -401,7 +438,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
     );
   }
 
-  Widget _buildPostDetailSheet(ExplorePost post) {
+  Widget _buildPostDetailSheet(PostModel post) {
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
       minChildSize: 0.5,
@@ -434,12 +471,12 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.grey.shade200,
-                      backgroundImage: NetworkImage(post.creatorAvatar),
+                      backgroundImage: NetworkImage(post.creator!.avatarUrl!),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        post.creatorName,
+                        post.creator?.name ?? "",
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -464,7 +501,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                       AspectRatio(
                         aspectRatio: 1,
                         child: Image.network(
-                          post.imageUrl,
+                          post.assets?.first ?? "",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -482,7 +519,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                                   iconSize: 28,
                                 ),
                                 Text(
-                                  _formatNumber(post.likes),
+                                  _formatNumber(post.likes?.length ?? 0),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -499,7 +536,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                                   iconSize: 28,
                                 ),
                                 Text(
-                                  _formatNumber(post.comments),
+                                  _formatNumber(post.comments?.length ?? 0),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -535,7 +572,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                             ),
                             children: [
                               TextSpan(
-                                text: post.creatorName,
+                                text: post.creator?.name,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),

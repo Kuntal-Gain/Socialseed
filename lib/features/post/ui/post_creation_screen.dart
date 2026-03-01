@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:socialseed/core/services/upload_service.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/app_loader.dart';
 import 'package:socialseed/core/utils/helpers/failure_widget.dart';
@@ -21,18 +25,61 @@ class _PostCreationScreenState extends ConsumerState<PostCreationScreen> {
   String? _selectedLocation;
   final List<String> _taggedUsers = [];
 
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void dispose() {
     _captionController.dispose();
     super.dispose();
   }
 
-  void _addAsset() {
-    // Simulate asset picker
-    setState(() {
-      _selectedAssets.add(
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400');
-    });
+  Future<String?> showImageSourceBottomSheet(BuildContext context) {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => const ImageSourceBottomSheet(),
+    );
+  }
+
+  void _addAsset() async {
+    // Show dialog to pick camera or gallery
+    // final choice = await showDialog<String>(
+    //   context: context,
+    //   builder: (context) => AlertDialog(
+    //     title: Text('Choose Source'),
+    //     content: Text('Select the image source'),
+    //     actions: [
+    //       TextButton(
+    //         onPressed: () => Navigator.pop(context, 'camera'),
+    //         child: Text('Camera'),
+    //       ),
+    //       TextButton(
+    //         onPressed: () => Navigator.pop(context, 'gallery'),
+    //         child: Text('Gallery'),
+    //       ),
+    //     ],
+    //   ),
+    // );
+
+    final choice = await showImageSourceBottomSheet(context);
+
+    if (choice == null) return; // user canceled
+
+    XFile? pickedFile;
+    if (choice == 'camera') {
+      pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    } else if (choice == 'gallery') {
+      pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    }
+
+    if (pickedFile != null) {
+      final url = await UploadService().uploadImage(File(pickedFile.path));
+
+      setState(() {
+        _selectedAssets.add(url!);
+      });
+    }
   }
 
   void _removeAsset(int index) {
@@ -614,6 +661,157 @@ class _PostCreationScreenState extends ConsumerState<PostCreationScreen> {
               Icons.chevron_right,
               color: Colors.grey.shade400,
               size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ImageSourceBottomSheet extends StatelessWidget {
+  const ImageSourceBottomSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Title
+            const Text(
+              'Add Photo',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              'Choose how you want to add your photo',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 24),
+
+            // Options Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildBottomSheetOption(
+                    context: context,
+                    icon: Icons.camera_alt_rounded,
+                    title: 'Camera',
+                    onTap: () => Navigator.pop(context, 'camera'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildBottomSheetOption(
+                    context: context,
+                    icon: Icons.photo_library_rounded,
+                    title: 'Gallery',
+                    onTap: () => Navigator.pop(context, 'gallery'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Cancel Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomSheetOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        decoration: BoxDecoration(
+          color: const Color(0xffF1F4F8),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xffFF3131),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
             ),
           ],
         ),

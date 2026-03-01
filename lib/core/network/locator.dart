@@ -7,6 +7,8 @@ import 'package:socialseed/features/friends_module/data/friend_usecase_impl.dart
 import 'package:socialseed/features/friends_module/data/friend_usecases.dart';
 import 'package:socialseed/features/post/data/post_usecase.dart';
 import 'package:socialseed/features/post/data/post_usecase_impl.dart';
+import 'package:socialseed/features/story/data/story_usecase.dart';
+import 'package:socialseed/features/story/data/story_usecase_impl.dart';
 
 final getIt = GetIt.instance;
 
@@ -15,4 +17,5 @@ void init() {
   getIt.registerLazySingleton<CredsUseCase>(() => CredsUseCasesImpl());
   getIt.registerLazySingleton<PostUsecase>(() => PostUsecaseImpl());
   getIt.registerLazySingleton<FriendUsecases>(() => FriendUsecaseImpl());
+  getIt.registerLazySingleton<StoryUsecase>(() => StoryUsecaseImpl());
 }

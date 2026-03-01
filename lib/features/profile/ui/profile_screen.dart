@@ -1,19 +1,24 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/app_loader.dart';
+import 'package:socialseed/core/utils/helpers/appbar.dart';
 import 'package:socialseed/core/utils/helpers/datetime_helper.dart';
 import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/scroll_view.dart';
+import 'package:socialseed/core/utils/helpers/text_style.dart';
 import 'package:socialseed/features/auth_module/model/user_model.dart';
 import 'package:socialseed/features/auth_module/ui/provider/auth_provider.dart';
 import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/feed/ui/widget/post_widget.dart';
 import 'package:socialseed/features/post/model/post_model.dart';
 import 'package:socialseed/features/post/ui/provider/post_provider.dart';
+import 'package:socialseed/features/profile/ui/widgets/edit_profile_bottom_sheet.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   final String? uid;
@@ -56,8 +61,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final postsCnt = ref.watch(userPostsCountProvider);
 
     return Scaffold(
+      appBar: widget.uid != null
+          ? CommonAppbar(
+              title: 'User Profile',
+            )
+          : null,
       backgroundColor: AppColor.whiteColor,
       body: RefreshIndicator(
+        color: AppColor.redColor,
         onRefresh: () async {
           ref.invalidate(credsProvider);
         },
@@ -67,229 +78,254 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               loading: () => AppLoader().stateLoader(),
               error: (error, stack) => Center(child: Text('Error: $error')),
               data: (user) {
-                return Column(
-                  children: [
-                    sizeVer(30),
+                return SafeArea(
+                  child: Column(
+                    children: [
+                      // sizeVer(30),
 
-                    SizedBox(
-                      height: 220,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Cover Image
-                          Container(
-                            height: 160,
-                            width: double.infinity,
-                            margin: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              image: const DecorationImage(
-                                image: NetworkImage(
-                                  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
-                                ),
-                                fit: BoxFit.cover,
-                              ),
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-
-                          // Profile Picture (Centered and Overlapping)
-                          Positioned(
-                            bottom: -10,
-                            left: 0,
-                            right: 0,
-                            child: Center(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 5,
+                      SizedBox(
+                        height: 220,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Cover Image
+                            Container(
+                              height: 160,
+                              width: double.infinity,
+                              margin: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                image: const DecorationImage(
+                                  image: NetworkImage(
+                                    'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.15),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
+                                  fit: BoxFit.cover,
+                                ),
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+
+                            // Profile Picture (Centered and Overlapping)
+                            Positioned(
+                              bottom: -10,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 5,
                                     ),
-                                  ],
-                                ),
-                                child: const CircleAvatar(
-                                  radius: 60,
-                                  backgroundImage: NetworkImage(
-                                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300',
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  // child: CircleAvatar(
+                                  //   radius: 60,
+                                  //   backgroundImage: NetworkImage(
+                                  //     user?.avatar != ""
+                                  //         ? user?.avatar ?? ""
+                                  //         : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300',
+                                  //   ),
+                                  //   child: CachedNetworkImage(
+                                  //     imageUrl: user?.avatar != ""
+                                  //         ? user?.avatar ?? ""
+                                  //         : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300',
+                                  //   ),
+                                  // ),
+                                  child: CircleAvatar(
+                                    radius: 60,
+                                    backgroundImage: user?.avatar != null &&
+                                            user!.avatar!.isNotEmpty
+                                        ? CachedNetworkImageProvider(
+                                            user.avatar!)
+                                        : const NetworkImage(
+                                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300',
+                                          ) as ImageProvider,
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // User Info
-                    Text(
-                      user?.fullName ?? 'NA',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '@${user?.username}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        user?.bio ?? '',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          height: 1.4,
+                          ],
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 12),
 
-                    // Stats Row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildStatItem(postsCnt.toString(), 'Posts'),
-                          Container(
-                            height: 40,
-                            width: 1,
-                            color: Colors.grey.shade300,
-                          ),
-                          _buildStatItem(
-                              '${user?.followers?.length}', 'Followers'),
-                          Container(
-                            height: 40,
-                            width: 1,
-                            color: Colors.grey.shade300,
-                          ),
-                          _buildStatItem(
-                              '${user?.following?.length}', 'Following'),
-                        ],
+                      // User Info
+                      Text(
+                        user?.fullName ?? 'NA',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '@${user?.username}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Text(
+                          user?.bio ?? '',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade700,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // Action Buttons
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xffFF3131),
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
+                      // Stats Row
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatItem(postsCnt.toString(), 'Posts'),
+                            Container(
+                              height: 40,
+                              width: 1,
+                              color: Colors.grey.shade300,
+                            ),
+                            _buildStatItem(
+                                '${user?.followers?.length}', 'Followers'),
+                            Container(
+                              height: 40,
+                              width: 1,
+                              color: Colors.grey.shade300,
+                            ),
+                            _buildStatItem(
+                                '${user?.following?.length}', 'Following'),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Action Buttons
+
+                      if (widget.uid !=
+                              FirebaseAuth.instance.currentUser?.uid &&
+                          widget.uid != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xffFF3131),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Follow',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 3,
+                                child: OutlinedButton(
+                                  onPressed: () {},
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    side:
+                                        BorderSide(color: Colors.grey.shade300),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Message',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                'Follow',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                                child: IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.person_add_outlined),
+                                  color: Colors.black,
+                                  padding: const EdgeInsets.all(12),
+                                  constraints: const BoxConstraints(),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 3,
-                            child: OutlinedButton(
-                              onPressed: () {},
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.black,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                side: BorderSide(color: Colors.grey.shade300),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text(
-                                'Message',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.person_add_outlined),
-                              color: Colors.black,
-                              padding: const EdgeInsets.all(12),
-                              constraints: const BoxConstraints(),
-                            ),
-                          ),
+                        ),
+
+                      const SizedBox(height: 20),
+
+                      // 🧭 Tab Bar
+                      Container(
+                        color: Colors.white,
+                        child: TabBar(
+                          dividerColor: AppColor.whiteColor,
+                          controller: _tabController,
+                          onTap: (index) {
+                            setState(() => _currentIndex = index);
+                          },
+                          labelColor: const Color(0xffFF3131),
+                          unselectedLabelColor: Colors.grey,
+                          indicatorColor: const Color(0xffFF3131),
+                          tabs: const [
+                            Tab(text: 'Posts'),
+                            Tab(text: 'Media'),
+                            Tab(text: 'About'),
+                          ],
+                        ),
+                      ),
+
+                      // 🔄 IndexedStack → conditional view by tab index
+                      IndexedStack(
+                        index: _currentIndex,
+                        children: [
+                          _buildPostsList(),
+                          _buildMediaGrid(),
+                          _buildAboutSection(user),
                         ],
                       ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // 🧭 Tab Bar
-                    Container(
-                      color: Colors.white,
-                      child: TabBar(
-                        dividerColor: AppColor.whiteColor,
-                        controller: _tabController,
-                        onTap: (index) {
-                          setState(() => _currentIndex = index);
-                        },
-                        labelColor: const Color(0xffFF3131),
-                        unselectedLabelColor: Colors.grey,
-                        indicatorColor: const Color(0xffFF3131),
-                        tabs: const [
-                          Tab(text: 'Posts'),
-                          Tab(text: 'Media'),
-                          Tab(text: 'About'),
-                        ],
-                      ),
-                    ),
-
-                    // 🔄 IndexedStack → conditional view by tab index
-                    IndexedStack(
-                      index: _currentIndex,
-                      children: [
-                        _buildPostsList(),
-                        _buildMediaGrid(),
-                        _buildAboutSection(user),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               }),
         ),
@@ -513,7 +549,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           //     ),
           //   ],
           // ),
-          // sizeVer(20),
+          Expanded(
+            flex: 3,
+            child: GestureDetector(
+              onTap: () => showEditProfileSheet(context, user!),
+              child: Container(
+                height: ScreenUtils().screenHeight(context) * 0.055,
+                decoration: BoxDecoration(
+                  color: AppColor.whiteColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColor.greyColor),
+                ),
+                child: Center(
+                    child: Text(
+                  'Update Profile',
+                  style: appTextStyle(
+                    color: AppColor.redColor,
+                  ),
+                )),
+              ),
+            ),
+          ),
+          sizeVer(10),
           Expanded(
             flex: 3,
             child: ElevatedButton(
@@ -571,6 +628,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ...children,
         ],
       ),
+    );
+  }
+
+  void showEditProfileSheet(BuildContext context, User user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditProfileBottomSheet(user: user),
     );
   }
 

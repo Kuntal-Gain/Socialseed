@@ -27,15 +27,14 @@ class CredsNotifier extends AutoDisposeAsyncNotifier<User?> {
     }
   }
 
-  /// Refresh the current user from Firestore manually
-  Future<void> refreshUser() async {
-    state = const AsyncValue.loading();
+  Future<void> updateUser(User user) {
     try {
       final usecase = getIt<CredsUseCase>();
-      final currentUser = await usecase.getCurrentUser();
-      state = AsyncValue.data(currentUser);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+
+      print("user updated");
+      return usecase.updateProfile(user);
+    } catch (e) {
+      throw Exception('Failed to create user: $e');
     }
   }
 
@@ -44,16 +43,13 @@ class CredsNotifier extends AutoDisposeAsyncNotifier<User?> {
     final user = state.value;
     if (user == null) return; // No user logged in
 
-    state = const AsyncValue.loading();
     try {
       final usecase = getIt<CredsUseCase>();
       await usecase.toggleOnlineStatus(user.uid!);
 
       // Update local state
-      final updatedUser = user.copyWith(isOnline: isOnline);
-      state = AsyncValue.data(updatedUser);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      rethrow;
     }
   }
 }

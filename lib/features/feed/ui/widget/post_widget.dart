@@ -8,6 +8,7 @@ import 'package:socialseed/core/utils/helpers/datetime_helper.dart';
 import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/text_style.dart';
+import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/post/model/post_model.dart';
 import 'package:socialseed/features/post/ui/provider/post_provider.dart';
 
@@ -15,18 +16,32 @@ import '../../../../core/services/route_generator.dart';
 
 class PostWidget extends ConsumerWidget {
   final PostModel post;
-  const PostWidget({super.key, required this.post});
+  final bool isFeed;
+  const PostWidget({
+    super.key,
+    required this.post,
+    this.isFeed = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final likeAsync = ref.watch(postLikeProvider(post.postId ?? ''));
     final commentAsync = ref.watch(postCommentsProvider(post.postId ?? ''));
 
+    final userAsync = ref.watch(userByIdProvider(post.creatorUid ?? ''));
+
+    final user = userAsync.maybeWhen(
+      orElse: () => null,
+      data: (user) => user,
+    );
+
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, RouteGenerator.kPostView, arguments: {
-          'post': post,
-        });
+        if (isFeed) {
+          Navigator.pushNamed(context, RouteGenerator.kPostView, arguments: {
+            'post': post,
+          });
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -51,10 +66,10 @@ class PostWidget extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile Picture
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 24,
                   backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
+                    user?.avatar ?? '',
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -66,7 +81,7 @@ class PostWidget extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            post.creator?.name ?? '',
+                            user?.fullName ?? '',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -132,6 +147,8 @@ class PostWidget extends ConsumerWidget {
                 child: Image.network(
                   post.assets?.first ?? '',
                   fit: BoxFit.cover,
+                  height: ScreenUtils().screenHeight(context) * 0.25,
+                  width: ScreenUtils().screenWidth(context) * 0.9,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
 

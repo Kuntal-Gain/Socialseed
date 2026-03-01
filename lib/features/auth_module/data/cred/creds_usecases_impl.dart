@@ -115,8 +115,78 @@ class CredsUseCasesImpl implements CredsUseCase {
   }
 
   @override
-  Future<void> updateProfile(User user) {
-    throw UnimplementedError();
+  Future<void> updateProfile(User user) async {
+    final uid = await getCurrentUid();
+
+    final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+    final docSnapshot = await docRef.get();
+
+    if (!docSnapshot.exists) {
+      throw Exception("User not found");
+    }
+
+    final currentUser = User.fromJson(docSnapshot.data()!);
+
+    final Map<String, dynamic> updatedData = {};
+
+    // 🔹 Compare primitive fields
+    if (user.fullName != currentUser.fullName) {
+      updatedData['fullName'] = user.fullName;
+    }
+
+    if (user.username != currentUser.username) {
+      updatedData['username'] = user.username;
+    }
+
+    if (user.bio != currentUser.bio) {
+      updatedData['bio'] = user.bio;
+    }
+
+    if (user.avatar != currentUser.avatar) {
+      updatedData['avatar'] = user.avatar;
+    }
+
+    if (user.cover != currentUser.cover) {
+      updatedData['cover'] = user.cover;
+    }
+
+    if (user.dateOfBirth != currentUser.dateOfBirth) {
+      updatedData['dateOfBirth'] = user.dateOfBirth;
+    }
+
+    // 🔹 Nested Object: Address
+    if (user.address != null &&
+        user.address?.toJson().toString() !=
+            currentUser.address?.toJson().toString()) {
+      updatedData['address'] = user.address!.toJson();
+    }
+
+    // 🔹 Nested Object: ProfileHistory
+    if (user.profileHistory != null &&
+        user.profileHistory?.toJson().toString() !=
+            currentUser.profileHistory?.toJson().toString()) {
+      updatedData['profileHistory'] = user.profileHistory!.toJson();
+    }
+
+    // 🔹 Boolean fields
+    if (user.isProfileCompleted != currentUser.isProfileCompleted) {
+      updatedData['isProfileCompleted'] = user.isProfileCompleted;
+    }
+
+    if (user.isOnline != currentUser.isOnline) {
+      updatedData['isOnline'] = user.isOnline;
+    }
+
+    if (user.isVerified != currentUser.isVerified) {
+      updatedData['isVerified'] = user.isVerified;
+    }
+
+    // 🔹 Always update updatedAt if something changed
+    if (updatedData.isNotEmpty) {
+      updatedData['updatedAt'] = Timestamp.now();
+      await docRef.update(updatedData);
+    }
   }
 
   @override

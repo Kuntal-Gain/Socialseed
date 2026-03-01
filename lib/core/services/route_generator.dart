@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:socialseed/core/utils/helpers/font_sizes.dart';
 import 'package:socialseed/features/auth_module/ui/auth_screen.dart';
 import 'package:socialseed/features/auth_module/ui/create_user_screen.dart';
+import 'package:socialseed/features/story/ui/story_upload_screen.dart';
 import 'package:socialseed/features/home/ui/home_screen.dart';
 import 'package:socialseed/features/post/ui/post_creation_screen.dart';
-import 'package:socialseed/features/profile/profile_screen.dart';
+import 'package:socialseed/features/profile/ui/profile_screen.dart';
 import 'package:socialseed/features/splash_module/ui/splash_screen.dart';
+import 'package:socialseed/features/story/ui/story_viewer_screen.dart';
 
 import '../../features/post/ui/post_view_screen.dart';
 
@@ -20,10 +22,12 @@ class RouteGenerator {
 
   /// [home]
   static const kHome = "/home";
+  static const kStory = "/StoryViewScreen";
 
   /// [POST]
   static const kPostCreate = "/CreatePost";
   static const kPostView = "/PostView";
+  static const kStoryUpload = "/StoryUpload";
 
   /// [profile]
   static const kProfile = "/Profile";
@@ -48,6 +52,11 @@ class RouteGenerator {
       case kHome:
         return _animatedPageRoute(HomeScreen());
 
+      case kStory:
+        final args = settings.arguments as Map<String, dynamic>;
+
+        return _animatedPageRoute(StoryViewScreen(story: args['story']));
+
       /// [POST] routes
       case kPostCreate:
         return _animatedPageRoute(PostCreationScreen());
@@ -64,6 +73,9 @@ class RouteGenerator {
         return _animatedPageRoute(UserProfileScreen(
           uid: args['uid'],
         ));
+
+      case kStoryUpload:
+        return _animatedPageRoute(StoryUploadScreen());
 
       default:
         return _errorRoute(errorMessage: "Route not found: ${settings.name}");

@@ -1,15 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialseed/core/provider/user_provider.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/app_loader.dart';
 import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/scroll_view.dart';
+import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/feed/ui/widget/post_widget.dart';
 import 'package:socialseed/features/feed/ui/widget/story_widget.dart';
 import 'package:socialseed/features/post/model/post_model.dart';
 import 'package:socialseed/features/post/ui/provider/post_provider.dart';
+import 'package:socialseed/features/story/ui/provider/story_provider.dart';
+import 'package:socialseed/features/story/ui/story_viewer_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -56,16 +61,50 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget _buildStoryList() {
     final double cardHeight = ScreenUtils().screenHeight(context) * 0.12;
 
-    return SizedBox(
-      height: cardHeight + 24, // enough space for +
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return StoryCard(isAddStory: index == 0);
-        },
-      ),
-    );
+    final storyAsync = ref.watch(storyNotifierProvider);
+
+    final user = ref.watch(currentUserProvider);
+
+    return storyAsync.when(
+        loading: () => AppLoader().stateLoader(),
+        error: (e, s) => errorWidget(e, s),
+        data: (stories) {
+          return SizedBox(
+            height: cardHeight + 24, // enough space for +
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: stories.length + 1,
+              itemBuilder: (context, index) {
+                final story = index > 0 ? stories[index - 1] : null;
+
+                return GestureDetector(
+                  onTap: () {
+                    if (index == 0) {
+                      // Handle add story
+                      Navigator.pushNamed(context, RouteGenerator.kStoryUpload);
+                    } else {
+                      // Navigate to story viewer
+                      Navigator.pushNamed(context, RouteGenerator.kStory,
+                          arguments: {
+                            "story": story,
+                          });
+
+                      ref
+                          .read(storyNotifierProvider.notifier)
+                          .viewStory(story!.creatorUid!);
+                    }
+                  },
+                  child: StoryCard(
+                      isAddStory: index == 0,
+                      uid: story?.creatorUid ?? user?.uid,
+                      isViewed: story?.viewers?.contains(
+                              FirebaseAuth.instance.currentUser?.uid) ??
+                          false),
+                );
+              },
+            ),
+          );
+        });
   }
 
   Widget _buildPostList(List<PostModel> posts) {
@@ -76,7 +115,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       itemBuilder: (context, index) {
         final post = posts[index];
 
-        return PostWidget(post: post);
+        return PostWidget(post: post, isFeed: true);
       },
     );
   }
