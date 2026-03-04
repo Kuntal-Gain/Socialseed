@@ -61,11 +61,8 @@ class AuthFormNotifier extends AsyncNotifier<AuthFormState> {
 
     try {
       await auth.login(form.email, form.password);
-      isLoading = false;
       return true;
     } catch (e) {
-      print(e.toString());
-      isLoading = false;
       return false;
     }
   }

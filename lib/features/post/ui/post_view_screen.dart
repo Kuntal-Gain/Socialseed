@@ -134,14 +134,16 @@ class _PostViewScreenState extends ConsumerState<PostViewScreen> {
                       child: CircleAvatar(
                         radius: 22,
                         backgroundColor: Colors.grey.shade100,
-                        backgroundImage: comment.creator?.avatarUrl != null
-                            ? NetworkImage(comment.creator!.avatarUrl!)
-                            : null,
-                        child: comment.creator?.avatarUrl == null ||
-                                comment.creator?.avatarUrl?.isEmpty == true
-                            ? Icon(Icons.person,
-                                size: 24, color: AppColor.redColor)
-                            : null,
+                        // backgroundImage: comment.creator?.avatarUrl != null
+                        //     ? NetworkImage(comment.creator!.avatarUrl!)
+                        //     : null,
+                        // child: comment.creator?.avatarUrl == null ||
+                        //         comment.creator?.avatarUrl?.isEmpty == true
+                        //     ? Icon(Icons.person,
+                        //         size: 24, color: AppColor.redColor)
+                        //     : null,
+                        child: Icon(Icons.person,
+                            size: 24, color: AppColor.redColor),
                       ),
                     ),
                   ),

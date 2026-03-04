@@ -170,7 +170,6 @@ class PostUsecaseImpl implements PostUsecase {
 
     await commentRef.set({
       'commentId': commentRef.key,
-      'creator': comment.creator?.toJson(),
       'content': comment.content,
       'createdAt': ServerValue.timestamp,
       'updatedAt': ServerValue.timestamp,
@@ -203,7 +202,6 @@ class PostUsecaseImpl implements PostUsecase {
 
     await replyRef.set({
       'commentId': replyRef.key,
-      'creator': reply.creator?.toJson(),
       'content': reply.content,
       'createdAt': ServerValue.timestamp,
       'updatedAt': ServerValue.timestamp,

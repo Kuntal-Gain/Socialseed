@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
+import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/text_style.dart';
 import 'package:socialseed/features/auth_module/ui/provider/auth_provider.dart';
@@ -35,8 +36,9 @@ class SplashScreen extends ConsumerWidget {
           const Spacer(),
           Text(
             'Fueling Connections, Sparking Conversations',
+            textAlign: TextAlign.center,
             style: appTextStyle(
-              fontSize: 19,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AppColor.redColor,
             ),
@@ -47,7 +49,7 @@ class SplashScreen extends ConsumerWidget {
               padding: EdgeInsets.only(bottom: 40),
               child: CircularProgressIndicator(),
             ),
-            error: (e, _) => const Text("Auth error 😵‍💫"),
+            error: (e, _) => errorWidget(e, _),
             data: (isLoggedIn) {
               if (isLoggedIn) {
                 return const Padding(
@@ -74,7 +76,7 @@ class SplashScreen extends ConsumerWidget {
                     child: Text(
                       'Start Your Journey',
                       style: appTextStyle(
-                        fontSize: 19,
+                        fontSize: 13,
                         color: AppColor.whiteColor,
                         fontWeight: FontWeight.bold,
                       ),

@@ -26,6 +26,8 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
 
   Future<void> _loadGallery() async {
     final permission = await PhotoManager.requestPermissionExtend();
+
+    print(permission);
     if (!permission.isAuth) {
       setState(() => _loading = false);
       return;

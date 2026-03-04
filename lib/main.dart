@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'School Management App',
+      title: 'Socialseed',
       debugShowCheckedModeBanner: false,
       // theme: AppTheme.lightTheme,
       theme: ThemeData(

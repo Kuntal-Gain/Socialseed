@@ -293,8 +293,6 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
             //   ),
             // ),
 
-            const SizedBox(height: 16),
-
             // Grid of Posts
             state.when(
                 loading: () => AppLoader().stateLoader(),
@@ -308,7 +306,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
 
                   return Expanded(
                     child: GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
@@ -471,12 +469,12 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.grey.shade200,
-                      backgroundImage: NetworkImage(post.creator!.avatarUrl!),
+                      // backgroundImage: NetworkImage(post.creator!.avatarUrl!),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        post.creator?.name ?? "",
+                        post.creatorUid ?? "",
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -572,7 +570,7 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                             ),
                             children: [
                               TextSpan(
-                                text: post.creator?.name,
+                                text: post.creatorUid,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),

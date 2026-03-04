@@ -5,6 +5,7 @@ import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/scroll_view.dart';
+import 'package:socialseed/core/utils/helpers/snackbar.dart';
 import 'package:socialseed/core/utils/helpers/text_style.dart';
 import 'package:socialseed/features/auth_module/ui/provider/auth_provider.dart';
 
@@ -27,144 +28,160 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Scaffold(
       backgroundColor: AppColor.whiteColor,
       body: CommonScreenWrapper(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            sizeVer(20),
-            Image.asset("assets/images/SOCIALSEED.png"),
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              sizeVer(20),
+              Image.asset("assets/images/SOCIALSEED.png"),
 
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                isLogin ? "Welcome Back" : "Join Us",
-                style: GoogleFonts.montserrat(
-                  fontSize: 45,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-
-            // email field
-            buildTextField(
-              "Email",
-              "Enter your email",
-              icon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-              controller: _emailController,
-            ),
-            // password field
-            buildTextField(
-              "Password",
-              "Enter your password",
-              icon: Icons.lock,
-              isPassword: true,
-              controller: _passwordController,
-            ),
-            if (isLogin)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Text(
-                  'Forgot Password ?',
-                  style: appTextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColor.redColor,
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    isLogin ? "Welcome Back" : "Join Us",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 35,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
 
-            GestureDetector(
-              onTap: () async {
-                if (isLogin) {
-                  await ref
-                      .read(authFormProvider.notifier)
-                      .login(
-                        AuthFormState(
+              // email field
+              buildTextField(
+                "Email",
+                "Enter your email",
+                icon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+                controller: _emailController,
+              ),
+              // password field
+              buildTextField(
+                "Password",
+                "Enter your password",
+                icon: Icons.lock,
+                isPassword: true,
+                controller: _passwordController,
+              ),
+              // if (isLogin)
+              //   Align(
+              //     alignment: Alignment.bottomRight,
+              //     child: Padding(
+              //       padding: const EdgeInsets.symmetric(
+              //         horizontal: 12,
+              //         vertical: 10,
+              //       ),
+              //       child: Text(
+              //         'Forgot Password ?',
+              //         style: appTextStyle(
+              //           fontSize: 14,
+              //           fontWeight: FontWeight.bold,
+              //           color: AppColor.redColor,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+
+              GestureDetector(
+                onTap: () async {
+                  if (isLogin) {
+                    final success =
+                        await ref.read(authFormProvider.notifier).login(
+                              AuthFormState(
+                                email: _emailController.text,
+                                password: _passwordController.text,
+                              ),
+                            );
+
+                    if (success && context.mounted) {
+                      successBar(context, "Login Successfull");
+
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        RouteGenerator.kHome,
+                        (route) => false,
+                      );
+                    } else {
+                      failureBar(context, "Invalid Credentials");
+                    }
+                  } else {
+                    await ref
+                        .read(authFormProvider.notifier)
+                        .signup(AuthFormState(
                           email: _emailController.text,
                           password: _passwordController.text,
-                        ),
-                      )
-                      .then(
-                        (_) => Navigator.of(context).pushNamedAndRemoveUntil(
-                            RouteGenerator.kHome, (route) => false),
-                      );
-                } else {
-                  await ref
-                      .read(authFormProvider.notifier)
-                      .signup(AuthFormState(
-                        email: _emailController.text,
-                        password: _passwordController.text,
-                      ));
+                        ));
 
-                  Navigator.of(context)
-                      .pushNamed(RouteGenerator.kCreateAcc, arguments: {
-                    'email': _emailController.text,
-                  });
-                }
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColor.redColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    isLogin ? 'Login' : 'Sign Up',
-                    style: appTextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.whiteColor,
+                    Navigator.of(context)
+                        .pushNamed(RouteGenerator.kCreateAcc, arguments: {
+                      'email': _emailController.text,
+                    });
+                  }
+                },
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: AppColor.redColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isLogin ? 'Login' : 'Sign Up',
+                      style: appTextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.whiteColor,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 2,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      isLogin
-                          ? 'Don\'t have an account?'
-                          : 'Already have an account?',
-                      style: appTextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
-                        color: AppColor.blackColor,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          isLogin = !isLogin;
-                        });
-                      },
-                      child: Text(
-                        !isLogin ? 'Login' : 'Signup',
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isLogin
+                            ? 'Don\'t have an account?'
+                            : 'Already have an account?',
                         style: appTextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.redColor,
+                          fontWeight: FontWeight.normal,
+                          color: AppColor.blackColor,
                         ),
                       ),
-                    ),
-                  ],
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isLogin = !isLogin;
+                          });
+                        },
+                        child: Text(
+                          !isLogin ? 'Login' : 'Signup',
+                          style: appTextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColor.redColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -187,7 +204,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             label,
             style: const TextStyle(
               color: AppColor.textGreyColor,
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -196,7 +213,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             keyboardType: keyboardType,
             obscureText: isPassword && !isVisible,
             controller: controller,
-            style: const TextStyle(color: AppColor.blackColor),
+            style: const TextStyle(color: AppColor.blackColor, fontSize: 12),
             decoration: InputDecoration(
               prefixIcon: Icon(
                 icon,

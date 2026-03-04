@@ -214,11 +214,6 @@ class _PostCreationScreenState extends ConsumerState<PostCreationScreen> {
 
     try {
       final newPost = PostModel(
-        creator: CreatorModel(
-            uid: user.uid,
-            name: user.fullName,
-            avatarUrl: user.avatar,
-            profileHistory: user.profileHistory),
         creatorUid: user.uid,
         type: _selectedAssets.isEmpty ? PostType.text : PostType.image,
         content: _captionController.text,

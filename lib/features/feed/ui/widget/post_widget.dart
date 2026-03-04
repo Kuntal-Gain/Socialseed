@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ionicons/ionicons.dart';
@@ -8,9 +9,11 @@ import 'package:socialseed/core/utils/helpers/datetime_helper.dart';
 import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/text_style.dart';
+import 'package:socialseed/features/auth_module/model/user_model.dart';
 import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/post/model/post_model.dart';
 import 'package:socialseed/features/post/ui/provider/post_provider.dart';
+import 'package:socialseed/features/post/ui/widget/relationship_chip.dart';
 
 import '../../../../core/services/route_generator.dart';
 
@@ -48,7 +51,7 @@ class PostWidget extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
@@ -99,24 +102,40 @@ class PostWidget extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color(0x4DF55050),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'college',
-                          style: appTextStyle(
-                            color: AppColor.whiteColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                      if (post.creatorUid !=
+                          FirebaseAuth.instance.currentUser?.uid)
+                        RelationshipChip(
+                          friendProfileHistory: user?.profileHistory ??
+                              ProfileHistory(
+                                "",
+                                "",
+                                "",
+                              ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "You",
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -785,9 +785,15 @@
 //   }
 // }
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:socialseed/core/utils/helpers/app_loader.dart';
+import 'package:socialseed/core/utils/helpers/failure_widget.dart';
+import 'package:socialseed/features/auth_module/model/user_model.dart';
+import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/story/model/story_model.dart';
 
 class StoryViewer {
@@ -961,365 +967,398 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen>
       );
     }
 
+    final userAsync =
+        ref.watch(userByIdProvider(widget.story.creatorUid ?? ""));
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTapDown: (details) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dx = details.globalPosition.dx;
-          if (dx < screenWidth / 3) {
-            _previousAsset();
-          } else if (dx > 2 * screenWidth / 3) {
-            _nextAsset();
-          }
-        },
-        onLongPressStart: (_) => _pauseStory(),
-        onLongPressEnd: (_) => _resumeStory(),
-        child: Stack(
-          children: [
-            // ── Story Content ──────────────────────────────────────────────
-            Positioned.fill(child: _buildAssetContent(_currentAsset)),
-
-            // ── Top Gradient ───────────────────────────────────────────────
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.6),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ── Top Section ────────────────────────────────────────────────
-            SafeArea(
-              child: Column(
+      body: userAsync.when(
+          loading: () => AppLoader().stateLoader(),
+          error: (e, s) => errorWidget(e, s),
+          data: (user) {
+            return GestureDetector(
+              onTapDown: (details) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final dx = details.globalPosition.dx;
+                if (dx < screenWidth / 3) {
+                  _previousAsset();
+                } else if (dx > 2 * screenWidth / 3) {
+                  _nextAsset();
+                }
+              },
+              onLongPressStart: (_) => _pauseStory(),
+              onLongPressEnd: (_) => _resumeStory(),
+              child: Stack(
                 children: [
-                  // Progress Bars
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Row(
-                      children: List.generate(
-                        _assets.length,
-                        (index) => Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: AnimatedBuilder(
-                              animation: _progressController,
-                              builder: (context, _) {
-                                double progress;
-                                if (index < _currentAssetIndex) {
-                                  progress = 1.0;
-                                } else if (index == _currentAssetIndex) {
-                                  progress = _progressController.value;
-                                } else {
-                                  progress = 0.0;
-                                }
-                                return FractionallySizedBox(
-                                  alignment: Alignment.centerLeft,
-                                  widthFactor: progress,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // ── Story Content ──────────────────────────────────────────────
+                  Positioned.fill(child: _buildAssetContent(_currentAsset)),
 
-                  // User Info Header — uses creatorUid for display
-                  // Replace CircleAvatar backgroundImage with your user provider
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xffFF3131),
-                              width: 2,
-                            ),
-                          ),
-                          // TODO: replace with avatar fetched via widget.story.creatorUid
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: Colors.grey.shade800,
-                            child: Text(
-                              widget.story.creatorUid
-                                      ?.substring(0, 1)
-                                      .toUpperCase() ??
-                                  '?',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // TODO: replace with display name fetched via creatorUid
-                              Text(
-                                widget.story.creatorUid ?? 'Unknown',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                _timestampTimeAgo(widget.story.createdAt),
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_isPaused)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.play_arrow,
-                                color: Colors.white, size: 20),
-                          ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.more_vert,
-                              color: Colors.white, size: 24),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close,
-                              color: Colors.white, size: 24),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Caption overlay (for image/video assets)
-                  if (_currentAsset.caption.isNotEmpty &&
-                      _currentAsset.type != StoryAssetType.text)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _currentAsset.caption,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 14),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  const Spacer(),
-
-                  // Bottom Actions
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              _pauseStory();
-                              _showReplyBottomSheet();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.chat_bubble_outline,
-                                      color: Colors.white.withOpacity(0.8),
-                                      size: 20),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Send message...',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        _iconButton(Icons.favorite_border),
-                        const SizedBox(width: 12),
-                        _iconButton(Icons.send_outlined),
-                      ],
-                    ),
-                  ),
-
-                  // Viewers Button
-                  GestureDetector(
-                    onTap: _toggleViewers,
+                  // ── Top Gradient ───────────────────────────────────────────────
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                      height: 200,
                       decoration: BoxDecoration(
-                        color: const Color(0xffFF3131),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xffFF3131).withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.visibility_outlined,
-                              color: Colors.white, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${widget.story.viewers?.length ?? 0} Views',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            _showViewers
-                                ? Icons.keyboard_arrow_down
-                                : Icons.keyboard_arrow_up,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ],
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.6),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
 
-            // ── Viewers Panel ──────────────────────────────────────────────
-            if (_showViewers)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.6,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Color(0xffF1F4F8),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
+                  // ── Top Section ────────────────────────────────────────────────
+                  SafeArea(
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 12, bottom: 8),
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xffc2c2c2),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
+                        // Progress Bars
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 16),
+                              horizontal: 8, vertical: 8),
                           child: Row(
-                            children: [
-                              const Icon(Icons.visibility,
-                                  color: Color(0xffFF3131), size: 24),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Viewed by ${widget.story.viewers?.length ?? 0}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
+                            children: List.generate(
+                              _assets.length,
+                              (index) => Expanded(
+                                child: Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: AnimatedBuilder(
+                                    animation: _progressController,
+                                    builder: (context, _) {
+                                      double progress;
+                                      if (index < _currentAssetIndex) {
+                                        progress = 1.0;
+                                      } else if (index == _currentAssetIndex) {
+                                        progress = _progressController.value;
+                                      } else {
+                                        progress = 0.0;
+                                      }
+                                      return FractionallySizedBox(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: progress,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                              const Spacer(),
+                            ),
+                          ),
+                        ),
+
+                        // User Info Header — uses creatorUid for display
+                        // Replace CircleAvatar backgroundImage with your user provider
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xffFF3131),
+                                    width: 2,
+                                  ),
+                                ),
+                                // TODO: replace with avatar fetched via widget.story.creatorUid
+                                child: CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: Colors.grey.shade800,
+                                  backgroundImage: user?.avatar != null
+                                      ? NetworkImage('${user?.avatar}')
+                                      : null,
+                                  child: user?.avatar != null
+                                      ? null
+                                      : Text(
+                                          user?.fullName
+                                                  ?.substring(0, 1)
+                                                  .toUpperCase() ??
+                                              '?',
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // TODO: replace with display name fetched via creatorUid
+                                    Text(
+                                      user?.fullName ?? 'Unknown',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _timestampTimeAgo(widget.story.createdAt),
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_isPaused)
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.play_arrow,
+                                      color: Colors.white, size: 20),
+                                ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.more_vert,
+                                    color: Colors.white, size: 24),
+                                onPressed: () {},
+                              ),
                               IconButton(
                                 icon: const Icon(Icons.close,
-                                    color: Colors.black87),
-                                onPressed: _toggleViewers,
+                                    color: Colors.white, size: 24),
+                                onPressed: () => Navigator.pop(context),
                               ),
                             ],
                           ),
                         ),
-                        const Divider(height: 1),
-                        Flexible(
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: _viewers.length,
-                            itemBuilder: (context, index) =>
-                                _buildViewerItem(_viewers[index], index),
+
+                        // Caption overlay (for image/video assets)
+                        if (_currentAsset.caption.isNotEmpty &&
+                            _currentAsset.type != StoryAssetType.text)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  _currentAsset.caption,
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        const Spacer(),
+
+                        // Bottom Actions
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _pauseStory();
+                                    _showReplyBottomSheet();
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.4),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.chat_bubble_outline,
+                                            color:
+                                                Colors.white.withOpacity(0.8),
+                                            size: 20),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Send message...',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withOpacity(0.7),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              _iconButton(Icons.favorite_border),
+                              const SizedBox(width: 12),
+                              _iconButton(Icons.send_outlined),
+                            ],
+                          ),
+                        ),
+
+                        // Viewers Button
+                        GestureDetector(
+                          onTap: _toggleViewers,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xffFF3131),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      const Color(0xffFF3131).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.visibility_outlined,
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${widget.story.viewers?.length ?? 0} Views',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  _showViewers
+                                      ? Icons.keyboard_arrow_down
+                                      : Icons.keyboard_arrow_up,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+
+                  // ── Viewers Panel ──────────────────────────────────────────────
+                  if (_showViewers)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.6,
+                          ),
+                          decoration: const BoxDecoration(
+                            color: Color(0xffF1F4F8),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(24)),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                margin:
+                                    const EdgeInsets.only(top: 12, bottom: 8),
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffc2c2c2),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 16),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.visibility,
+                                        color: Color(0xffFF3131), size: 24),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Viewed by ${widget.story.viewers?.length ?? 0}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.close,
+                                          color: Colors.black87),
+                                      onPressed: _toggleViewers,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(height: 1),
+                              Flexible(
+                                child: ListView.builder(
+                                    shrinkWrap: true,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    itemCount:
+                                        widget.story.viewers?.length ?? 0,
+                                    itemBuilder: (context, index) {
+                                      final userId =
+                                          widget.story.viewers?[index];
+
+                                      final _userAsync = ref.watch(
+                                          userByIdProvider(userId ?? ""));
+
+                                      final user = _userAsync.maybeWhen(
+                                        data: (user) => user,
+                                        orElse: () => null,
+                                      );
+
+                                      return _buildViewerItem(user, index);
+                                    }),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
+            );
+          }),
     );
   }
 
@@ -1327,7 +1366,12 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen>
     switch (asset.type) {
       case StoryAssetType.image:
         return asset.url != null
-            ? Image.network(asset.url!, fit: BoxFit.contain)
+            ? CachedNetworkImage(
+                imageUrl: asset.url!,
+                fit: BoxFit.contain,
+                errorWidget: (context, error, stackTrace) =>
+                    _colorBackground(asset.bg),
+              )
             : _colorBackground(asset.bg);
 
       case StoryAssetType.video:
@@ -1376,7 +1420,7 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen>
         child: Icon(icon, color: Colors.white, size: 22),
       );
 
-  Widget _buildViewerItem(StoryViewer viewer, int index) {
+  Widget _buildViewerItem(User? user, int index) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -1412,7 +1456,7 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen>
           CircleAvatar(
             radius: 22,
             backgroundColor: const Color(0xffF1F4F8),
-            backgroundImage: NetworkImage(viewer.avatarUrl),
+            backgroundImage: NetworkImage(user?.avatar ?? ""),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1420,35 +1464,21 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  viewer.name,
+                  user?.fullName ?? "Unknown User",
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _getTimeAgo(viewer.viewedAt),
-                  style:
-                      const TextStyle(fontSize: 12, color: Color(0xff677681)),
-                ),
+                // TODO: ** implement later **
+                // const SizedBox(height: 2),
+                // Text(
+                //   _getTimeAgo(viewer.viewedAt),
+                //   style:
+                //       const TextStyle(fontSize: 12, color: Color(0xff677681)),
+                // ),
               ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xffFF3131).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'View',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xffFF3131),
-              ),
             ),
           ),
         ],

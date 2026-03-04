@@ -5,7 +5,7 @@ enum PostType { text, image, video }
 
 class PostModel {
   final String? postId;
-  final CreatorModel? creator;
+
   final String? creatorUid;
   final bool? isDeleted;
   final Timestamp? createdAt;
@@ -18,7 +18,6 @@ class PostModel {
 
   const PostModel({
     this.postId,
-    this.creator,
     this.creatorUid,
     this.isDeleted,
     this.createdAt,
@@ -32,7 +31,6 @@ class PostModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'creator': creator?.toJson(),
       'creatorUid': creatorUid,
       'type': type?.name,
       'content': content,
@@ -43,7 +41,6 @@ class PostModel {
   factory PostModel.fromJson(Map<String, dynamic> json) {
     return PostModel(
       postId: json['postId'],
-      creator: CreatorModel.fromJson(json['creator']),
       creatorUid: json['creatorUid'],
       isDeleted: json['isDeleted'],
       createdAt: json['createdAt'],

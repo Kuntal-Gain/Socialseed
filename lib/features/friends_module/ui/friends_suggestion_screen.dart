@@ -8,6 +8,7 @@ import 'package:socialseed/core/utils/helpers/failure_widget.dart';
 import 'package:socialseed/core/utils/helpers/no_data_found_widget.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
 import 'package:socialseed/core/utils/helpers/scroll_view.dart';
+import 'package:socialseed/core/utils/helpers/snackbar.dart';
 import 'package:socialseed/features/auth_module/model/user_model.dart';
 import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/friends_module/model/request_model.dart';
@@ -133,14 +134,7 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
 
     // Show feedback
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Friend request sent to ${suggestion.fullName}'),
-          backgroundColor: const Color(0xffFF3131),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      successBar(context, "Request Send Successful to ${suggestion.fullName}");
     }
   }
 
@@ -160,14 +154,7 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
 
     // Show feedback
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Friend request cancelled'),
-          backgroundColor: Colors.grey.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      successBar(context, "request cancelled");
     }
   }
 
@@ -474,81 +461,52 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
           ),
 
           // Action Buttons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              sendAsync.maybeWhen(
-                orElse: () => const SizedBox.shrink(),
-                data: (isSent) => GestureDetector(
-                    onTap: () async {
-                      if (isSent) {
-                        _cancelFriendRequest(user);
-                      } else {
-                        _sendFriendRequest(user);
-                      }
+          sendAsync.maybeWhen(
+            orElse: () => const SizedBox.shrink(),
+            data: (isSent) => GestureDetector(
+                onTap: () async {
+                  if (isSent) {
+                    _cancelFriendRequest(user);
+                  } else {
+                    _sendFriendRequest(user);
+                  }
 
-                      // Only after backend is updated, refresh the provider
-                      ref.invalidate(hasISentRequestToProvider(user.uid!));
-                    },
-                    child: Container(
-                      height: 35,
-                      width: 130,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color:
-                            isSent ? Colors.grey.shade200 : AppColor.redColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: isLoading
-                            ? const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2, // keeps it slim and circular
-                                ),
-                              )
-                            : Text(
-                                isSent ? 'Cancel Request' : 'Send Request',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSent
-                                      ? Colors.grey.shade700
-                                      : Colors.white,
-                                ),
-                              ),
-                      ),
-                    )),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () {
-                  // Remove suggestion
-                  Navigator.pushNamed(context, RouteGenerator.kProfile,
-                      arguments: {'uid': user.uid});
+                  // Only after backend is updated, refresh the provider
+                  ref.invalidate(hasISentRequestToProvider(user.uid!));
                 },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey.shade700,
+                child: Container(
+                  height: 35,
+                  width: 140,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  side: BorderSide(color: Colors.grey.shade300),
-                  shape: RoundedRectangleBorder(
+                  decoration: BoxDecoration(
+                    color: isSent ? Colors.grey.shade200 : AppColor.redColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  minimumSize: const Size(70, 36),
-                ),
-                child: const Text(
-                  'View',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  child: Center(
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2, // keeps it slim and circular
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              isSent ? 'Cancel Request' : 'Send Request',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSent
+                                    ? Colors.grey.shade700
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
                   ),
-                ),
-              ),
-            ],
+                )),
           ),
         ],
       ),
