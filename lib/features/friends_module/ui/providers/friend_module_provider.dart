@@ -21,6 +21,19 @@ class SuggestedUsersNotifier extends AutoDisposeAsyncNotifier<List<User>> {
   }
 }
 
+final friendsProvider =
+    AutoDisposeAsyncNotifierProvider<FriendsNotifier, List<User>>(
+  FriendsNotifier.new,
+);
+
+class FriendsNotifier extends AutoDisposeAsyncNotifier<List<User>> {
+  @override
+  Future<List<User>> build() async {
+    final usecase = getIt<FriendUsecases>();
+    return usecase.getFriends();
+  }
+}
+
 class FriendRequestsNotifier
     extends AutoDisposeAsyncNotifier<RequestListModel> {
   final _usecase = getIt<FriendUsecases>();

@@ -184,4 +184,30 @@ class FriendUsecaseImpl extends FriendUsecases {
 
     return exists;
   }
+
+  @override
+  Future<List<User>> getFriends() async {
+    final uid = await getCurrentUid();
+    try {
+      final firestore = FirebaseFirestore.instance;
+
+      final userDoc = await firestore.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) return [];
+
+      final data = userDoc.data()!;
+      final List<dynamic> following = data['following'] ?? [];
+
+      if (following.isEmpty) return [];
+
+      final friendsSnap = await firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: following)
+          .get();
+
+      return friendsSnap.docs.map((doc) => User.fromJson(doc.data())).toList();
+    } catch (e) {
+      throw Exception("Failed to fetch friends: $e");
+    }
+  }
 }

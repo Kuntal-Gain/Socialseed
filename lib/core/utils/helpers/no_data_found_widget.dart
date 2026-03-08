@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 
 class NoDataFoundWidget extends StatefulWidget {
@@ -13,7 +14,7 @@ class NoDataFoundWidget extends StatefulWidget {
     super.key,
     this.title = 'No Data Found',
     this.message = 'There is no data available at the moment.',
-    this.icon = Icons.inbox_outlined,
+    this.icon = Ionicons.bulb_outline,
     this.onRefresh,
     this.actionButtonText,
     this.iconcolor,

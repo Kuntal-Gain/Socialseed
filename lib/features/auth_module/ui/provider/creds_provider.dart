@@ -81,6 +81,9 @@ class UserByIdFamilyNotifier extends FamilyAsyncNotifier<User?, String> {
     try {
       final usecase = getIt<CredsUseCase>();
       final user = await usecase.getUser(uid);
+
+      print(user?.toJson());
+
       state = AsyncValue.data(user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

@@ -1,16 +1,19 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+
 import 'package:socialseed/core/utils/helpers/font_sizes.dart';
 import 'package:socialseed/features/auth_module/ui/auth_screen.dart';
 import 'package:socialseed/features/auth_module/ui/create_user_screen.dart';
-import 'package:socialseed/features/story/ui/story_upload_screen.dart';
+import 'package:socialseed/features/chat/ui/chat_list_screen.dart';
 import 'package:socialseed/features/home/ui/home_screen.dart';
 import 'package:socialseed/features/post/ui/post_creation_screen.dart';
 import 'package:socialseed/features/profile/ui/profile_screen.dart';
 import 'package:socialseed/features/splash_module/ui/splash_screen.dart';
+import 'package:socialseed/features/story/ui/story_upload_screen.dart';
 import 'package:socialseed/features/story/ui/story_viewer_screen.dart';
 
+import '../../features/chat/ui/chat_screen.dart';
 import '../../features/post/ui/post_view_screen.dart';
 
 class RouteGenerator {
@@ -31,6 +34,10 @@ class RouteGenerator {
 
   /// [profile]
   static const kProfile = "/Profile";
+
+  /// [chat]
+  static const kChat = "/Chat";
+  static const kMessage = "/Message";
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -76,6 +83,12 @@ class RouteGenerator {
 
       case kStoryUpload:
         return _animatedPageRoute(StoryUploadScreen());
+
+      case kChat:
+        return _animatedPageRoute(ChatListScreen());
+
+      case kMessage:
+        return _animatedPageRoute(ChatScreen());
 
       default:
         return _errorRoute(errorMessage: "Route not found: ${settings.name}");

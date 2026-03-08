@@ -26,6 +26,10 @@ class _EditProfileBottomSheetState
   File? _pickedAvatar;
   bool _isUploadingAvatar = false;
 
+  // ── Cover Image ───────────────────────────────────────────────────────────
+  File? _pickedCover;
+  bool _isUploadingCover = false;
+
   // ── Controllers ──────────────────────────────────────────────────────────
   late final TextEditingController _fullNameCtrl;
   late final TextEditingController _usernameCtrl;
@@ -79,6 +83,80 @@ class _EditProfileBottomSheetState
       c.dispose();
     }
     super.dispose();
+  }
+
+  // ── Pick cover image ──────────────────────────────────────────────────────
+  Future<void> _pickCover() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined,
+                  color: Color(0xffFF3131)),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined,
+                  color: Color(0xffFF3131)),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1080,
+    );
+
+    if (picked != null) {
+      setState(() => _pickedCover = File(picked.path));
+    }
+  }
+
+  /// Uploads cover image to Firebase Storage and returns the download URL.
+  Future<String?> _uploadCover() async {
+    if (_pickedCover == null) return null;
+
+    setState(() => _isUploadingCover = true);
+
+    try {
+      final upload = ref.read(uploadImageProvider);
+      final url = await upload(_pickedCover);
+      return url;
+    } catch (e) {
+      debugPrint("Cover upload failed: $e");
+      return null;
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingCover = false);
+      }
+    }
   }
 
   // ── Pick avatar ───────────────────────────────────────────────────────────
@@ -163,7 +241,11 @@ class _EditProfileBottomSheetState
     setState(() => _isSaving = true);
 
     try {
-      // Upload avatar first (if a new one was picked)
+      // Upload cover first (if a new one was picked)
+      final coverUrl =
+          _pickedCover != null ? await _uploadCover() : widget.user.cover;
+
+      // Upload avatar (if a new one was picked)
       final avatarUrl =
           _pickedAvatar != null ? await _uploadAvatar() : widget.user.avatar;
 
@@ -173,6 +255,7 @@ class _EditProfileBottomSheetState
         bio: _bioCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         avatar: avatarUrl,
+        cover: coverUrl,
         dateOfBirth: _selectedDob != null
             ? Timestamp.fromDate(_selectedDob!)
             : widget.user.dateOfBirth,
@@ -345,6 +428,216 @@ class _EditProfileBottomSheetState
     );
   }
 
+  // ── Cover + Avatar composite widget ──────────────────────────────────────
+  Widget _coverAndAvatarSection() {
+    // Resolve cover image provider
+    ImageProvider? coverImageProvider;
+    if (_pickedCover != null) {
+      coverImageProvider = FileImage(_pickedCover!);
+    } else if (widget.user.cover != null && widget.user.cover!.isNotEmpty) {
+      coverImageProvider = NetworkImage(widget.user.cover!);
+    }
+
+    // Resolve avatar image provider
+    ImageProvider? avatarImageProvider;
+    if (_pickedAvatar != null) {
+      avatarImageProvider = FileImage(_pickedAvatar!);
+    } else if (widget.user.avatar != null && widget.user.avatar!.isNotEmpty) {
+      avatarImageProvider = NetworkImage(widget.user.avatar!);
+    }
+
+    return Column(
+      children: [
+        // ── Cover image area ─────────────────────────────────────────────
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Cover container
+            GestureDetector(
+              onTap: _pickCover,
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade200,
+                  image: coverImageProvider != null
+                      ? DecorationImage(
+                          image: coverImageProvider,
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: coverImageProvider == null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image_outlined,
+                              size: 32, color: Colors.grey.shade400),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Add cover photo',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      )
+                    : null,
+              ),
+            ),
+
+            // Cover upload loading overlay
+            if (_isUploadingCover)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.black.withOpacity(0.4),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Cover edit badge (top-right)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: _pickCover,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.55),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.camera_alt, size: 13, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Edit cover',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Avatar overlapping cover ───────────────────────────────────
+            Positioned(
+              bottom: -40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: _pickAvatar,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // White ring + avatar
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xffFF3131),
+                              width: 2.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 44,
+                            backgroundColor: Colors.grey.shade100,
+                            backgroundImage: avatarImageProvider,
+                            child: avatarImageProvider == null
+                                ? Icon(Icons.person,
+                                    size: 40, color: Colors.grey.shade400)
+                                : null,
+                          ),
+                        ),
+                      ),
+
+                      // Avatar upload overlay
+                      if (_isUploadingAvatar)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.4),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Camera badge on avatar
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xffFF3131),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Space to account for avatar overflow below cover
+        const SizedBox(height: 52),
+
+        // "Tap to change photo" hint centered under avatar
+        Center(
+          child: Text(
+            'Tap avatar to change',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -418,98 +711,9 @@ class _EditProfileBottomSheetState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Avatar Picker ──────────────────────────────
-                        const SizedBox(height: 20),
-                        Center(
-                          child: GestureDetector(
-                            onTap: _pickAvatar,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                // Avatar circle
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xffFF3131),
-                                      width: 2.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: 52,
-                                    backgroundColor: Colors.grey.shade100,
-                                    backgroundImage: _pickedAvatar != null
-                                        ? FileImage(_pickedAvatar!)
-                                            as ImageProvider
-                                        : (widget.user.avatar != null &&
-                                                widget.user.avatar!.isNotEmpty
-                                            ? NetworkImage(widget.user.avatar!)
-                                            : null),
-                                    child: (_pickedAvatar == null &&
-                                            (widget.user.avatar == null ||
-                                                widget.user.avatar!.isEmpty))
-                                        ? Icon(Icons.person,
-                                            size: 48,
-                                            color: Colors.grey.shade400)
-                                        : null,
-                                  ),
-                                ),
-
-                                // Upload overlay (shown while uploading)
-                                if (_isUploadingAvatar)
-                                  Positioned.fill(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.black.withOpacity(0.4),
-                                      ),
-                                      child: const Center(
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                // Camera badge
-                                Positioned(
-                                  bottom: 2,
-                                  right: 2,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xffFF3131),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Center(
-                          child: Text(
-                            'Tap to change photo',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ),
+                        // ── Cover + Avatar ─────────────────────────────
+                        const SizedBox(height: 16),
+                        _coverAndAvatarSection(),
 
                         // ── Basic Info ─────────────────────────────────
                         _sectionHeader('Basic Info'),

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:socialseed/core/provider/user_provider.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
@@ -161,15 +162,31 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildLogo() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16.0),
-        child: Image.asset(
-          'assets/images/logo.png',
-          height: ScreenUtils().screenHeight(context) * 0.065,
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Image.asset(
+            'assets/images/logo.png',
+            height: ScreenUtils().screenHeight(context) * 0.065,
+          ),
         ),
-      ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: IconButton(
+            icon: const Icon(
+              Ionicons.chatbubble_outline,
+              color: AppColor.redColor,
+              size: 28,
+            ),
+            onPressed: () {
+              // TODO: Navigate to notifications
+              Navigator.of(context).pushNamed(RouteGenerator.kChat);
+            },
+          ),
+        ),
+      ],
     );
   }
 

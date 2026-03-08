@@ -10,6 +10,9 @@ import 'package:socialseed/features/post/data/post_usecase_impl.dart';
 import 'package:socialseed/features/story/data/story_usecase.dart';
 import 'package:socialseed/features/story/data/story_usecase_impl.dart';
 
+import '../../features/chat/data/chat_usecase.dart';
+import '../../features/chat/data/chat_usecase_impl.dart';
+
 final getIt = GetIt.instance;
 
 void init() {
@@ -18,4 +21,5 @@ void init() {
   getIt.registerLazySingleton<PostUsecase>(() => PostUsecaseImpl());
   getIt.registerLazySingleton<FriendUsecases>(() => FriendUsecaseImpl());
   getIt.registerLazySingleton<StoryUsecase>(() => StoryUsecaseImpl());
+  getIt.registerLazySingleton<ChatUsecase>(() => ChatUsecaseImpl());
 }
