@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialseed/core/services/route_generator.dart';
+import 'package:socialseed/features/auth_module/model/user_model.dart';
 import 'package:socialseed/features/auth_module/ui/provider/auth_provider.dart';
+import 'package:socialseed/features/auth_module/ui/provider/creds_provider.dart';
 import 'package:socialseed/features/feed/ui/explore_feed_screen.dart';
 import 'package:socialseed/features/feed/ui/feed_screen.dart';
 import 'package:socialseed/features/friends_module/ui/friends_suggestion_screen.dart';
@@ -30,6 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final uidAsync = ref.watch(getCurrentUserProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       body: uidAsync.when(
@@ -57,9 +60,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Text(error.toString()),
       ),
-      bottomNavigationBar: SocialBottomNav(
-        currentIndex: _index,
-        onTap: (index) => setState(() => _index = index),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (user?.userType == UserType.admin)
+            Container(
+              height: 40,
+              width: double.infinity,
+              color: Colors.red, // your strip
+              child: const Center(
+                  child: Text(
+                "You Are a Admin",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              )),
+            ),
+          SocialBottomNav(
+            currentIndex: _index,
+            onTap: (index) => setState(() => _index = index),
+          ),
+        ],
       ),
     );
   }

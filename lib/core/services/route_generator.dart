@@ -9,6 +9,9 @@ import 'package:socialseed/features/chat/ui/chat_list_screen.dart';
 import 'package:socialseed/features/home/ui/home_screen.dart';
 import 'package:socialseed/features/post/ui/post_creation_screen.dart';
 import 'package:socialseed/features/profile/ui/profile_screen.dart';
+import 'package:socialseed/features/profile/ui/settings_screen.dart';
+import 'package:socialseed/features/settings/ui/milestone_screen.dart';
+import 'package:socialseed/features/settings/ui/verify_screen.dart';
 import 'package:socialseed/features/splash_module/ui/splash_screen.dart';
 import 'package:socialseed/features/story/ui/story_upload_screen.dart';
 import 'package:socialseed/features/story/ui/story_viewer_screen.dart';
@@ -34,6 +37,9 @@ class RouteGenerator {
 
   /// [profile]
   static const kProfile = "/Profile";
+  static const kSettings = "/Settings";
+  static const kMilestones = "/milestones";
+  static const kVerify = "/verify";
 
   /// [chat]
   static const kChat = "/Chat";
@@ -81,6 +87,9 @@ class RouteGenerator {
           uid: args['uid'],
         ));
 
+      case kSettings:
+        return _animatedPageRoute(const SettingsScreen());
+
       case kStoryUpload:
         return _animatedPageRoute(StoryUploadScreen());
 
@@ -89,6 +98,12 @@ class RouteGenerator {
 
       case kMessage:
         return _animatedPageRoute(ChatScreen());
+
+      case kMilestones:
+        return _animatedPageRoute(const MilestoneScreen());
+
+      case kVerify:
+        return _animatedPageRoute(const VerifyScreen());
 
       default:
         return _errorRoute(errorMessage: "Route not found: ${settings.name}");

@@ -35,7 +35,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: 
   firebase_core: 
-  google_fonts:
   firebase_auth: 
   get_it: 
   flutter_riverpod: 
@@ -47,6 +46,8 @@ dependencies:
   image_picker: ^1.1.2
   cached_network_image: ^3.4.1
   photo_manager: ^3.8.3
+  # hugeicons: ^1.1.6
+  hugeicons_pro: ^0.0.3
   # image_editor_plus: ^1.0.6
 
 

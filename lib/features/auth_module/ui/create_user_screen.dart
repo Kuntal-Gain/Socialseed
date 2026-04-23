@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:scroll_date_picker/scroll_date_picker.dart';
 import 'package:socialseed/core/provider/user_provider.dart';
 import 'package:socialseed/core/services/route_generator.dart';
@@ -96,7 +95,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                       children: [
                         Text(
                           "Complete Profile",
-                          style: GoogleFonts.montserrat(
+                          style: TextStyle(
                             fontSize: 35,
                             fontWeight: FontWeight.w500,
                             color: AppColor.blackColor,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:hugeicons_pro/hugeicons.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 
 class SocialBottomNav extends StatelessWidget {
@@ -14,11 +16,19 @@ class SocialBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      Icons.home_rounded,
-      Icons.group_rounded,
-      Icons.explore_rounded,
-      Icons.notifications_rounded,
-      Icons.person_rounded,
+      HugeIconsStroke.home04,
+      HugeIconsStroke.addMale,
+      HugeIconsStroke.discoverCircle,
+      HugeIconsStroke.notification01,
+      HugeIconsStroke.user,
+    ];
+
+    final selectedItems = [
+      HugeIconsSolid.home04,
+      HugeIconsSolid.addMale,
+      HugeIconsSolid.discoverCircle,
+      HugeIconsSolid.notification01,
+      HugeIconsSolid.user,
     ];
 
     return Container(
@@ -56,7 +66,7 @@ class SocialBottomNav extends StatelessWidget {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutBack,
                 child: Icon(
-                  items[index],
+                  isSelected ? selectedItems[index] : items[index],
                   size: 26,
                   color: isSelected ? Colors.white : Colors.grey,
                 ),

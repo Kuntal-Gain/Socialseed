@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:hugeicons_pro/hugeicons.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/app_loader.dart';
@@ -95,13 +97,40 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                               margin: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                image: const DecorationImage(
+                                image: DecorationImage(
                                   image: NetworkImage(
-                                    'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+                                    user?.cover != ""
+                                        ? user!.cover!
+                                        : 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
                                   ),
                                   fit: BoxFit.cover,
                                 ),
                                 color: Colors.grey.shade300,
+                              ),
+                            ),
+
+                            Positioned(
+                              right: 30,
+                              top: 30,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    RouteGenerator.kSettings,
+                                  );
+                                },
+                                child: Container(
+                                  height: 45,
+                                  width: 45,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.redColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    HugeIconsStroke.settings01,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
 
@@ -159,13 +188,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       const SizedBox(height: 12),
 
                       // User Info
-                      Text(
-                        user?.fullName ?? 'NA',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            user?.fullName ?? 'NA',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          sizeHor(5),
+                          Icon(
+                            HugeIconsSolid.checkmarkBadge01,
+                            color: AppColor.redColor,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(

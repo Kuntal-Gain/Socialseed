@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:socialseed/core/services/route_generator.dart';
 import 'package:socialseed/core/utils/constants/color_const.dart';
 import 'package:socialseed/core/utils/helpers/screen_utils.dart';
@@ -42,7 +41,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   child: Text(
                     isLogin ? "Welcome Back" : "Join Us",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
+                    style: TextStyle(
                       fontSize: 35,
                       fontWeight: FontWeight.w500,
                     ),

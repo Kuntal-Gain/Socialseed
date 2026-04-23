@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum UserType { user, admin }
+
 class User {
   final String? uid;
   final String? email;
@@ -18,26 +20,27 @@ class User {
   final bool? isProfileCompleted;
   final bool? isVerified;
   final bool? isOnline;
+  final UserType? userType;
 
-  User({
-    required this.uid,
-    required this.email,
-    required this.fullName,
-    required this.username,
-    this.avatar = "",
-    this.cover = "",
-    this.bio = "",
-    this.address,
-    this.profileHistory,
-    this.followers = const [],
-    this.following = const [],
-    this.dateOfBirth,
-    this.createdAt,
-    this.updatedAt,
-    this.isProfileCompleted = false,
-    this.isVerified = false,
-    this.isOnline = true,
-  });
+  User(
+      {required this.uid,
+      required this.email,
+      required this.fullName,
+      required this.username,
+      this.avatar = "",
+      this.cover = "",
+      this.bio = "",
+      this.address,
+      this.profileHistory,
+      this.followers = const [],
+      this.following = const [],
+      this.dateOfBirth,
+      this.createdAt,
+      this.updatedAt,
+      this.isProfileCompleted = false,
+      this.isVerified = false,
+      this.isOnline = true,
+      this.userType});
 
   Map<String, dynamic> toJson() {
     return {
@@ -58,6 +61,7 @@ class User {
       'isProfileCompleted': isProfileCompleted,
       'isVerified': isVerified,
       'isOnline': isOnline,
+      'type': userType?.name,
     };
   }
 
@@ -85,6 +89,9 @@ class User {
       isProfileCompleted: json['isProfileCompleted'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
       isOnline: json['isOnline'] as bool? ?? true,
+      userType: json['type'] != null
+          ? UserType.values.firstWhere((e) => e.name == json['type'])
+          : UserType.user,
     );
   }
 

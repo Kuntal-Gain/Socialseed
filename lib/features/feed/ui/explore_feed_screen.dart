@@ -298,11 +298,8 @@ class _ExploreFeedScreenState extends ConsumerState<ExploreFeedScreen> {
                 loading: () => AppLoader().stateLoader(),
                 error: (e, s) => errorWidget(e, s),
                 data: (data) {
-                  final posts = [
-                    ...data.where((e) => e.type != PostType.text),
-                    ...data.where((e) => e.type != PostType.text),
-                    ...data.where((e) => e.type != PostType.text)
-                  ];
+                  final posts =
+                      data.where((e) => e.type != PostType.text).toList();
 
                   return Expanded(
                     child: GridView.builder(
